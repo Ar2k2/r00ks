@@ -3,14 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WASD</title>
+<title>WASD · Minecraft Java tools</title>
+<meta name="description" content="Tools for Minecraft Java Edition: snapshot breakdowns, block gradients, seed tools and building helpers.">
+<link rel="stylesheet" href="shared/shell.css">
 <style>
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-         background: #0b0e13; color: #e8edf4; font-family: system-ui, sans-serif; }
-  h1 { color: #2ee6c5; letter-spacing: .2em; }
+  .hero { padding: 24px 0 48px; }
+  .hero .logo { font-size: 22px; }
+  .hero h1 { margin-top: 28px; font-size: clamp(32px, 5vw, 52px); letter-spacing: -.02em; max-width: 16ch; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p { margin: 16px 0 0; max-width: 52ch; color: var(--muted); font-size: 17px; }
+  footer { margin-top: 56px; color: var(--faint); font: 12px var(--mono); }
 </style>
 </head>
-<body>
-<h1>WASD</h1>
+<body data-tool="home">
+<main>
+  <section class="hero">
+    <span class="logo" role="img" aria-label="WASD"><b>W</b><b>A</b><b>S</b><b>D</b></span>
+    <h1>Tools for <em>Minecraft Java</em>, built by hand.</h1>
+    <p>Snapshot breakdowns, block gradients, seed tools and building helpers. Everything runs in your browser.</p>
+  </section>
+  <section class="cards" aria-label="Tools"></section>
+  <footer>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</footer>
+</main>
+<script src="shared/shell.js"></script>
+<script>
+  // Cards come from the same tool list as the rail and drawer.
+  document.querySelector('.cards').innerHTML = WASD.tools.filter(t => t.id !== 'home').map((t, i) => {
+    const tag = t.built ? 'a' : 'div';
+    return `<${tag} class="card"${t.built ? ` href="${WASD.root}${t.path}"` : ''} style="--c:${t.color};--i:${i}">
+      <h3>${t.name}${t.built ? '' : '<small class="tag">soon</small>'}</h3><p>${t.desc}</p></${tag}>`;
+  }).join('');
+</script>
 </body>
 </html>
