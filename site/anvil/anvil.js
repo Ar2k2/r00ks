@@ -1,4 +1,6 @@
 // Anvil cost optimizer: the cheapest order to put enchanted books onto an item (Java Edition).
+// Data checked against data/minecraft/enchantment/*.json in the 26.3 and 26.4-snapshot-8 jars:
+// book multiplier = max(1, anvil_cost / 2). Re-check each major update.
 // Plain script for the browser (window.Anvil) and Node (module.exports) for tests.
 (() => {
   // id: [name, max level, book multiplier]. The sacrifice is always a book here, so only the
@@ -16,7 +18,7 @@
     infinity: ['Infinity', 1, 4], luck_of_the_sea: ['Luck of the Sea', 3, 2], lure: ['Lure', 3, 2],
     multishot: ['Multishot', 1, 2], piercing: ['Piercing', 4, 1], quick_charge: ['Quick Charge', 3, 1],
     impaling: ['Impaling', 5, 2], riptide: ['Riptide', 3, 2], loyalty: ['Loyalty', 3, 1], channeling: ['Channeling', 1, 4],
-    density: ['Density', 5, 1], breach: ['Breach', 4, 2], wind_burst: ['Wind Burst', 3, 2],
+    density: ['Density', 5, 1], breach: ['Breach', 4, 2], wind_burst: ['Wind Burst', 3, 2], lunge: ['Lunge', 3, 1],
     unbreaking: ['Unbreaking', 3, 1], mending: ['Mending', 1, 2],
     binding_curse: ['Curse of Binding', 1, 4], vanishing_curse: ['Curse of Vanishing', 1, 4],
   };
@@ -34,6 +36,7 @@
     bow: ['Bow', ['power', 'punch', 'flame', 'infinity', ...end]],
     crossbow: ['Crossbow', ['multishot', 'piercing', 'quick_charge', ...end]],
     trident: ['Trident', ['impaling', 'riptide', 'loyalty', 'channeling', ...end]],
+    spear: ['Spear', ['sharpness', 'smite', 'bane_of_arthropods', 'knockback', 'fire_aspect', 'looting', 'lunge', ...end]],
     mace: ['Mace', ['density', 'breach', 'smite', 'bane_of_arthropods', 'wind_burst', 'fire_aspect', ...end]],
     fishing_rod: ['Fishing Rod', ['luck_of_the_sea', 'lure', ...end]],
     elytra: ['Elytra', [...end, 'binding_curse']],
@@ -41,7 +44,7 @@
   // Enchantments that cannot sit on the same item.
   const EXCLUSIVE = [
     ['protection', 'fire_protection', 'blast_protection', 'projectile_protection'],
-    ['sharpness', 'smite', 'bane_of_arthropods', 'density', 'breach'],
+    ['sharpness', 'smite', 'bane_of_arthropods', 'density', 'breach', 'impaling'],
     ['silk_touch', 'fortune'], ['infinity', 'mending'], ['depth_strider', 'frost_walker'],
     ['riptide', 'loyalty'], ['riptide', 'channeling'], ['multishot', 'piercing'],
   ];
