@@ -1,0 +1,4 @@
+.DS_Store
+node_modules/
+# local-only: game data we must never publish
+tools/work/
