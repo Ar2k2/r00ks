@@ -7,32 +7,127 @@
 <meta name="description" content="Tools for Minecraft Java Edition: snapshot breakdowns, block gradients, seed tools and building helpers.">
 <link rel="stylesheet" href="shared/shell.css">
 <style>
-  .hero { padding: 24px 0 48px; }
-  .hero .logo { font-size: 22px; }
-  .hero h1 { margin-top: 28px; font-size: clamp(32px, 5vw, 52px); letter-spacing: -.02em; max-width: 16ch; }
-  .hero h1 em { font-style: normal; color: var(--accent); }
-  .hero p { margin: 16px 0 0; max-width: 52ch; color: var(--muted); font-size: 17px; }
-  footer { margin-top: 56px; color: var(--faint); font: 12px var(--mono); }
+  .top { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+  .top .name { font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
+  .top .ver { margin-left: auto; font: 13px var(--mono); color: var(--muted); }
+
+  /* Featured card: the latest snapshot (or newest tool until snapshots exist). */
+  .latest { overflow: hidden; padding: 0; }
+  .strip { display: flex; height: 10px; }
+  .strip i {
+    flex: 1; background: var(--b); box-shadow: 1px 0 0 var(--b); /* hides subpixel seams */
+    transform-origin: top; animation: drop .5s var(--spring) both; animation-delay: calc(300ms + var(--k) * 45ms);
+  }
+  @keyframes drop { from { transform: scaleY(0); } }
+  .latest .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 18px 24px 0; font: 500 13px var(--mono); color: var(--muted); }
+  .latest .meta .date { margin-left: auto; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px 2px 8px; border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--text);
+  }
+  .pill::before { content: ''; width: 7px; height: 7px; border-radius: 2px; background: var(--accent); }
+  .latest .body { padding: 14px 24px 8px; }
+  .latest h1 { font-size: clamp(30px, 4.6vw, 44px); line-height: 1.08; letter-spacing: -.025em; font-weight: 700; max-width: 22ch; }
+  .latest .sum { margin: 12px 0 0; color: var(--muted); max-width: 58ch; }
+  .changes { list-style: none; margin: 20px 0 0; padding: 0; }
+  .changes li { display: grid; grid-template-columns: 84px 1fr auto; gap: 16px; align-items: baseline; padding: 11px 0; border-top: 1px solid var(--panel-border); }
+  .changes .kind, .changes code { font: 12px var(--mono); color: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 24px 24px; }
+  .actions .btn { display: inline-flex; gap: 8px; padding: 0 18px; }
+
+  /* Tools: a list whose hover highlight springs from row to row. */
+  .tools-h { margin: 44px 0 10px 4px; font: 500 13px var(--mono); color: var(--muted); }
+  .tools { position: relative; margin: 0; padding: 6px; }
+  .tools .hl { left: 6px; right: 6px; height: 56px; border-radius: 10px; opacity: 0; pointer-events: none;
+    background: color-mix(in srgb, var(--text) 6%, transparent); border: 0; }
+  .tools:hover .hl { opacity: 1; }
+  .row {
+    position: relative; display: grid; grid-template-columns: 22px 150px 1fr auto; gap: 14px; align-items: center;
+    height: 56px; padding: 0 14px; border-radius: 10px; color: var(--text); text-decoration: none;
+  }
+  .row svg.ic { color: var(--muted); }
+  a.row:hover svg.ic { transform: scale(1.15) rotate(-6deg); color: var(--accent); }
+  a.row:active { transform: scale(.98); transition: transform .15s var(--spring); }
+  .row b { font-weight: 600; }
+  .row span { color: var(--muted); font-size: 15px; }
+  .row small { font: 12px var(--mono); color: var(--faint); }
+  a.row small { color: var(--text); transition: transform .25s var(--spring); }
+  a.row:hover small { transform: translateX(-3px); }
+  .row.soon b, .row.soon svg.ic { opacity: .5; }
+
+  .in { animation: enter .55s var(--enter) both; animation-delay: calc(var(--i) * 60ms); }
+  footer { margin-top: 44px; color: var(--faint); font: 12px var(--mono); }
+
+  @media (max-width: 640px) {
+    .row { grid-template-columns: 20px 1fr auto; }
+    .row span { display: none; }
+    .changes li { grid-template-columns: 1fr; gap: 2px; }
+  }
 </style>
 </head>
 <body data-tool="home">
 <main>
-  <section class="hero">
+  <div class="top">
     <span class="logo" role="img" aria-label="WASD"><b>W</b><b>A</b><b>S</b><b>D</b></span>
-    <h1>Tools for <em>Minecraft Java</em>, built by hand.</h1>
-    <p>Snapshot breakdowns, block gradients, seed tools and building helpers. Everything runs in your browser.</p>
-  </section>
-  <section class="cards" aria-label="Tools"></section>
+    <span class="name">WASD</span>
+    <span class="ver" id="ver"></span>
+  </div>
+
+  <article class="panel latest in" style="--i:1" aria-labelledby="latest-h">
+    <div class="strip" id="strip" aria-hidden="true"></div>
+    <div class="meta" id="latest-meta"></div>
+    <div class="body">
+      <h1 id="latest-h"></h1>
+      <p class="sum" id="latest-sum"></p>
+      <ul class="changes" id="latest-changes" hidden></ul>
+    </div>
+    <div class="actions" id="latest-actions"></div>
+  </article>
+
+  <h2 class="tools-h in" style="--i:2">Tools</h2>
+  <nav class="panel tools in" style="--i:3" aria-label="All tools"><i class="hl"></i></nav>
+
   <footer>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</footer>
 </main>
 <script src="shared/shell.js"></script>
 <script>
-  // Cards come from the same tool list as the rail and drawer.
-  document.querySelector('.cards').innerHTML = WASD.tools.filter(t => t.id !== 'home').map((t, i) => {
-    const tag = t.built ? 'a' : 'div';
-    return `<${tag} class="card"${t.built ? ` href="${WASD.root}${t.path}"` : ''} style="--c:${t.color};--i:${i}">
-      <h3>${t.name}${t.built ? '' : '<small class="tag">soon</small>'}</h3><p>${t.desc}</p></${tag}>`;
+  // Featured card. Once snapshot pages exist this becomes the newest one:
+  // { label: 'Latest snapshot', version, date, title, summary, changes: [[kind, text, key]], link, cta }
+  // strip: average colors (blocks.json) of the featured block's family; its last color is --seed in shell.css.
+  const latest = {
+    label: 'New tool', version: 'Java 26.3', title: 'Nether coordinate converter',
+    summary: 'Type Overworld or Nether coordinates and the other side follows. Paste an F3 + C line and it lands on the right side.',
+    link: 'utilities/', cta: 'Open the converter',
+    strip: ['#c26d52', '#a47e69', '#6d9b71', '#54a587'], // copper oxidizing
+  };
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
+  $('ver').textContent = latest.version;
+  $('latest-meta').innerHTML = `<span class="pill">${esc(latest.label)}</span>`
+    + (latest.date ? `<span class="date">${esc(latest.date)}</span>` : '');
+  $('latest-h').textContent = latest.title;
+  $('latest-sum').textContent = latest.summary;
+  if (latest.changes?.length) {
+    $('latest-changes').hidden = false;
+    $('latest-changes').innerHTML = latest.changes.map(([k, t, key]) =>
+      `<li><span class="kind">${esc(k)}</span><span>${esc(t)}</span><code>${esc(key)}</code></li>`).join('');
+  }
+  $('latest-actions').innerHTML = `<a class="btn primary" href="${WASD.root}${latest.link}">${esc(latest.cta)} <span class="arr">→</span></a>`;
+
+  // Strip: 16 cells blended in OKLab across the given colors, dropping in one by one.
+  const n = latest.strip.length - 1;
+  $('strip').innerHTML = Array.from({ length: 16 }, (_, k) => {
+    const t = k / 15 * n, i = Math.min(n - 1, Math.floor(t)), f = Math.round((t - i) * 100);
+    return `<i style="--b:color-mix(in oklab, ${latest.strip[i]} ${100 - f}%, ${latest.strip[i + 1]});--k:${k}"></i>`;
   }).join('');
+
+  // Tool rows come from the same list as the rail and drawer.
+  const list = document.querySelector('.tools'), hl = list.querySelector('.hl');
+  list.insertAdjacentHTML('beforeend', WASD.tools.filter(t => t.id !== 'home').map(t => t.built
+    ? `<a class="row" href="${WASD.root}${t.path}">${WASD.icon(t.id)}<b>${t.name}</b><span>${t.desc}</span><small>Open →</small></a>`
+    : `<div class="row soon">${WASD.icon(t.id)}<b>${t.name}</b><span>${t.desc}</span><small>soon</small></div>`).join(''));
+  list.querySelectorAll('.row').forEach(r => r.onmouseenter = () => hl.style.transform = `translateY(${r.offsetTop}px)`);
 </script>
 </body>
 </html>

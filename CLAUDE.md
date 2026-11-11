@@ -19,7 +19,6 @@ libraries, and ask before adding any dependency.
 ```
 CLAUDE.md
 .github/workflows/pages.yml
-design/            design export from Claude Design (reference only)
 tools/             local scripts: jar diffing, NBT parsing, block color extraction
 site/
   index.html       home
@@ -41,36 +40,48 @@ site/
 
 ## Design system
 
-The design reference is in `design/`. Match it closely.
+The look was refreshed in Nov 2026 to move away from a generic "AI site" feel.
+`site/shared/shell.css` holds the tokens; match it.
 
-**Theme:** dark only.
+**Theme:** light and dark, following the device (`prefers-color-scheme`). No
+manual toggle.
 
-| Token | Value |
-| --- | --- |
-| Background | `#0b0e13` |
-| Panel | `#11151c` (border `#1f2632`) |
-| Raised / drawer | `#0f131a`, controls `#12161d` (border `#2a3240`) |
-| Text | `#e8edf4` |
-| Muted text | `#8b96a8`, faint `#6f7a8c` |
-| Accent | teal `#2ee6c5` (text on it: `#06201b`) |
+**Seed color:** everything tinted (accent, the W keycap, highlights, and a
+faint tint on the backgrounds) derives from `--seed` in `shell.css` via
+`oklch(from var(--seed) ...)`. The seed is the average color (from
+`blocks.json`) of the **latest snapshot's featured block**. Currently oxidized
+copper `#54a587`. When a snapshot is published:
+1. Set `--seed` in `shell.css` and the matching fixed values in its
+   `@supports not` fallback block.
+2. Update `latest` in `site/index.html` (title, summary, changes, link, and
+   `strip`: a short run of related block averages ending in the seed).
 
-**Section colors:** Home teal `#2ee6c5`, Snapshots amber `#f5b041`,
-Gradient pink `#f472b6`, Map art violet `#a78bfa`, Palette blue `#60a5fa`,
-Seed tools green `#4ade80`, Building orange `#fb923c`, Utilities slate
-`#94a3b8`.
+No per-tool colors. The rainbow section colors were removed; tools are told
+apart by their icons.
 
-**Type:** Space Grotesk (headings), Inter (body), JetBrains Mono (data:
-coordinates, block IDs, diffs, labels).
+**Icons:** original line icons on a 24px grid, stroke 1.7, defined once in
+`shell.js` (`WASD.icon(id)`) and used in the rail, drawer, home list and tool
+page titles. Draw new ones by hand; no icon libraries.
+
+**Type:** IBM Plex Sans (headings and body) and IBM Plex Mono (data:
+coordinates, block IDs, diffs, labels). Labels are lowercase mono, not
+uppercase letter-spaced.
+
+**Surfaces:** soft and rounded. Panels 16px radius with a soft shadow,
+controls and buttons 10px, keycaps 7px. Primary buttons are filled with the
+text color. No heavy black borders or hard offset shadows.
 
 **Layout:**
-- A 72px icon rail is always on the left: a menu button at the top, then a
-  colored dot per tool. Clicking a dot navigates; the active highlight springs
-  to it.
+- A 72px icon rail is always on the left: a menu button at the top, then an
+  icon per tool. Clicking an icon navigates; the active highlight springs to
+  it.
 - The menu button slides a ~312px drawer **over** the page, with a dimmed
   scrim behind it. Picking a tool slides the drawer highlight first, then the
   drawer closes about 300ms later. The X button or scrim also closes it.
 - The drawer has the WASD keycap logo, grouped tool list with section headers,
   and "soon" tags on unbuilt tools.
+- Home leads with a featured card (latest snapshot, or the newest tool until
+  snapshot pages exist) with the block color strip, then a list of tools.
 - **No keyboard shortcuts.** The owner explicitly removed them.
 
 **Motion (the top priority: every click should feel satisfying):**
@@ -80,11 +91,13 @@ coordinates, block IDs, diffs, labels).
 - Keep interactions quick, about 150 to 300ms (drawer and entrances can run
   slightly longer).
 - Buttons lift slightly on hover and squish to `scale(.93)` on press.
-- Sidebar highlights slide between items.
+- Sidebar highlights slide between items; the home tool list has one hover
+  highlight that springs from row to row.
+- Icons tilt slightly on hover.
 - Page content glides up about 12px while fading in.
-- Cards lift about 4px on hover.
 - Logo keycaps press down in a staggered ripple on hover.
-- Gradient result blocks drop in one by one (about 70ms apart) with a bounce.
+- The home color strip and gradient result blocks drop in one by one with a
+  bounce (gradient blocks about 70ms apart).
 - Copy buttons morph into a checkmark. No particle bursts or click splashes: the owner removed them as too much.
 - Everything must respect `prefers-reduced-motion`.
 
