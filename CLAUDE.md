@@ -85,7 +85,7 @@ coordinates, block IDs, diffs, labels).
 - Cards lift about 4px on hover.
 - Logo keycaps press down in a staggered ripple on hover.
 - Gradient result blocks drop in one by one (about 70ms apart) with a bounce.
-- Copy buttons morph into a checkmark with a small particle burst.
+- Copy buttons morph into a checkmark. No particle bursts or click splashes: the owner removed them as too much.
 - Everything must respect `prefers-reduced-motion`.
 
 ## Tools and build order

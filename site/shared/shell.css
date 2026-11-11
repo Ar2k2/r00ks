@@ -138,17 +138,14 @@ a.card:active { transform: scale(.97); }
 .card h3 .tag { margin-left: auto; }
 .card p { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
 
-/* Spark burst (see WASD.burst in shell.js). */
-.fx { position: fixed; z-index: 100; width: 0; height: 0; pointer-events: none; }
-.fx-spark {
-  position: absolute; width: 6px; height: 6px; margin: -3px; border-radius: 2px;
-  background: var(--k); box-shadow: 0 0 8px var(--k);
-  animation: fx-spark .6s var(--enter) forwards;
-}
-@keyframes fx-spark {
-  from { transform: rotate(var(--a)) translateX(4px) scale(1.2); }
-  to { transform: rotate(var(--a)) translateX(var(--d)) rotate(180deg) scale(0); opacity: 0; }
-}
+/* Copy: morphs into a checkmark. */
+.copy { position: relative; gap: 8px; grid-auto-flow: column; }
+.copy svg { width: 16px; height: 16px; }
+.copy .ok { display: none; color: var(--c); }
+.copy.done { border-color: var(--c); }
+.copy.done .ok { display: block; animation: pop .35s var(--spring); }
+.copy.done .ic { display: none; }
+@keyframes pop { from { transform: scale(.3) rotate(-30deg); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -17,23 +17,26 @@
       desc: 'Slime chunks and structures from a world seed.' },
     { id: 'building', name: 'Building', color: '#fb923c', path: 'building/', group: 'Build',
       desc: 'Circles, spheres and domes, block by block.' },
-    { id: 'utilities', name: 'Utilities', color: '#94a3b8', path: 'utilities/', group: 'Build',
+    { id: 'utilities', name: 'Utilities', color: '#94a3b8', path: 'utilities/', group: 'Build', built: true,
       desc: 'Nether coordinates and other small helpers.' },
   ];
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Small spark burst at (x, y). Colors cycle through `colors`.
-  const burst = (x, y, colors, count = 10) => {
-    if (reduced) return;
-    const fx = document.createElement('div');
-    fx.className = 'fx';
-    fx.style.cssText = `left:${x}px;top:${y}px;--k:${colors[0]}`;
-    fx.innerHTML = Array.from({ length: count }, (_, i) =>
-      `<i class="fx-spark" style="--a:${i * 360 / count + Math.random() * 24}deg;--d:${22 + Math.random() * 26}px;--k:${colors[i % colors.length]}"></i>`).join('');
-    document.body.append(fx);
-    setTimeout(() => fx.remove(), 700);
+  // Copy buttons: <button class="btn copy">Label</button>. The icon morphs into a checkmark.
+  const copyIcons = '<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>'
+    + '<svg class="ok" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+  document.querySelectorAll('.copy').forEach(b => {
+    b.dataset.label = b.textContent.trim();
+    b.innerHTML = `${copyIcons}<span>${b.dataset.label}</span>`;
+  });
+  const copy = async (btn, text) => {
+    const label = btn.querySelector('span');
+    clearTimeout(btn.t);
+    btn.t = setTimeout(() => { btn.classList.remove('done'); label.textContent = btn.dataset.label; }, 1600);
+    try { await navigator.clipboard.writeText(text); } catch { label.textContent = 'Copy failed'; return; }
+    btn.classList.add('done'); label.textContent = 'Copied';
   };
-  window.WASD = { root, tools, burst };
+  window.WASD = { root, tools, copy };
 
   const active = document.body.dataset.tool;
   const logo = '<span class="logo" role="img" aria-label="WASD"><b>W</b><b>A</b><b>S</b><b>D</b></span>';
