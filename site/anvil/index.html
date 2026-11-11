@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anvil optimizer · WASD</title>
+<meta name="description" content="The cheapest order to combine enchanted books on an anvil in Minecraft Java, without hitting Too Expensive.">
+<link rel="stylesheet" href="../shared/shell.css">
+<style>
+  .controls { display: grid; gap: 20px; }
+  .ench { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ench .chip span { padding-right: 6px; }
+  .lvl {
+    position: relative; z-index: 1; /* above the chip's invisible checkbox */
+    height: 28px; margin-left: 2px; padding: 0 4px; border-radius: 7px; border: 1px solid var(--control-border);
+    background: var(--panel); color: var(--text); font: 500 12px var(--mono); cursor: pointer;
+  }
+  .lvl:disabled { display: none; }
+  .ench .chip span:has(.lvl:disabled) { padding-right: 14px; }
+  .work { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+  .work select { height: 36px; padding: 0 8px; border-radius: 10px; background: var(--control); border: 1px solid var(--control-border); color: var(--text); font: 500 14px var(--mono); }
+
+  .total { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; }
+  .total b { font: 700 44px/1 var(--head); letter-spacing: -.02em; }
+  .total span { color: var(--muted); }
+  .steps { list-style: none; margin: 18px 0 0; padding: 0; counter-reset: step; }
+  .steps li {
+    display: grid; grid-template-columns: 28px 1fr auto; gap: 14px; align-items: center; padding: 12px 0;
+    border-top: 1px solid var(--panel-border); counter-increment: step;
+  }
+  .steps li::before { content: counter(step); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--text); font: 600 13px var(--mono); }
+  .steps .pair { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+  .steps .plus { color: var(--faint); }
+  .steps .thing b { font-weight: 600; }
+  .steps .thing small { display: block; color: var(--faint); font: 12px var(--mono); }
+  .steps .cost { font: 600 15px var(--mono); white-space: nowrap; }
+  .steps .cost.high { color: var(--warn); }
+  .note { margin: 14px 0 0; color: var(--faint); font-size: 13px; }
+  .hint { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; font-size: 14px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent); animation: enter .4s var(--enter) both; }
+</style>
+</head>
+<body data-tool="anvil">
+<main>
+  <header class="head">
+    <h1>Anvil optimizer</h1>
+    <p>Pick an item and the enchanted books you have. You get the order that costs the fewest levels in total, with no step reaching Too Expensive (40 levels).</p>
+  </header>
+
+  <section class="panel controls" aria-label="Settings">
+    <fieldset class="filters" id="items"><legend class="label">Item</legend></fieldset>
+    <fieldset class="filters"><legend class="label">Books (one per enchantment)</legend><div class="ench" id="ench"></div></fieldset>
+    <fieldset class="filters"><legend class="label">Already on the item (leave empty for a new one)</legend><div class="ench" id="have"></div></fieldset>
+    <label class="work">Times this item has been on an anvil already
+      <select id="work"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+    </label>
+  </section>
+
+  <section class="panel" aria-label="Result" aria-live="polite">
+    <div class="result-head">
+      <span class="label">Cheapest order</span>
+      <button class="btn copy" id="copy">Copy steps</button>
+    </div>
+    <div id="out"></div>
+  </section>
+</main>
+<script src="../shared/shell.js"></script>
+<script src="anvil.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const { ENCH, ITEMS, EXCLUSIVE, merge, plan } = Anvil;
+  const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
+  let lastText = '';
+
+  $('items').insertAdjacentHTML('beforeend', Object.entries(ITEMS).map(([id, [name]], i) =>
+    `<label class="chip"><input type="radio" name="item" value="${id}"${i ? '' : ' checked'}><span>${name}</span></label>`).join(''));
+
+  const drawEnch = () => {
+    const item = document.querySelector('[name=item]:checked').value;
+    $('ench').innerHTML = $('have').innerHTML = ITEMS[item][1].map(id => { const [name, max] = ENCH[id]; return `<label class="chip">
+      <input type="checkbox" value="${id}"><span>${name}<select class="lvl" aria-label="${name} level"${max > 1 ? '' : ' disabled'}>${
+        Array.from({ length: max }, (_, l) => `<option value="${l + 1}"${l + 1 === max ? ' selected' : ''}>${ROMAN[l + 1]}</option>`).join('')}</select></span></label>`; }).join('');
+  };
+
+  const render = () => {
+    const item = ITEMS[document.querySelector('[name=item]:checked').value][0];
+    const picked = box => [...$(box).querySelectorAll('input:checked')].map(c =>
+      ({ id: c.value, level: +c.parentElement.querySelector('.lvl').value }));
+    const books = picked('ench'), has = Object.fromEntries(picked('have').map(b => [b.id, b.level]));
+    const name = ([id, level]) => `${ENCH[id][0]}${ENCH[id][1] > 1 ? ' ' + ROMAN[level] : ''}`;
+    if (!books.length) { $('out').innerHTML = '<p class="empty">Tick the books you want on the item.</p>'; lastText = ''; return; }
+    const p = plan(books, +$('work').value, has);
+    if (!p) {
+      $('out').innerHTML = '<p class="empty">No order works: some step always reaches 40 levels (Too Expensive). Try fewer books, or an item with fewer anvil uses.</p>';
+      lastText = ''; return;
+    }
+    // A tree reads as the item or a book, listing the enchantments it carries at their merged levels.
+    const enchOf = t => {
+      if (t === 'item') return new Map(Object.entries(has));
+      if (typeof t === 'number') return new Map([[books[t].id, books[t].level]]);
+      const m = enchOf(t[0]);
+      for (const [id, l] of enchOf(t[1])) m.set(id, m.has(id) ? merge(m.get(id), l, id) : l);
+      return m;
+    };
+    const leaves = t => [...enchOf(t)].map(name);
+    const hasItem = t => t === 'item' || (Array.isArray(t) && t.some(hasItem));
+    const thing = t => ({ title: hasItem(t) ? item : typeof t === 'number' ? 'Book' : 'Combined book', list: leaves(t).join(', ') });
+    // Books that are more than this item needs: a lower level merges to the same result
+    // (the anvil charges the final level either way), or the book adds nothing at all.
+    const hints = books.flatMap(b => {
+      const e = has[b.id];
+      if (!e || b.level <= 1) return [];
+      if (b.level < e) return [`The ${name([b.id, b.level])} book adds nothing: the item already has ${name([b.id, e])}.`];
+      if (b.level > e && merge(e, e, b.id) === merge(e, b.level, b.id))
+        return [`A ${name([b.id, e])} book gives the same ${name([b.id, merge(e, e, b.id)])} at the same cost, so you can keep the ${name([b.id, b.level])} book.`];
+      return [];
+    });
+    $('out').innerHTML = `${hints.map(h => `<p class="hint">${h}</p>`).join('')}<div class="total"><b>${p.total}</b><span>levels in ${p.steps.length} step${p.steps.length > 1 ? 's' : ''}</span></div>
+      <ol class="steps">${p.steps.map((s, i) => { const a = thing(s.target), b = thing(s.sacrifice); return `<li class="in" style="--i:${i}">
+        <div class="pair"><span class="thing"><b>${a.title}</b><small>${a.list || 'no enchantments yet'}</small></span><span class="plus">+</span>
+        <span class="thing"><b>${b.title}</b><small>${b.list}</small></span></div>
+        <span class="cost${s.cost >= 30 ? ' high' : ''}">${s.cost} lv</span></li>`; }).join('')}</ol>
+      <p class="note">Result: ${item.toLowerCase()} with ${leaves(p.steps.at(-1) ? [p.steps.at(-1).target, p.steps.at(-1).sacrifice] : 'item').join(', ')}.
+      Put the left one in the first anvil slot. Afterwards the ${item.toLowerCase()} counts ${p.work} anvil use${p.work === 1 ? '' : 's'}, so its next repair or book costs ${2 ** p.work - 1} extra levels.</p>`;
+    lastText = p.steps.map((s, i) => { const a = thing(s.target), b = thing(s.sacrifice);
+      return `${i + 1}. ${a.title}${a.list ? ` (${a.list})` : ''} + ${b.title} (${b.list}): ${s.cost} levels`; }).join('\n')
+      + `\nTotal: ${p.total} levels`;
+  };
+
+  $('items').onchange = () => { drawEnch(); render(); };
+  // Ticking one unticks what cannot share the item with it, on the item or in the books.
+  // The same enchantment in both is fine: the book upgrades it.
+  const pick = e => {
+    const box = e.target.closest('.chip').querySelector('input');
+    if (e.target.matches('.lvl')) box.checked = true;
+    if (box.checked) {
+      const rivals = EXCLUSIVE.filter(g => g.includes(box.value)).flat().filter(id => id !== box.value);
+      document.querySelectorAll('#ench input:checked, #have input:checked').forEach(c => rivals.includes(c.value) && (c.checked = false));
+    }
+    render();
+  };
+  $('ench').onchange = $('have').onchange = pick;
+  $('work').onchange = render;
+  $('copy').onclick = () => lastText && WASD.copy($('copy'), lastText);
+  drawEnch(); render();
+})();
+</script>
+</body>
+</html>

@@ -64,6 +64,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0; min-height: 100vh; padding-left: 72px;
   background: var(--bg); color: var(--text);
@@ -183,6 +184,32 @@ a.dot:active svg.ic { transform: scale(.93); }
 .logo:hover b:nth-child(4) { animation-delay: 180ms; }
 @keyframes press { 40% { transform: translateY(3px); box-shadow: 0 0 0 transparent; } }
 
+/* Tool lists (home and hub pages): one hover highlight springs from row to row. */
+.in { animation: enter .55s var(--enter) both; animation-delay: calc(var(--i) * 60ms); }
+.tools-h { margin: 36px 0 10px 4px; font: 500 13px var(--mono); color: var(--muted); }
+.tools { position: relative; margin: 0; padding: 6px; }
+.tools .hl { left: 6px; right: 6px; height: 56px; border-radius: 10px; opacity: 0; pointer-events: none;
+  background: color-mix(in srgb, var(--text) 6%, transparent); border: 0; }
+.tools:hover .hl { opacity: 1; }
+.trow {
+  position: relative; display: grid; grid-template-columns: 22px 170px 1fr auto; gap: 14px; align-items: center;
+  height: 56px; padding: 0 14px; border-radius: 10px; color: var(--text); text-decoration: none;
+}
+.trow svg.ic { color: var(--muted); }
+a.trow:hover svg.ic { transform: scale(1.15) rotate(-6deg); color: var(--accent); }
+a.trow:active { transform: scale(.98); transition: transform .15s var(--spring); }
+.trow b { font-weight: 600; }
+.trow span { color: var(--muted); font-size: 15px; }
+.trow small { font: 12px var(--mono); color: var(--faint); }
+a.trow small { color: var(--text); transition: transform .25s var(--spring); }
+a.trow:hover small { transform: translateX(-3px); }
+.trow.soon b, .trow.soon svg.ic { opacity: .5; }
+.head + .tools { margin-top: 28px; }
+@media (max-width: 640px) {
+  .trow { grid-template-columns: 20px 1fr auto; }
+  .trow span { display: none; }
+}
+
 /* Copy: morphs into a checkmark. */
 .copy { position: relative; gap: 8px; grid-auto-flow: column; }
 .copy svg { width: 16px; height: 16px; }
@@ -290,7 +317,52 @@ input[type=range] { accent-color: var(--c); width: 100%; }
 .filters legend { padding: 0; margin-bottom: 10px; }
 .result-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .result-head .label { margin-right: auto; }
+/* Coordinate fieldsets: <fieldset class="side"><legend> + .xyz labels with inputs. */
+.side {
+  margin: 0; padding: 16px; border-radius: 12px; min-width: 0;
+  background: var(--raised); border: 1px solid var(--panel-border);
+}
+.side legend { float: left; width: 100%; padding: 0; margin-bottom: 12px; font: 600 15px var(--head); }
+.xyz { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; clear: both; }
+.xyz label { display: grid; gap: 6px; min-width: 0; }
+.xyz input {
+  width: 100%; height: 44px; padding: 0 12px; border-radius: 10px;
+  background: var(--control); border: 1px solid var(--control-border); color: var(--text);
+  font: 500 15px var(--mono); transition: border-color .2s;
+}
+.xyz input:focus { border-color: var(--c); outline: none; }
+.xyz input:invalid { border-color: var(--error); }
+.xyz input.tick { animation: tick .3s var(--spring); }
+@keyframes tick { 40% { transform: translateY(-3px); color: var(--c); } }
 /* Load jar panel (shared/jar.js) */
 .jar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .jar p { margin: 0; flex: 1 1 280px; color: var(--muted); font-size: 13px; }
 .jar input { display: none; }
+/* Substitute picker (shared/swap.js): pops from the clicked block, options drop in one by one. */
+.swap-pop {
+  position: absolute; z-index: 40; width: min(320px, calc(100vw - 16px)); padding: 10px; border-radius: 16px;
+  background: var(--panel); border: 1px solid var(--panel-border); box-shadow: var(--shadow-hi);
+  animation: pop-in .3s var(--spring) both;
+}
+.swap-pop.out { animation: pop-out .15s ease-in both; }
+@keyframes pop-in { from { opacity: 0; transform: scale(.85) translateY(-6px); } }
+@keyframes pop-out { to { opacity: 0; transform: scale(.92); } }
+.swap-pop .tile { display: block; width: 32px; height: 32px; flex: none; border-radius: 7px; box-shadow: 0 3px 0 -1px rgb(0 0 0 / .25); }
+.swap-pop header, .swap-list button { display: flex; align-items: center; gap: 12px; }
+.swap-pop header { padding: 4px 6px 10px; border-bottom: 1px solid var(--panel-border); }
+.swap-pop b { display: block; font-size: 14px; font-weight: 600; line-height: 1.25; }
+.swap-pop small { display: block; color: var(--faint); font: 11px var(--mono); overflow-wrap: anywhere; }
+.swap-list { display: grid; margin-top: 6px; max-height: 50vh; overflow-y: auto; }
+.swap-list button {
+  all: unset; display: flex; gap: 12px; padding: 7px 6px; border-radius: 10px; cursor: pointer; text-align: left;
+  animation: drop .35s var(--spring) both; animation-delay: calc(var(--i) * 35ms);
+  transition: background .15s, transform .2s var(--spring);
+}
+.swap-list button:hover { background: color-mix(in srgb, var(--text) 6%, transparent); }
+.swap-list button:hover .tile { transform: translateY(-2px) rotate(-4deg); }
+.swap-list button:active { transform: scale(.96); }
+.swap-list button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.swap-pop footer { display: flex; gap: 8px; padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--panel-border); }
+.swap-pop footer .btn { flex: 1; height: 38px; font-size: 13px; }
+/* A tile the visitor swapped by hand. */
+.swapped .tile { outline: 2px dashed var(--accent); outline-offset: 3px; }

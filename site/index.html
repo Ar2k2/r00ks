@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WASD · Minecraft Java tools</title>
-<meta name="description" content="Tools for Minecraft Java Edition: snapshot breakdowns, block gradients, seed tools and building helpers.">
+<meta name="description" content="Tools for Minecraft Java Edition: snapshot breakdowns, block color tools, world helpers and game mechanics.">
 <link rel="stylesheet" href="shared/shell.css">
 <style>
   .top { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
@@ -35,32 +35,9 @@
   .actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 24px 24px; }
   .actions .btn { display: inline-flex; gap: 8px; padding: 0 18px; }
 
-  /* Tools: a list whose hover highlight springs from row to row. */
-  .tools-h { margin: 44px 0 10px 4px; font: 500 13px var(--mono); color: var(--muted); }
-  .tools { position: relative; margin: 0; padding: 6px; }
-  .tools .hl { left: 6px; right: 6px; height: 56px; border-radius: 10px; opacity: 0; pointer-events: none;
-    background: color-mix(in srgb, var(--text) 6%, transparent); border: 0; }
-  .tools:hover .hl { opacity: 1; }
-  .row {
-    position: relative; display: grid; grid-template-columns: 22px 150px 1fr auto; gap: 14px; align-items: center;
-    height: 56px; padding: 0 14px; border-radius: 10px; color: var(--text); text-decoration: none;
-  }
-  .row svg.ic { color: var(--muted); }
-  a.row:hover svg.ic { transform: scale(1.15) rotate(-6deg); color: var(--accent); }
-  a.row:active { transform: scale(.98); transition: transform .15s var(--spring); }
-  .row b { font-weight: 600; }
-  .row span { color: var(--muted); font-size: 15px; }
-  .row small { font: 12px var(--mono); color: var(--faint); }
-  a.row small { color: var(--text); transition: transform .25s var(--spring); }
-  a.row:hover small { transform: translateX(-3px); }
-  .row.soon b, .row.soon svg.ic { opacity: .5; }
-
-  .in { animation: enter .55s var(--enter) both; animation-delay: calc(var(--i) * 60ms); }
   footer { margin-top: 44px; color: var(--faint); font: 12px var(--mono); }
 
   @media (max-width: 640px) {
-    .row { grid-template-columns: 20px 1fr auto; }
-    .row span { display: none; }
     .changes li { grid-template-columns: 1fr; gap: 2px; }
   }
 </style>
@@ -84,8 +61,7 @@
     <div class="actions" id="latest-actions"></div>
   </article>
 
-  <h2 class="tools-h in" style="--i:2">Tools</h2>
-  <nav class="panel tools in" style="--i:3" aria-label="All tools"><i class="hl"></i></nav>
+  <div data-all-tools></div>
 
   <footer>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</footer>
 </main>
@@ -128,12 +104,6 @@
     return `<i style="--b:color-mix(in oklab, ${latest.strip[i]} ${100 - f}%, ${latest.strip[i + 1]});--k:${k}"></i>`;
   }).join('');
 
-  // Tool rows come from the same list as the rail and drawer.
-  const list = document.querySelector('.tools'), hl = list.querySelector('.hl');
-  list.insertAdjacentHTML('beforeend', WASD.tools.filter(t => t.id !== 'home').map(t => t.built
-    ? `<a class="row" href="${WASD.root}${t.path}">${WASD.icon(t.id)}<b>${t.name}</b><span>${t.desc}</span><small>Open →</small></a>`
-    : `<div class="row soon">${WASD.icon(t.id)}<b>${t.name}</b><span>${t.desc}</span><small>soon</small></div>`).join(''));
-  list.querySelectorAll('.row').forEach(r => r.onmouseenter = () => hl.style.transform = `translateY(${r.offsetTop}px)`);
 </script>
 </body>
 </html>

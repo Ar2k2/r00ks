@@ -75,13 +75,15 @@
 <script src="../shared/shell.js"></script>
 <script src="engine.js"></script>
 <script src="../shared/jar.js"></script>
+<script src="../shared/swap.js"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
   const HEX = /^#[0-9a-f]{6}$/i;
   const { version, blocks } = await (await fetch('blocks.json')).json();
   const textures = new Map(); // texture path -> object URL, filled by "Load jar"
-  let last = [];
+  let last = [], pool = [], inputs = '';
+  const subs = new Map(); // step index -> block the visitor swapped in
 
   const filters = {
     smooth: b => b.noise < 0.05,
@@ -100,15 +102,18 @@
     $('ideal').style.background = `linear-gradient(to right in oklab, ${from}, ${to})`;
 
     const view = document.querySelector('[name=view]:checked').value;
-    const pool = blocks.filter(b => b.views.includes(view) &&
+    pool = blocks.filter(b => b.views.includes(view) &&
       ($('wool').checked || !b.id.endsWith('_wool')) &&
       Object.entries(filters).every(([k, f]) => !f || !$(k).checked || f(b)));
-    const row = Gradient.pick(pool, from, to, steps, { avoidRepeats: $('norepeat').checked });
+    // Swaps hold until a setting changes.
+    const now = [from, to, steps, view, ...[...document.querySelectorAll('.filters input')].map(c => c.checked)].join();
+    if (now !== inputs) { subs.clear(); inputs = now; }
+    const row = Gradient.pick(pool, from, to, steps, { avoidRepeats: $('norepeat').checked }).map((b, i) => subs.get(i) ?? b);
 
     // Only tiles whose block changed drop in again, so dragging the slider stays calm.
     $('row').innerHTML = row.map((b, i) => {
       const tex = textures.get(b.tex);
-      return `<li class="${last[i] === b ? 'same' : ''}" style="--i:${i}"><button class="pick" data-i="${i}" style="--c:${b.hex}" title="Copy minecraft:${b.id}">
+      return `<li class="${last[i] === b ? 'same' : ''}${subs.has(i) ? ' swapped' : ''}" style="--i:${i}"><button class="pick" data-i="${i}" style="--c:${b.hex}" title="Swap or copy ${b.name}" aria-haspopup="dialog">
         <div class="tile${tex ? ' tex' : ''}" style="--hex:${b.hex}${tex ? `;--tex:url(${tex})` : ''}"></div>
         <b>${b.name}</b><small>${b.id}${b.face ? ' · ' + b.face : ''}</small></button></li>`;
     }).join('') || '';
@@ -162,16 +167,17 @@
   $('copy').onclick = () => WASD.copy($('copy'),
     last.map((b, i) => `${i + 1}. ${b.name}${b.face ? ` (${b.face})` : ''}  minecraft:${b.id}`).join('\n'));
 
-  // Click a block: it hops and its ID is copied.
-  $('row').onclick = async e => {
+  // Click a block: it hops and opens substitutes, with its ID one click away.
+  $('row').onclick = e => {
     const btn = e.target.closest('.pick');
     if (!btn) return;
-    const b = last[btn.dataset.i], small = btn.querySelector('small'), text = small.textContent;
+    const i = +btn.dataset.i, b = last[i];
     btn.classList.remove('hop'); void btn.offsetWidth; btn.classList.add('hop'); // restart the hop
-    try { await navigator.clipboard.writeText('minecraft:' + b.id); } catch { return; }
-    btn.classList.add('copied'); small.textContent = 'copied!';
-    clearTimeout(btn.t);
-    btn.t = setTimeout(() => { btn.classList.remove('copied'); small.textContent = text; }, 1200);
+    const actions = [{ label: 'Copy ID', run: async a => {
+      try { await navigator.clipboard.writeText('minecraft:' + b.id); a.textContent = 'Copied'; } catch { a.textContent = 'Copy failed'; }
+    } }];
+    if (subs.has(i)) actions.push({ label: 'Undo swap', run: () => { Swap.close(); subs.delete(i); render(); } });
+    Swap.open(btn, b, pool, textures, { onPick: n => { subs.set(i, n); render(); }, actions });
   };
 
   // Load textures from a jar or resource pack, entirely in the browser.

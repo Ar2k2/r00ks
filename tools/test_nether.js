@@ -1,6 +1,6 @@
 // Checks for the Nether converter. Run: node tools/test_nether.js
 const assert = require('assert');
-const { toNether, toOverworld, parse } = require('../site/utilities/nether.js');
+const { toNether, toOverworld, parse } = require('../site/nether/nether.js');
 
 assert.deepStrictEqual([800, 807, 808, 0, -1, -8, -9, 12.9].map(toNether), [100, 100, 101, 0, -1, -1, -2, 1]);
 assert.deepStrictEqual([100, -1, 0, 1.5].map(toOverworld), [800, -8, 0, 8]);

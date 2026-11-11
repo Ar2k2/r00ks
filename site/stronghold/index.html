@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stronghold finder · WASD</title>
+<meta name="description" content="Find a Minecraft Java stronghold by triangulating two Eye of Ender throws, with ring and Nether coordinates.">
+<link rel="stylesheet" href="../shared/shell.css">
+<style>
+  .throws { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .how { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+  .how b { font-weight: 600; color: var(--text); }
+
+  .found { display: grid; grid-template-columns: 1fr auto; gap: 12px 20px; align-items: start; }
+  .found p { margin: 6px 0 0; }
+  .coords { font: 700 clamp(28px, 4vw, 40px)/1.1 var(--mono); letter-spacing: -.02em; }
+  .facts { list-style: none; margin: 18px 0 0; padding: 0; }
+  .facts li { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 10px 0; border-top: 1px solid var(--panel-border); }
+  .facts .label { padding-top: 2px; }
+  .warn { margin: 14px 0 0; color: var(--warn); font-size: 14px; }
+  .note { margin: 14px 0 0; color: var(--faint); font-size: 13px; }
+
+  @media (max-width: 640px) {
+    .throws, .found { grid-template-columns: 1fr; }
+    .facts li { grid-template-columns: 1fr; gap: 2px; }
+  }
+</style>
+</head>
+<body data-tool="stronghold">
+<main>
+  <header class="head">
+    <h1>Stronghold finder</h1>
+    <p>Throw an Eye of Ender, stand where you threw it and line your crosshair up with its path. Note your position and facing, walk a good way to the side, and throw again. Two throws cross at the stronghold.</p>
+  </header>
+
+  <section class="panel" aria-label="Throws">
+    <p class="how">Fill in <b>X</b>, <b>Z</b> and the facing <b>angle</b> from F3 (the first number after "Facing"), or press <b>F3 + C</b> in game and paste here.</p>
+    <div class="throws" id="throws"></div>
+  </section>
+
+  <section class="panel found" aria-label="Result" aria-live="polite">
+    <div id="out"></div>
+    <button class="btn copy" id="copy" type="button" hidden>Copy</button>
+  </section>
+</main>
+<script>
+  // Both throws are built from one template.
+  document.getElementById('throws').innerHTML = [1, 2].map(n => `<fieldset class="side" data-n="${n}"><legend>Throw ${n}</legend>
+    <div class="xyz">${[['x', 'x'], ['z', 'z'], ['yaw', 'angle']].map(([k, l]) =>
+      `<label><span class="label">${l}</span><input data-k="${k}" aria-label="Throw ${n} ${l}" placeholder="${k === 'yaw' ? '-45.3' : '0'}"
+        inputmode="decimal" pattern="-?\\d+(\\.\\d+)?" autocomplete="off" spellcheck="false"></label>`).join('')}</div></fieldset>`).join('');
+</script>
+<script src="../shared/shell.js"></script>
+<script src="../nether/nether.js"></script>
+<script src="stronghold.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const NUM = /^-?\d+(\.\d+)?$/;
+  const { RINGS, cross, ring, stretch, parse } = Stronghold;
+  const ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
+  const r = Math.round, fmt = ([x, z]) => `${r(x)}, ${r(z)}`;
+  let target = null;
+
+  const read = n => {
+    const box = document.querySelector(`.side[data-n="${n}"]`), v = {};
+    for (const k of ['x', 'z', 'yaw']) {
+      const s = box.querySelector(`[data-k=${k}]`).value.trim();
+      if (!NUM.test(s)) return null;
+      v[k] = +s;
+    }
+    return v;
+  };
+
+  const render = () => {
+    const a = read(1), b = read(2), out = $('out');
+    target = null; $('copy').hidden = true;
+    if (!a) { out.innerHTML = '<p class="empty">Fill in the first throw to start.</p>'; return; }
+    if (!b) {
+      const s = stretch(a);
+      out.innerHTML = s
+        ? `<span class="label">One throw so far</span><p>From here the line runs through the first ring between <b>${fmt(s[0])}</b> and <b>${fmt(s[1])}</b>. Most strongholds near spawn sit in this stretch, so a second throw along the way pins it down.</p>`
+        : '<p class="empty">Add a second throw, at least a couple of hundred blocks to the side of the first.</p>';
+      return;
+    }
+    const c = cross(a, b);
+    if (c.error) {
+      out.innerHTML = `<p class="empty">${c.error === 'parallel'
+        ? 'The two lines are almost parallel, so they never meet in a useful spot. Walk further to the side of your first throw and try again.'
+        : 'The lines cross behind you. Check that each angle is the way the eye flew, not where you came from.'}</p>`;
+      return;
+    }
+    target = c;
+    const dist = Math.hypot(c.x, c.z), i = ring(dist), [lo, hi, count] = RINGS[i], walk = Math.hypot(c.x - b.x, c.z - b.z);
+    out.innerHTML = `<span class="label">Stronghold near</span><div class="coords in" style="--i:0">X ${r(c.x)} · Z ${r(c.z)}</div>
+      <ul class="facts">
+        <li class="in" style="--i:1"><span class="label">from throw 2</span><span>${r(walk)} blocks</span></li>
+        <li class="in" style="--i:2"><span class="label">nether</span><span>X ${Nether.toNether(c.x)} · Z ${Nether.toNether(c.z)}</span></li>
+        <li class="in" style="--i:3"><span class="label">ring</span><span>${dist >= lo && dist <= hi ? `The ${ORD[i]} ring (${lo} to ${hi} blocks from 0, 0), which holds ${count} strongholds.`
+          : `${r(dist)} blocks from 0, 0, outside every ring. The nearest is the ${ORD[i]} (${lo} to ${hi}), so recheck your throws.`}</span></li>
+      </ul>
+      ${c.angle < 8 ? `<p class="warn">The lines meet at only ${c.angle.toFixed(1)}°, so this could be off by a few hundred blocks. A throw further to the side sharpens it.</p>` : ''}
+      <p class="note">Dig down once you are within a few chunks: the eye points at the stronghold's starting staircase, which can sit a little away from the rooms.</p>`;
+    $('copy').hidden = false;
+  };
+
+  $('copy').onclick = () => target && WASD.copy($('copy'), `${r(target.x)} ~ ${r(target.z)}`);
+  $('throws').addEventListener('input', render);
+  // An F3 + C line fills the whole throw.
+  $('throws').addEventListener('paste', e => {
+    const p = parse(e.clipboardData.getData('text'));
+    if (!p) return;
+    e.preventDefault();
+    const box = e.target.closest('.side');
+    for (const k of ['x', 'z', 'yaw']) box.querySelector(`[data-k=${k}]`).value = k === 'yaw' ? p.yaw : Math.floor(p[k]);
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

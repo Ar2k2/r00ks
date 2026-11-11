@@ -72,16 +72,21 @@ controls and buttons 10px, keycaps 7px. Primary buttons are filled with the
 text color. No heavy black borders or hard offset shadows.
 
 **Layout:**
-- A 72px icon rail is always on the left: a menu button at the top, then an
-  icon per tool. Clicking an icon navigates; the active highlight springs to
-  it.
+- Tools are grouped into **categories** (Updates, Color & art, World, Build,
+  Mechanics), defined with the tool list in `shell.js`. Each category with a
+  built tool has a hub page (`color/`, `world/`, `mechanics/`; Updates links
+  straight to Snapshots). Add a hub when a category gets its first tool.
+- A 72px icon rail is always on the left: a menu button at the top, then home
+  and an icon per category. Clicking an icon navigates; the active highlight
+  springs to the current tool's category.
 - The menu button slides a ~312px drawer **over** the page, with a dimmed
   scrim behind it. Picking a tool slides the drawer highlight first, then the
   drawer closes about 300ms later. The X button or scrim also closes it.
-- The drawer has the WASD keycap logo, grouped tool list with section headers,
+- The drawer has the WASD keycap logo, every tool grouped under its category,
   and "soon" tags on unbuilt tools.
 - Home leads with a featured card (latest snapshot, or the newest tool until
-  snapshot pages exist) with the block color strip, then a list of tools.
+  snapshot pages exist) with the block color strip, then the tools listed by
+  category.
 - **No keyboard shortcuts.** The owner explicitly removed them.
 
 **Motion (the top priority: every click should feel satisfying):**

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image mosaic · WASD</title>
+<meta name="description" content="Turn a picture into a wall or floor of Minecraft Java blocks, with a block count. The image never leaves your browser.">
+<link rel="stylesheet" href="../shared/shell.css">
+<style>
+  .controls { display: grid; grid-template-columns: auto 1fr; gap: 16px 20px; align-items: end; }
+  .controls .view { grid-column: auto; }
+  .size { display: grid; gap: 8px; }
+  .size output { font: 500 13px var(--mono); color: var(--text); }
+  .file input { display: none; }
+  .file { cursor: pointer; justify-self: start; }
+  .help { margin: 0; align-self: center; color: var(--faint); font-size: 13px; }
+
+  .stage { margin-top: 16px; display: grid; place-items: center; padding: 12px; border-radius: 12px;
+    background: repeating-conic-gradient(var(--raised) 0 25%, var(--control) 0 50%) 0 0 / 16px 16px; }
+  #art { display: block; max-width: 100%; max-height: 70vh; image-rendering: pixelated; cursor: crosshair;
+    animation: drop .5s var(--spring) both; }
+  .spot { min-height: 1.5em; }
+  @media (max-width: 640px) { .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-tool="mosaic">
+<main>
+  <header class="head">
+    <h1>Image mosaic</h1>
+    <p>Pick a picture and it becomes a wall or floor of blocks, one block per pixel, matched by color in OKLab. Your image is read here in the browser and never uploaded.</p>
+  </header>
+
+  <section class="panel controls" aria-label="Settings">
+    <label class="btn primary file">Choose image<input type="file" id="file" accept="image/*"></label>
+    <label class="size"><span class="label">Width in blocks: <output id="dims">64</output></span>
+      <input type="range" id="width" min="16" max="256" step="8" value="64"></label>
+    <label class="size"><span class="label">Block types: <output id="kinds-out">no limit</output></span>
+      <input type="range" id="kinds" min="2" max="41" value="41" aria-describedby="kinds-help"></label>
+    <p class="help" id="kinds-help">Fewer block types means a simpler build and fewer blocks to gather, with less detail.</p>
+    <div class="view" role="radiogroup" aria-label="Which face you will see">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="view" value="t"><span>Floor <small>top</small></span></label>
+      <label><input type="radio" name="view" value="s" checked><span>Wall <small>side</small></span></label>
+    </div>
+    <fieldset class="filters">
+      <legend class="label">Filters</legend>
+      <label class="chip"><input type="checkbox" id="smooth"><span>Smooth only</span></label>
+      <label class="chip"><input type="checkbox" id="wool" checked><span>Include wool</span></label>
+      <label class="chip"><input type="checkbox" id="survival" checked><span>Survival only</span></label>
+      <label class="chip"><input type="checkbox" id="nogravity" checked><span>No gravity blocks</span></label>
+      <label class="chip"><input type="checkbox" id="nolight"><span>No light sources</span></label>
+    </fieldset>
+  </section>
+
+  <section class="panel" aria-label="Result">
+    <div class="result-head">
+      <span class="label spot" id="spot">Choose an image to start.</span>
+    </div>
+    <div class="stage" id="stage" hidden><canvas id="art" aria-label="Block mosaic preview"></canvas></div>
+  </section>
+
+  <section class="panel" aria-label="Blocks needed" id="mats-panel" hidden>
+    <div class="result-head">
+      <span class="label" id="total"></span>
+      <button class="btn copy" id="copy">Copy list</button>
+    </div>
+    <ol class="row" id="mats"></ol>
+    <p class="meta" id="meta"></p>
+  </section>
+
+  <section class="panel jar" aria-label="Textures">
+    <p id="jar-text">The preview shows each block's average color. For real textures, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
+    <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
+  </section>
+</main>
+<script src="../shared/shell.js"></script>
+<script src="../gradient/engine.js"></script>
+<script src="mosaic.js"></script>
+<script src="../shared/jar.js"></script>
+<script src="../shared/swap.js"></script>
+<script>
+(async () => {
+  const $ = id => document.getElementById(id);
+  const { version, blocks } = await (await fetch('../gradient/blocks.json')).json();
+  const textures = new Map(); // texture path -> object URL, filled by "Load jar"
+  const images = new Map(); // object URL -> loaded Image
+  const MAX_H = 256;
+  let img = null, pool = [], cells = null, w = 0, h = 0, mats = [];
+  const subs = new Map(); // block -> block the visitor swapped in, everywhere in the picture
+
+  const filters = {
+    smooth: b => b.noise < 0.05,
+    survival: b => !b.flags?.includes('u'),
+    nogravity: b => !b.flags?.includes('g'),
+    nolight: b => !b.flags?.includes('l'),
+  };
+  const face = b => b.face ? ` (${b.face})` : '';
+  const loadImg = src => images.get(src) ?? images.set(src, new Promise(ok => {
+    const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src;
+  })).get(src);
+
+  const render = async () => {
+    if (!img) return;
+    const view = document.querySelector('[name=view]:checked').value;
+    pool = blocks.filter(b => b.views.includes(view) && ($('wool').checked || !b.id.endsWith('_wool')) &&
+      Object.entries(filters).every(([k, f]) => !$(k).checked || f(b)));
+    w = +$('width').value; h = Math.max(1, Math.round(w * img.height / img.width));
+    if (h > MAX_H) { h = MAX_H; w = Math.max(1, Math.round(h * img.width / img.height)); }
+    $('dims').textContent = `${w} × ${h}`;
+
+    // Shrink the picture to one pixel per block, then match each pixel.
+    // shortcut: the browser averages in sRGB, not linear light; fine at these sizes, upgrade if colors look muddy.
+    const small = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true });
+    small.imageSmoothingQuality = 'high';
+    small.drawImage(img, 0, 0, w, h);
+    const kinds = +$('kinds').value, limit = kinds > 40 ? Infinity : kinds; // the top of the slider means no limit
+    $('kinds-out').textContent = isFinite(limit) ? limit : 'no limit';
+    cells = pool.length ? Mosaic.build(small.getImageData(0, 0, w, h).data, pool, limit) : new Int32Array(w * h).fill(-1);
+    // Swaps: a substitute the filters now hide is skipped rather than snuck back in.
+    const to = pool.map(b => { const k = pool.indexOf(subs.get(b)); return k < 0 ? -1 : k; });
+    cells = cells.map(k => k >= 0 && to[k] >= 0 ? to[k] : k);
+
+    // Draw: flat colors, or 16px textures when a jar is loaded.
+    const art = $('art'), px = textures.size ? 16 : 1, ctx = art.getContext('2d');
+    art.width = w * px; art.height = h * px;
+    art.style.width = `min(100%, ${Math.max(w * 6, 480)}px)`;
+    art.style.aspectRatio = `${w} / ${h}`;
+    ctx.imageSmoothingEnabled = false;
+    const tex = new Map(await Promise.all([...new Set(cells)].filter(k => k >= 0).map(async k =>
+      [k, textures.has(pool[k].tex) ? await loadImg(textures.get(pool[k].tex)) : null])));
+    for (let p = 0; p < cells.length; p++) {
+      const k = cells[p];
+      if (k < 0) continue;
+      const x = p % w * px, y = Math.floor(p / w) * px;
+      if (tex.get(k)) ctx.drawImage(tex.get(k), 0, 0, 16, 16, x, y, px, px);
+      else { ctx.fillStyle = pool[k].hex; ctx.fillRect(x, y, px, px); }
+    }
+    $('stage').hidden = false;
+    art.style.animation = 'none'; void art.offsetWidth; art.style.animation = '';
+
+    // Blocks needed, most first; tiles drop in one by one (capped so long lists stay quick).
+    mats = Mosaic.count(cells, pool);
+    const total = mats.reduce((a, m) => a + m.count, 0);
+    $('mats-panel').hidden = false;
+    $('total').textContent = `${total} blocks · ${mats.length} kinds`;
+    const swapped = new Set(subs.values());
+    $('mats').innerHTML = mats.map(({ block: b, count: c }, i) => { const t = textures.get(b.tex); return `<li class="${swapped.has(b) ? 'swapped' : ''}" style="--i:${Math.min(i, 14)}">
+      <button class="pick" data-i="${i}" title="Swap ${b.name} for another block" aria-haspopup="dialog">
+      <div class="tile${t ? ' tex' : ''}" style="--hex:${b.hex}${t ? `;--tex:url(${t})` : ''}"></div>
+      <b>${b.name}${face(b)}</b><small>${c} · ${Mosaic.stacks(c)}</small></button></li>`; }).join('');
+    $('meta').textContent = pool.length
+      ? `Click a block to swap it for a similar one. ${pool.length} block faces considered · data from Java ${version}`
+      : 'No blocks match these filters. Try turning some off.';
+    $('spot').textContent = 'Hover the preview to see each block.';
+  };
+
+  let queued;
+  const update = () => queued ||= requestAnimationFrame(() => { queued = 0; render(); });
+
+  $('file').onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const i = new Image();
+    i.onload = () => { URL.revokeObjectURL(i.src); img = i; subs.clear(); update(); };
+    i.onerror = () => { $('spot').textContent = `Could not read ${f.name} as an image.`; };
+    i.src = URL.createObjectURL(f);
+    e.target.value = '';
+  };
+  $('width').oninput = $('kinds').oninput = update;
+  document.querySelectorAll('.filters input, [name=view]').forEach(el => el.onchange = update);
+
+  // Hover: which block sits where. Rows count from the top of the picture.
+  $('art').onmousemove = e => {
+    if (!cells) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left) / r.width * w), y = Math.floor((e.clientY - r.top) / r.height * h);
+    const k = cells[y * w + x];
+    if (k === undefined) return;
+    $('spot').textContent = `column ${x + 1}, row ${y + 1} · ${k < 0 ? 'empty (transparent)' : pool[k].name + face(pool[k])}`;
+  };
+
+  // Click a block in the list: swap it for a close color everywhere it is used.
+  $('mats').onclick = e => {
+    const btn = e.target.closest('.pick');
+    if (!btn) return;
+    const b = mats[btn.dataset.i].block;
+    btn.classList.remove('hop'); void btn.offsetWidth; btn.classList.add('hop');
+    const undo = [...subs].filter(([, n]) => n === b).map(([o]) => o);
+    const actions = undo.length ? [{ label: 'Undo swap', run: () => { Swap.close(); undo.forEach(o => subs.delete(o)); update(); } }] : [];
+    Swap.open(btn, b, pool, textures, { actions, onPick: n => {
+      // Everything showing this block now shows the new one, including earlier swaps onto it.
+      for (const [o, m] of subs) if (m === b) o === n ? subs.delete(o) : subs.set(o, n);
+      subs.set(b, n);
+      update();
+    } });
+  };
+
+  $('copy').onclick = () => WASD.copy($('copy'),
+    mats.map(({ block: b, count: c }) => `${c}\t${b.name}${face(b)}\tminecraft:${b.id}`).join('\n'));
+
+  Jar.wire($('jar'), $('jar-text'), blocks, textures, update);
+})();
+</script>
+</body>
+</html>
