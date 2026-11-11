@@ -4,7 +4,7 @@
    average color of the latest snapshot's featured block (from blocks.json).
    Publishing a snapshot = update --seed here and the fallback block below. */
 :root {
-  --seed: #54a587; /* oxidized copper */
+  --seed: #75a8fd; /* blue ice: Java 26.4-snapshot-8 */
 
   --accent: oklch(from var(--seed) .52 clamp(.07, c, .15) h);
   --on-accent: #fff;
@@ -52,14 +52,14 @@
     --scrim: rgb(0 0 0 / .55);
   }
 }
-/* Browsers without relative color syntax get fixed copper values. */
+/* Browsers without relative color syntax get fixed values for the current seed. */
 @supports not (color: oklch(from red l c h)) {
-  :root { --accent: #3f8f72; --bg: #f3f4f2; --panel: #fff; --raised: #f8f9f8; --control: #fbfbfa;
-    --panel-border: #e0e3e0; --control-border: #cdd1cd; }
+  :root { --accent: #3d6fc4; --bg: #f2f4f7; --panel: #fff; --raised: #f7f9fb; --control: #fafbfd;
+    --panel-border: #dfe3ea; --control-border: #cbd1db; }
   @media (prefers-color-scheme: dark) {
-    :root { --accent: #5fb898; --on-accent: #10231b; --bg: #0f1412; --panel: #161c19; --raised: #131816;
-      --control: #131816; --panel-border: #243029; --control-border: #2f3c35;
-      --text: #eef1ef; --muted: #a8b1ac; --faint: #7f8a84; }
+    :root { --accent: #9cbcf5; --on-accent: #101b2e; --bg: #0f1218; --panel: #161a22; --raised: #13161d;
+      --control: #13161d; --panel-border: #242a36; --control-border: #2f3746;
+      --text: #eef1f6; --muted: #a8b0bf; --faint: #7f8899; }
   }
 }
 

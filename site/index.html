@@ -95,10 +95,16 @@
   // { label: 'Latest snapshot', version, date, title, summary, changes: [[kind, text, key]], link, cta }
   // strip: average colors (blocks.json) of the featured block's family; its last color is --seed in shell.css.
   const latest = {
-    label: 'New tool', version: 'Java 26.3', title: 'Nether coordinate converter',
-    summary: 'Type Overworld or Nether coordinates and the other side follows. Paste an F3 + C line and it lands on the right side.',
-    link: 'utilities/', cta: 'Open the converter',
-    strip: ['#c26d52', '#a47e69', '#6d9b71', '#54a587'], // copper oxidizing
+    label: 'Latest snapshot', version: '26.4-snapshot-8', date: 'Nov 10, 2026',
+    title: 'Frostbite, Ice Caves and a stack of new ice blocks',
+    summary: 'Since 26.3 the theme is winter: a new icy mob, a cave biome, a throwable ice ball and full sets of calcite, packed ice and snow bricks.',
+    changes: [
+      ['mob', 'Frostbite, a new zombie that burns in daylight', 'frostbite'],
+      ['biome', 'Ice Caves, a new underground biome', 'ice_caves'],
+      ['blocks', 'Icicles, brittle ice, ice crystals and building sets', 'icicle'],
+    ],
+    link: 'snapshots/java/26.4-snapshot-8/since-release/', cta: 'Read the breakdown',
+    strip: ['#f9fefe', '#8fb4fb', '#75a8fd'], // snow block, packed ice, blue ice
   };
 
   const $ = id => document.getElementById(id);

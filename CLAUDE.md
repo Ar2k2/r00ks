@@ -1,6 +1,7 @@
 # WASD — Minecraft tools site
 
-WASD is a website of Minecraft **Java Edition** tools: snapshot breakdowns,
+WASD is a website of Minecraft **Java Edition** tools (plus Bedrock preview
+breakdowns): snapshot breakdowns,
 block gradients, seed tools, building helpers and utilities. It is a personal
 project built from scratch. Prefer writing our own code over pulling in
 libraries, and ask before adding any dependency.
@@ -112,24 +113,43 @@ text color. No heavy black borders or hard offset shadows.
    gradient's color engine), structure finder (extends the slime chunk seed
    math), command and component builder.
 
-## Snapshot diff workflow (manual, owner-curated)
+## Snapshot and preview diffs (manual, owner-curated)
 
-1. The owner asks for the changes in a new snapshot.
-2. Read the new snapshot jar and the previous one straight from the local
-   Minecraft `versions` folder. Nothing gets uploaded.
-3. Run the diff scripts in `tools/`, which are saved once and reused, not
-   rewritten each time.
-4. Report findings, roughly in this priority: language key changes (often the
+Covers **Java snapshots** and **Bedrock previews**, each with its own list on
+the site. Every snapshot/preview page has two subpages:
+- **This update:** changes since the previous snapshot or preview.
+- **Since release:** everything changed since the last full release
+  (e.g. Java 26.3 → 26.4-snapshot-8, Bedrock 1.26.60.5 → 1.26.70.23 preview).
+
+**Scripts** (saved once and reused, not rewritten each time):
+- `python3 tools/java_diff.py [OLD] [NEW]` reads jars from the local launcher
+  `versions` folder. Defaults: newest snapshot vs the previous installed one;
+  `OLD=release` compares against the latest release. Registries are inferred
+  from files (blockstates, items, entity lang keys, sounds.json), not by
+  running game code. Ignores the DataVersion stamp in structure `.nbt` files.
+- `python3 tools/bedrock_diff.py [OLD] [NEW]` uses Mojang's official
+  `bedrock-samples` GitHub repo, cached in `tools/work/bedrock-samples`
+  (blobless clone, fetched each run). Tags: `v1.26.70.23-preview` for
+  previews, `v1.26.60.5` for releases. Registries come from
+  `metadata/vanilladata_modules`. Features behind experiments may show up in
+  lang and files before the registries.
+- Both print a markdown report and write full JSON to `tools/work/diff/`
+  (git-ignored). `python3 tools/test_diffs.py` pins a few known facts.
+
+**Workflow:**
+1. The owner asks for the changes in a new snapshot or preview.
+2. Run the scripts for both views (this update, and since release).
+3. Report findings, roughly in this priority: language key changes (often the
    earliest hint of unreleased content), registry changes (blocks, items,
    entities, sounds), data changes (worldgen, loot tables, recipes, tags),
    asset file paths, and code changes (new classes, methods, constants).
-5. Group related changes into likely features (for example a new lang key, a
-   texture path and a registry entry sharing a name are probably one block).
-6. **The owner decides what is important.** Only then write the snapshot page
-   and update the index, and publish only when told to.
+4. Group related changes into likely features (the scripts do a first pass by
+   shared names), and note which features exist on both editions.
+5. **The owner decides what is important.** Only then write the pages and
+   update the index, and publish only when told to.
 
 Pages show names, keys, paths and summaries only, never Mojang's actual
-files or code.
+files, text or code.
 
 ## Block gradient spec
 

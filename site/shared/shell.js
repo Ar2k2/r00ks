@@ -5,7 +5,7 @@
   const root = new URL('..', document.currentScript.src).href;
   const tools = [
     { id: 'home', name: 'Home', path: '', built: true },
-    { id: 'snapshots', name: 'Snapshots', path: 'snapshots/', group: 'Updates',
+    { id: 'snapshots', name: 'Snapshots', path: 'snapshots/', group: 'Updates', built: true,
       desc: 'What changed in each snapshot, read straight from the jar.' },
     { id: 'gradient', name: 'Gradient', path: 'gradient/', group: 'Color', built: true,
       desc: 'Smooth block gradients between any two colors.' },
