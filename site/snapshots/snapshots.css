@@ -1,4 +1,4 @@
-/* Shared by the snapshots index and every snapshot/preview page. */
+/* Shared by the snapshots index and every snapshot page. */
 .crumbs { margin-bottom: 18px; font: 13px var(--mono); color: var(--muted); }
 .crumbs a { color: var(--muted); text-decoration: none; }
 .crumbs a:hover { color: var(--text); }
@@ -26,9 +26,7 @@
 
 /* Feature cards drop in one by one. */
 .features { display: grid; gap: 14px; margin-top: 24px; }
-.feature { margin: 0; animation: enter .5s var(--enter) both; animation-delay: calc(120ms + var(--i) * 60ms);
-  transition: transform .25s var(--spring), box-shadow .25s; }
-.feature:hover { transform: translateY(-3px); box-shadow: var(--shadow-hi); }
+.feature { margin: 0; animation: enter .5s var(--enter) both; animation-delay: calc(120ms + var(--i) * 60ms); }
 .feature header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .feature .kind { font: 500 12px var(--mono); color: var(--accent); margin-right: 4px; }
 .feature h2 { font-size: 20px; letter-spacing: -.01em; }

@@ -1,5 +1,5 @@
-// Renders a snapshot/preview page from data.js.
-// The page's <body> says which: data-edition="java|bedrock" data-version="…" data-view="update|since".
+// Renders a snapshot page from data.js.
+// The page's <body> says which: data-edition="java" data-version="…" data-view="update|since".
 (() => {
   const { edition, version, view } = document.body.dataset;
   const ed = SNAPSHOTS[edition], e = ed.entries.find(x => x.v === version);
@@ -7,8 +7,6 @@
   const date = d => new Date(d + 'T00:00:00Z').toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
   const base = `${WASD.root}snapshots/${edition}/${e.v}/`;
   const v = e[view];
-  const label = edition === 'java' ? 'Java' : 'Bedrock';
-  const kind = e.preview ? 'preview' : 'snapshot';
 
   const feature = (f, i) => `<article class="panel feature" style="--i:${i}">
     <header><span class="kind">${esc(f.kind)}</span><h2>${esc(f.title)}</h2>
@@ -18,11 +16,11 @@
   </article>`;
 
   document.getElementById('page').innerHTML = `
-    <nav class="crumbs"><a href="${WASD.root}snapshots/">Snapshots</a> / <a href="${WASD.root}snapshots/#${edition}">${label}</a></nav>
+    <nav class="crumbs"><a href="${WASD.root}snapshots/">Snapshots</a></nav>
     <header class="head">
       <h1>${WASD.icon('snapshots')}${esc(e.v)}</h1>
       <p>${esc(e.title)}</p>
-      <div class="meta-line"><span>${label} ${kind}</span><span>${date(e.date)}</span></div>
+      <div class="meta-line"><span>Java snapshot</span><span>${date(e.date)}</span></div>
     </header>
     <nav class="seg" aria-label="Compare against"><i class="seg-hl"></i>
       <a href="${base}"${view === 'update' ? ' aria-current="page"' : ''}>This update<small>vs ${esc(e.prev)}</small></a>
