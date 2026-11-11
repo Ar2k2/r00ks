@@ -11,7 +11,7 @@
       desc: 'Smooth block gradients between any two colors.' },
     { id: 'mapart', name: 'Map art', path: 'mapart/', group: 'Color',
       desc: 'Turn an image into a map art block layout.' },
-    { id: 'palette', name: 'Palette', path: 'palette/', group: 'Color',
+    { id: 'palette', name: 'Palette', path: 'palette/', group: 'Color', built: true,
       desc: 'Build block palettes that sit well together.' },
     { id: 'seeds', name: 'Seed tools', path: 'seeds/', group: 'World',
       desc: 'Slime chunks and structures from a world seed.' },

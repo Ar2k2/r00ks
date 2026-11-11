@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Block palette · WASD</title>
+<meta name="description" content="Build Minecraft Java block palettes from one color or block, using color harmony in OKLab.">
+<link rel="stylesheet" href="../shared/shell.css">
+<style>
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; align-items: end; }
+  .search {
+    width: 100%; height: 44px; padding: 0 12px; border-radius: 10px;
+    background: var(--control); border: 1px solid var(--control-border); color: var(--text); font: 14px var(--body);
+  }
+  .group { margin-top: 22px; }
+  .group .row { margin-top: 10px; }
+  @media (max-width: 640px) { .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-tool="palette">
+<main>
+  <header class="head">
+    <h1>Block palette</h1>
+    <p>Start from a block or a color and get blocks that sit well with it: shades of the same hue, neighbors, or contrasting accents. Colors are matched in OKLab, and each block is used once.</p>
+  </header>
+
+  <section class="panel controls" aria-label="Settings">
+    <div class="view" role="radiogroup" aria-label="Which face you will see">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="view" value="t" checked><span>Top <small>floor</small></span></label>
+      <label><input type="radio" name="view" value="s"><span>Side <small>wall</small></span></label>
+    </div>
+    <label class="color"><span class="label">Start from a block</span>
+      <input class="search" id="block" list="names" placeholder="Oxidized Copper" spellcheck="false" autocomplete="off">
+      <datalist id="names"></datalist>
+    </label>
+    <label class="color"><span class="label">Or a color</span>
+      <div><input type="color" id="base-pick" value="#54a587" aria-label="Base color"><input class="hex" id="base" value="#54a587" pattern="#[0-9a-fA-F]{6}" spellcheck="false" aria-label="Base hex"></div>
+    </label>
+    <fieldset class="filters">
+      <legend class="label">Scheme</legend>
+      <label class="chip"><input type="radio" name="scheme" value="tonal" checked><span>Tonal</span></label>
+      <label class="chip"><input type="radio" name="scheme" value="analogous"><span>Analogous</span></label>
+      <label class="chip"><input type="radio" name="scheme" value="complementary"><span>Complementary</span></label>
+      <label class="chip"><input type="radio" name="scheme" value="triad"><span>Triad</span></label>
+    </fieldset>
+    <fieldset class="filters">
+      <legend class="label">Filters</legend>
+      <label class="chip"><input type="checkbox" id="smooth"><span>Smooth only</span></label>
+      <label class="chip"><input type="checkbox" id="wool" checked><span>Include wool</span></label>
+      <label class="chip"><input type="checkbox" id="survival" checked><span>Survival only</span></label>
+      <label class="chip"><input type="checkbox" id="nogravity"><span>No gravity blocks</span></label>
+      <label class="chip"><input type="checkbox" id="nolight"><span>No light sources</span></label>
+    </fieldset>
+  </section>
+
+  <section class="panel" aria-label="Result">
+    <div class="result-head">
+      <span class="label">Palette</span>
+      <button class="btn copy" id="copy">Copy list</button>
+    </div>
+    <div id="groups"></div>
+    <p class="meta" id="meta"></p>
+  </section>
+
+  <section class="panel jar" aria-label="Textures">
+    <p id="jar-text">Swatches show each block's average color. For real textures, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
+    <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
+  </section>
+</main>
+<script src="../shared/shell.js"></script>
+<script src="../gradient/engine.js"></script>
+<script src="palette.js"></script>
+<script src="../shared/jar.js"></script>
+<script>
+(async () => {
+  const $ = id => document.getElementById(id);
+  const HEX = /^#[0-9a-f]{6}$/i;
+  const { version, blocks } = await (await fetch('../gradient/blocks.json')).json();
+  const names = [...new Set(blocks.map(b => b.name))].sort();
+  $('names').innerHTML = names.map(n => `<option value="${n}">`).join('');
+  const textures = new Map(); // texture path -> object URL, filled by "Load jar"
+  let baseBlock = null, last = [];
+
+  const filters = {
+    smooth: b => b.noise < 0.05,
+    survival: b => !b.flags?.includes('u'),
+    nogravity: b => !b.flags?.includes('g'),
+    nolight: b => !b.flags?.includes('l'),
+  };
+  const groupName = h => h === null ? 'base' : h === 0 ? 'shades' : `${h > 0 ? '+' : '−'}${Math.abs(h)}° hue`;
+
+  const render = () => {
+    const view = document.querySelector('[name=view]:checked').value;
+    const scheme = document.querySelector('[name=scheme]:checked').value;
+    // A picked block shows the face that fits the view, if it has one.
+    if (baseBlock) baseBlock = blocks.find(b => b.id === baseBlock.id && b.views.includes(view)) ?? baseBlock;
+    const pool = blocks.filter(b => b.views.includes(view) &&
+      ($('wool').checked || !b.id.endsWith('_wool')) &&
+      Object.entries(filters).every(([k, f]) => !$(k).checked || f(b)));
+    const groups = Palette.build(pool, baseBlock ?? Gradient.hexToLab($('base').value), scheme);
+    const prev = new Set(last);
+    last = groups.flatMap(g => g.blocks);
+
+    let i = 0; // tiles drop in one by one across groups; unchanged ones stay put
+    $('groups').innerHTML = groups.map(g => `<div class="group"><span class="label">${groupName(g.hue)}</span><ol class="row">${
+      g.blocks.map(b => { const tex = textures.get(b.tex); return `<li class="${prev.has(b) ? 'same' : ''}" style="--i:${i}"><button class="pick" data-i="${i++}" title="Copy minecraft:${b.id}">
+        <div class="tile${tex ? ' tex' : ''}" style="--hex:${b.hex}${tex ? `;--tex:url(${tex})` : ''}"></div>
+        <b>${b.name}</b><small>${b.id}${b.face ? ' · ' + b.face : ''}</small></button></li>`; }).join('')}</ol></div>`).join('');
+    $('meta').textContent = groups.length
+      ? `${pool.length} block faces considered · data from Java ${version}`
+      : 'No blocks match these filters. Try turning some off.';
+  };
+
+  let queued;
+  const update = () => queued ||= requestAnimationFrame(() => { queued = 0; render(); });
+  const setColor = hex => { $('base').value = $('base-pick').value = hex; };
+
+  $('block').oninput = e => {
+    const name = e.target.value.trim().toLowerCase();
+    const b = blocks.find(b => b.name.toLowerCase() === name);
+    if (!b) return;
+    baseBlock = b; setColor(b.hex); update();
+  };
+  // Editing the color lets go of the picked block.
+  $('base-pick').oninput = e => { baseBlock = null; $('block').value = ''; $('base').value = e.target.value; update(); };
+  $('base').oninput = e => {
+    let v = e.target.value.trim();
+    if (!v.startsWith('#')) v = '#' + v;
+    if (!HEX.test(v)) return;
+    baseBlock = null; $('block').value = '';
+    $('base-pick').value = v.toLowerCase(); e.target.value = v; update();
+  };
+  document.querySelectorAll('.filters input, [name=view]').forEach(el => el.onchange = update);
+
+  $('copy').onclick = () => WASD.copy($('copy'),
+    last.map(b => `${b.name}${b.face ? ` (${b.face})` : ''}  minecraft:${b.id}`).join('\n'));
+
+  // Click a block: it hops and its ID is copied.
+  $('groups').onclick = async e => {
+    const btn = e.target.closest('.pick');
+    if (!btn) return;
+    const b = last[btn.dataset.i], small = btn.querySelector('small'), text = small.textContent;
+    btn.classList.remove('hop'); void btn.offsetWidth; btn.classList.add('hop');
+    try { await navigator.clipboard.writeText('minecraft:' + b.id); } catch { return; }
+    btn.classList.add('copied'); small.textContent = 'copied!';
+    clearTimeout(btn.t);
+    btn.t = setTimeout(() => { btn.classList.remove('copied'); small.textContent = text; }, 1200);
+  };
+
+  Jar.wire($('jar'), $('jar-text'), blocks, textures, () => { last = []; render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
