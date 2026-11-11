@@ -7,7 +7,7 @@
     { id: 'home', name: 'Home', color: '#2ee6c5', path: '', built: true },
     { id: 'snapshots', name: 'Snapshots', color: '#f5b041', path: 'snapshots/', group: 'Updates',
       desc: 'What changed in each snapshot, read straight from the jar.' },
-    { id: 'gradient', name: 'Gradient', color: '#f472b6', path: 'gradient/', group: 'Color',
+    { id: 'gradient', name: 'Gradient', color: '#f472b6', path: 'gradient/', group: 'Color', built: true,
       desc: 'Smooth block gradients between any two colors.' },
     { id: 'mapart', name: 'Map art', color: '#a78bfa', path: 'mapart/', group: 'Color',
       desc: 'Turn an image into a map art block layout.' },
@@ -20,10 +20,22 @@
     { id: 'utilities', name: 'Utilities', color: '#94a3b8', path: 'utilities/', group: 'Build',
       desc: 'Nether coordinates and other small helpers.' },
   ];
-  window.WASD = { root, tools };
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Small spark burst at (x, y). Colors cycle through `colors`.
+  const burst = (x, y, colors, count = 10) => {
+    if (reduced) return;
+    const fx = document.createElement('div');
+    fx.className = 'fx';
+    fx.style.cssText = `left:${x}px;top:${y}px;--k:${colors[0]}`;
+    fx.innerHTML = Array.from({ length: count }, (_, i) =>
+      `<i class="fx-spark" style="--a:${i * 360 / count + Math.random() * 24}deg;--d:${22 + Math.random() * 26}px;--k:${colors[i % colors.length]}"></i>`).join('');
+    document.body.append(fx);
+    setTimeout(() => fx.remove(), 700);
+  };
+  window.WASD = { root, tools, burst };
 
   const active = document.body.dataset.tool;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const logo = '<span class="logo" role="img" aria-label="WASD"><b>W</b><b>A</b><b>S</b><b>D</b></span>';
 
   // Built tools are links; unbuilt ones are inert spans.
