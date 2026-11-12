@@ -4,7 +4,7 @@
    average color of a block (from blocks.json). Changing it = update --seed here and the
    fallback block below. */
 :root {
-  --seed: #75a8fd; /* blue ice */
+  --seed: #c75b17; /* orange poplar leaves (Wilderness Bound, 26.3). Back to blue ice #75a8fd for 26.4. */
 
   --accent: oklch(from var(--seed) .52 clamp(.07, c, .15) h);
   --on-accent: #fff;
@@ -54,12 +54,12 @@
 }
 /* Browsers without relative color syntax get fixed values for the current seed. */
 @supports not (color: oklch(from red l c h)) {
-  :root { --accent: #3d6fc4; --bg: #f2f4f7; --panel: #fff; --raised: #f7f9fb; --control: #fafbfd;
-    --panel-border: #dfe3ea; --control-border: #cbd1db; }
+  :root { --accent: #ab4500; --bg: #f7f2f0; --panel: #fffdfc; --raised: #faf7f5; --control: #fcf9f8;
+    --panel-border: #e4dedb; --control-border: #d0c9c5; }
   @media (prefers-color-scheme: dark) {
-    :root { --accent: #9cbcf5; --on-accent: #101b2e; --bg: #0f1218; --panel: #161a22; --raised: #13161d;
-      --control: #13161d; --panel-border: #242a36; --control-border: #2f3746;
-      --text: #eef1f6; --muted: #a8b0bf; --faint: #7f8899; }
+    :root { --accent: #ff9965; --on-accent: #21120a; --bg: #150f0c; --panel: #1f1814; --raised: #1a1310;
+      --control: #1a1310; --panel-border: #312823; --control-border: #433833;
+      --text: #f2edeb; --muted: #b3a8a3; --faint: #887e79; }
   }
 }
 

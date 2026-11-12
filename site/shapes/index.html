@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circles &amp; spheres · R00K’s</title>
+<meta name="description" content="Block-by-block circles, spheres and domes for Minecraft Java, layer by layer.">
+<link rel="stylesheet" href="../shared/shell.css">
+<style>
+  .controls { display: grid; gap: 18px; }
+  /* Three-way version of the shared pill. */
+  .view.three { grid-template-columns: repeat(3, 1fr); }
+  .three .view-hl { width: calc((100% - 8px) / 3); }
+  .three:has([value=sphere]:checked) .view-hl { transform: translateX(100%); }
+  .three:has([value=dome]:checked) .view-hl { transform: translateX(200%); }
+
+  .slider { display: grid; grid-template-columns: 7ch 1fr auto; gap: 14px; align-items: center; }
+  .slider input[type=number] {
+    width: 7ch; height: 36px; padding: 0 8px; border-radius: 10px; text-align: right;
+    background: var(--control); border: 1px solid var(--control-border); color: var(--text); font: 500 14px var(--mono);
+  }
+  .slider input[type=number]:focus { border-color: var(--c); outline: none; }
+  .slider output { font: 500 14px var(--mono); min-width: 7ch; text-align: right; }
+  .slider[hidden] { display: none; }
+  .opts { display: flex; gap: 8px; }
+
+  .result-head { justify-content: space-between; }
+  .stats { font: 500 13px var(--mono); color: var(--muted); }
+  .stats b { color: var(--text); font-weight: 600; }
+  .stage { margin-top: 16px; display: grid; justify-items: center; }
+  .stage canvas { max-width: 100%; border-radius: 10px; }
+  .stage.pop canvas { animation: pop-in .35s var(--spring); }
+  @keyframes pop-in { from { transform: scale(.94); opacity: .4; } }
+  .key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 14px; color: var(--faint); font: 12px var(--mono); }
+  .key i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+</style>
+</head>
+<body data-tool="shapes">
+<main>
+  <header class="head">
+    <h1>Circles &amp; spheres</h1>
+    <p>Pick a shape and a diameter, then build it layer by layer. Hollow shapes have walls one block thick with no gaps.</p>
+  </header>
+
+  <section class="panel controls" aria-label="Settings">
+    <div class="view three" role="radiogroup" aria-label="Shape">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="kind" value="circle" checked><span>Circle</span></label>
+      <label><input type="radio" name="kind" value="sphere"><span>Sphere</span></label>
+      <label><input type="radio" name="kind" value="dome"><span>Dome</span></label>
+    </div>
+    <label class="slider"><span class="label">diameter</span>
+      <input type="range" id="size-range" min="1" max="128" step="0.01" value="15" aria-label="Diameter slider">
+      <input type="number" id="size" min="1" max="128" value="15" aria-label="Diameter in blocks">
+    </label>
+    <label class="slider" id="layer-row" hidden><span class="label">layer</span>
+      <input type="range" id="layer" min="1" step="0.01" value="1" aria-label="Layer, from the bottom">
+      <output id="layer-out">1 / 1</output>
+    </label>
+    <div class="opts">
+      <label class="chip"><input type="checkbox" id="hollow" checked><span>Hollow</span></label>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Result">
+    <div class="result-head">
+      <span class="stats" id="stats"></span>
+      <span class="stats" id="total"></span>
+    </div>
+    <div class="stage" id="stage"><canvas id="grid" role="img"></canvas></div>
+    <div class="key" id="key">
+      <span><i style="background: var(--accent)"></i>this layer</span>
+      <span id="key-below"><i style="background: color-mix(in srgb, var(--accent) 22%, transparent)"></i>layer below</span>
+      <span>lines every 5 blocks · dashed lines mark the center</span>
+    </div>
+  </section>
+</main>
+<script src="../shared/shell.js"></script>
+<script src="shapes.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const canvas = $('grid'), ctx = canvas.getContext('2d'), stage = $('stage');
+  const kind = () => document.querySelector('[name=kind]:checked').value;
+  const fmt = n => n.toLocaleString('en');
+  const stacks = n => n < 64 ? '' : ` (${Math.floor(n / 64)} stacks${n % 64 ? ` + ${n % 64}` : ''})`;
+
+  const clampSize = v => Math.min(128, Math.max(1, Math.round(+v) || 1));
+
+  const draw = () => {
+    const d = clampSize($('size').value), k = kind(), filled = !$('hollow').checked;
+    const n = Shapes.layers(d, k), li = Math.min(Math.round($('layer').value), n) - 1;
+    const g = Shapes.layer(d, k, li, filled);
+    const below = li > 0 ? Shapes.layer(d, k, li - 1, filled) : null;
+
+    let total = 0;
+    for (let i = 0; i < n; i++) total += i === li ? Shapes.count(g) : Shapes.count(Shapes.layer(d, k, i, filled));
+    $('stats').innerHTML = k === 'circle' ? `<b>${fmt(Shapes.count(g))}</b> blocks`
+      : `layer ${li + 1} of ${n} · <b>${fmt(Shapes.count(g))}</b> blocks`;
+    $('total').textContent = k === 'circle' ? stacks(total).trim() : `total ${fmt(total)}${stacks(total)}`;
+    $('key-below').hidden = !below;
+    canvas.setAttribute('aria-label', `${k} ${d} blocks wide, layer ${li + 1} of ${n}: ${Shapes.count(g)} blocks`);
+
+    // Fit the grid to the panel, sharp on high-DPI screens.
+    // Tokens are relative oklch colors, so let the browser resolve them through the canvas's own color.
+    const color = v => { canvas.style.color = `var(${v})`; return getComputedStyle(canvas).color; };
+    const cell = Math.max(3, Math.min(32, Math.floor(Math.min(stage.clientWidth, 720) / d)));
+    const px = cell * d, dpr = devicePixelRatio || 1;
+    canvas.width = canvas.height = px * dpr;
+    canvas.style.width = canvas.style.height = px + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, px, px);
+
+    const accent = color('--accent'), gap = cell >= 8 ? 1 : 0;
+    const fill = (grid, alpha) => {
+      ctx.globalAlpha = alpha; ctx.fillStyle = accent;
+      for (let z = 0; z < d; z++) for (let x = 0; x < d; x++)
+        if (grid[z * d + x]) ctx.fillRect(x * cell + gap, z * cell + gap, cell - gap * 2, cell - gap * 2);
+    };
+    if (below) fill(below.map((v, i) => v && !g[i]), .22);
+    fill(g, 1);
+    ctx.globalAlpha = 1;
+
+    // Grid: faint every block (when big enough to see), stronger every 5, dashed through the center.
+    ctx.lineWidth = 1;
+    const line = (i, style) => {
+      ctx.strokeStyle = style; ctx.beginPath();
+      const p = Math.round(i * cell) + .5;
+      ctx.moveTo(p, 0); ctx.lineTo(p, px); ctx.moveTo(0, p); ctx.lineTo(px, p); ctx.stroke();
+    };
+    if (cell >= 6) for (let i = 0; i <= d; i++) if (i % 5) line(i, color('--panel-border'));
+    for (let i = 0; i <= d; i += 5) line(i, color('--faint'));
+    line(d, color('--faint'));
+    ctx.setLineDash([4, 4]); line(d / 2, color('--text')); ctx.setLineDash([]);
+  };
+
+  const pop = () => { stage.classList.remove('pop'); void stage.offsetWidth; stage.classList.add('pop'); };
+
+  // Shape or size changed: reset the layer slider (spheres start in the middle, domes at the base).
+  const reshape = () => {
+    const d = clampSize($('size').value), k = kind(), n = Shapes.layers(d, k);
+    $('size-range').dataset.v = d;
+    $('layer-row').hidden = k === 'circle';
+    $('layer').max = n;
+    $('layer').value = k === 'sphere' ? Math.ceil(n / 2) : 1;
+    setLayer($('layer').value);
+  };
+
+  // Smooth sliders (like the gradient's): step="0.01" lets the thumb move freely while the value
+  // snaps to whole blocks; on release it glides onto the nearest step. Arrow keys move one whole step.
+  const smooth = (el, update) => {
+    // data-v holds the value last drawn, so dragging within one step does not redraw.
+    el.oninput = () => { const v = Math.round(el.value); if (v !== +el.dataset.v) update(v); };
+    el.onchange = () => {
+      const from = +el.value, to = Math.round(from), t0 = performance.now();
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return el.value = to;
+      const tick = now => {
+        const k = Math.min(1, (now - t0) / 180);
+        el.value = from + (to - from) * (1 - (1 - k) ** 3);
+        if (k < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+    el.onkeydown = e => {
+      const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+      if (!d) return;
+      e.preventDefault();
+      el.value = Math.min(+el.max, Math.max(+el.min, Math.round(el.value) + d));
+      el.oninput();
+    };
+  };
+  const setLayer = v => { $('layer').dataset.v = v; $('layer').setAttribute('aria-valuetext', v); $('layer-out').textContent = `${v} / ${$('layer').max}`; draw(); };
+
+  smooth($('size-range'), v => { $('size').value = v; $('size-range').setAttribute('aria-valuetext', v); reshape(); });
+  smooth($('layer'), setLayer);
+  $('size').oninput = () => { if ($('size').value) { $('size-range').value = clampSize($('size').value); reshape(); } };
+  $('size').onchange = () => { $('size').value = clampSize($('size').value); reshape(); };
+  document.querySelectorAll('[name=kind]').forEach(r => r.onchange = () => { reshape(); pop(); });
+  $('hollow').onchange = draw;
+
+  addEventListener('resize', draw);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+  reshape();
+})();
+</script>
+</body>
+</html>

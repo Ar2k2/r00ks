@@ -28,7 +28,7 @@
       desc: 'Slime chunks around you from a world seed.' },
     { id: 'structures', name: 'Structure finder', path: 'structures/', cat: 'world',
       desc: 'Villages, monuments and more from a seed.' },
-    { id: 'shapes', name: 'Circles & spheres', path: 'shapes/', cat: 'build',
+    { id: 'shapes', name: 'Circles & spheres', path: 'shapes/', cat: 'build', built: true,
       desc: 'Circles, spheres and domes, block by block.' },
     { id: 'anvil', name: 'Anvil optimizer', path: 'anvil/', cat: 'mechanics', built: true,
       desc: 'The cheapest order to combine enchanted books.' },

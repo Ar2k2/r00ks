@@ -47,7 +47,8 @@ manual toggle.
 **Seed color:** everything tinted (accent, the logo's crane, highlights, and a
 faint tint on the backgrounds) derives from `--seed` in `shell.css` via
 `oklch(from var(--seed) ...)`. The seed is a block's average color (from
-`blocks.json`), currently blue ice `#75a8fd`. To change it, set `--seed` and the
+`blocks.json`, or measured locally the same way), currently orange poplar leaves `#c75b17`
+for the Wilderness Bound release (26.3). Switch back to blue ice `#75a8fd` when 26.4 drops. To change it, set `--seed` and the
 matching fixed values in its `@supports not` fallback block, and end the home
 card's `strip` in the same color.
 
