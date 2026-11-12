@@ -32,7 +32,7 @@
       desc: 'Circles, spheres and domes, block by block.' },
     { id: 'anvil', name: 'Anvil optimizer', path: 'anvil/', cat: 'mechanics', built: true,
       desc: 'The cheapest order to combine enchanted books.' },
-    { id: 'commands', name: 'Command builder', path: 'commands/', cat: 'mechanics',
+    { id: 'commands', name: 'Command builder', path: 'commands/', cat: 'mechanics', built: true,
       desc: 'Build give, summon and component commands.' },
   ];
   for (const c of cats) c.built = tools.some(t => t.cat === c.id && t.built);
@@ -61,10 +61,11 @@
   // Copy buttons: <button class="btn copy">Label</button>. The icon morphs into a checkmark.
   const copyIcons = '<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>'
     + '<svg class="ok" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
-  document.querySelectorAll('.copy').forEach(b => {
+  const dress = b => {
     b.dataset.label = b.textContent.trim();
     b.innerHTML = `${copyIcons}<span>${b.dataset.label}</span>`;
-  });
+  };
+  document.querySelectorAll('.copy').forEach(dress);
   const copy = async (btn, text) => {
     const label = btn.querySelector('span');
     clearTimeout(btn.t);
@@ -72,7 +73,7 @@
     try { await navigator.clipboard.writeText(text); } catch { label.textContent = 'Copy failed'; return; }
     btn.classList.add('done'); label.textContent = 'Copied';
   };
-  window.WASD = { root, cats, tools, copy, icon };
+  window.WASD = { root, cats, tools, copy, dress, icon };
 
   const active = document.body.dataset.tool;
   // The rail highlights the category of the current tool (or the hub itself).

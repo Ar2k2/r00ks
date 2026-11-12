@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command builder · R00K’s</title>
+<meta name="description" content="Build Minecraft Java /give, /summon, /fill and /setblock commands with item components, effects and block states.">
+<link rel="stylesheet" href="../shared/shell.css">
+<style>
+  .view.three { grid-template-columns: repeat(3, 1fr); }
+  .three .view-hl { width: calc((100% - 8px) / 3); }
+  .three:has([value=summon]:checked) .view-hl { transform: translateX(100%); }
+  .three:has([value=fill]:checked) .view-hl { transform: translateX(200%); }
+
+  .form { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px 12px; margin-top: 20px; }
+  .form[hidden] { display: none; }
+  .field { display: grid; gap: 6px; align-content: start; min-width: 0; }
+  .wide { grid-column: 1 / -1; }
+  .field input:not([type=checkbox]):not([type=radio]), .field select, .field textarea {
+    width: 100%; min-width: 0; height: 40px; padding: 0 12px; border-radius: 10px;
+    background: var(--control); border: 1px solid var(--control-border); color: var(--text); font: 500 14px var(--body);
+    transition: border-color .2s;
+  }
+  .field textarea { height: auto; min-height: 64px; padding: 10px 12px; resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--c); outline: none; }
+  .field .mono, .xyz input { font-family: var(--mono); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .xyz label { font: 12px var(--mono); color: var(--muted); }
+
+  /* Added enchantments / effects: removable pills that pop in. */
+  .adder { display: flex; flex-wrap: wrap; gap: 8px; }
+  .adder select { flex: 1 1 180px; width: auto !important; }
+  .adder input { flex: 0 0 76px; width: 76px !important; font-family: var(--mono) !important; }
+  .adder .btn { height: 40px; }
+  .list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .list:empty { display: none; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 6px 0 12px; border-radius: 10px;
+    background: color-mix(in srgb, var(--c) 14%, var(--control)); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+    font-size: 13px; font-weight: 500; animation: chip-pop .35s var(--spring);
+  }
+  .pill small { font: 12px var(--mono); color: var(--muted); }
+  .pill button { all: unset; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; color: var(--muted); transition: transform .2s var(--spring), color .2s; }
+  .pill button:hover { color: var(--text); transform: rotate(90deg); }
+  .pill button:active { transform: scale(.85); }
+
+  .out {
+    margin: 14px 0 0; padding: 16px; border-radius: 12px; background: var(--raised); border: 1px solid var(--panel-border);
+    font: 500 14px/1.6 var(--mono); white-space: pre-wrap; word-break: break-all;
+  }
+  .out.tick { animation: tick .3s var(--spring); }
+  .note { margin: 10px 0 0; color: var(--faint); font-size: 13px; }
+  .note.warn { color: var(--warn); }
+  .note:empty { display: none; }
+</style>
+</head>
+<body data-tool="commands">
+<main>
+  <header class="head">
+    <h1>Command builder</h1>
+    <p>Fill in what you want and copy the command. Uses the item component and entity syntax of Java 26.x.</p>
+  </header>
+
+  <section class="panel" aria-label="Command">
+    <div class="view three" role="radiogroup" aria-label="Command">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="cmd" value="give" checked><span>Give</span></label>
+      <label><input type="radio" name="cmd" value="summon"><span>Summon</span></label>
+      <label><input type="radio" name="cmd" value="fill"><span>Fill</span></label>
+    </div>
+
+    <div class="form" id="give">
+      <label class="field"><span class="label">item</span><input id="g-item" class="mono" list="items" value="diamond_sword" spellcheck="false" autocomplete="off"></label>
+      <label class="field"><span class="label">count</span><input id="g-count" type="number" min="1" max="99" value="1"></label>
+      <label class="field"><span class="label">player</span><input id="g-target" class="mono" value="@p" spellcheck="false"></label>
+      <label class="field"><span class="label">name</span><input id="g-name" placeholder="No custom name"></label>
+      <label class="field"><span class="label">name color</span><select id="g-color"></select></label>
+      <div class="field"><span class="label">name style</span><div class="chips">
+        <label class="chip"><input type="checkbox" id="g-bold"><span>Bold</span></label>
+        <label class="chip"><input type="checkbox" id="g-italic"><span>Italic</span></label></div></div>
+      <label class="field wide"><span class="label">lore, one line each</span><textarea id="g-lore" placeholder="Shown under the name in gray"></textarea></label>
+      <div class="field wide"><span class="label">enchantments (levels above the max work too)</span>
+        <div class="adder"><select id="g-ench" aria-label="Enchantment"></select><input id="g-lvl" type="number" min="1" max="255" value="1" aria-label="Level"><button class="btn" type="button" id="g-add">Add</button></div>
+        <div class="list" id="g-list"></div></div>
+      <div class="field wide"><span class="label">extras</span><div class="chips">
+        <label class="chip"><input type="checkbox" id="g-unbreakable"><span>Unbreakable</span></label>
+        <label class="chip"><input type="checkbox" id="g-glint"><span>Enchantment glint</span></label></div></div>
+    </div>
+
+    <div class="form" id="summon" hidden>
+      <label class="field"><span class="label">entity</span><input id="s-entity" class="mono" list="entities" value="zombie" spellcheck="false" autocomplete="off"></label>
+      <div class="field"><span class="label">position</span><div class="xyz" id="s-pos"></div></div>
+      <label class="field"><span class="label">name</span><input id="s-name" placeholder="No custom name"></label>
+      <div class="field wide"><span class="label">options</span><div class="chips" id="s-flags"></div></div>
+      <div class="field wide"><span class="label">effects (level, then seconds; 0 seconds lasts forever)</span>
+        <div class="adder"><select id="s-fx" aria-label="Effect"></select><input id="s-lvl" type="number" min="1" max="128" value="1" aria-label="Level"><input id="s-sec" type="number" min="0" value="0" aria-label="Seconds"><button class="btn" type="button" id="s-add">Add</button></div>
+        <div class="list" id="s-list"></div></div>
+      <label class="field"><span class="label">holding</span><input id="s-hand" class="mono" list="items" placeholder="nothing" spellcheck="false" autocomplete="off"></label>
+      <label class="field"><span class="label">wearing on head</span><input id="s-head" class="mono" list="items" placeholder="nothing" spellcheck="false" autocomplete="off"></label>
+    </div>
+
+    <div class="form" id="fill" hidden>
+      <div class="field wide"><span class="label">command</span><div class="chips">
+        <label class="chip"><input type="radio" name="f-kind" value="fill" checked><span>/fill an area</span></label>
+        <label class="chip"><input type="radio" name="f-kind" value="setblock"><span>/setblock one block</span></label></div></div>
+      <div class="field"><span class="label" id="f-from-l">from</span><div class="xyz" id="f-from"></div></div>
+      <div class="field" id="f-to-f"><span class="label">to</span><div class="xyz" id="f-to"></div></div>
+      <label class="field"><span class="label">block, with states like [axis=x]</span><input id="f-block" class="mono" list="blocks" value="stone" spellcheck="false" autocomplete="off"></label>
+      <label class="field"><span class="label">mode</span><select id="f-mode"></select></label>
+      <label class="field" id="f-filter-f"><span class="label">only replace</span><input id="f-filter" class="mono" list="blocks" placeholder="any block" spellcheck="false" autocomplete="off"></label>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Result">
+    <div class="result-head"><span class="label">command</span><button class="btn copy" id="copy">Copy</button></div>
+    <pre class="out" id="out"></pre>
+    <p class="note" id="note"></p>
+  </section>
+
+  <datalist id="items"></datalist><datalist id="entities"></datalist><datalist id="blocks"></datalist>
+</main>
+<script src="../shared/shell.js"></script>
+<script src="../anvil/anvil.js"></script>
+<script src="commands.js"></script>
+<script>
+(async () => {
+  const $ = id => document.getElementById(id);
+  const opt = (v, label = v) => `<option value="${v}">${label}</option>`;
+  const nice = s => s.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+
+  // Common IDs for suggestions; anything else can still be typed.
+  const tiers = ['wooden', 'stone', 'iron', 'golden', 'diamond', 'netherite'];
+  const ITEMS = [...tiers.flatMap(t => ['sword', 'pickaxe', 'axe', 'shovel', 'hoe', 'spear'].map(k => `${t}_${k}`)),
+    ...['leather', 'chainmail', 'iron', 'golden', 'diamond', 'netherite'].flatMap(t => ['helmet', 'chestplate', 'leggings', 'boots'].map(k => `${t}_${k}`)),
+    'turtle_helmet', 'elytra', 'shield', 'bow', 'crossbow', 'trident', 'mace', 'fishing_rod', 'shears', 'flint_and_steel', 'brush',
+    'totem_of_undying', 'enchanted_golden_apple', 'golden_apple', 'ender_pearl', 'firework_rocket', 'arrow', 'spectral_arrow',
+    'wind_charge', 'book', 'enchanted_book', 'writable_book', 'name_tag', 'saddle', 'lead', 'stick', 'diamond', 'emerald',
+    'netherite_ingot', 'iron_ingot', 'gold_ingot', 'carved_pumpkin', 'player_head', 'command_block', 'barrier', 'debug_stick'];
+  const ENTITIES = ['zombie', 'husk', 'drowned', 'skeleton', 'stray', 'bogged', 'creeper', 'spider', 'cave_spider', 'enderman',
+    'witch', 'pillager', 'vindicator', 'evoker', 'ravager', 'blaze', 'ghast', 'piglin', 'piglin_brute', 'zombified_piglin',
+    'hoglin', 'wither_skeleton', 'slime', 'magma_cube', 'phantom', 'guardian', 'shulker', 'breeze', 'creaking', 'warden',
+    'iron_golem', 'snow_golem', 'villager', 'wandering_trader', 'allay', 'cow', 'pig', 'sheep', 'chicken', 'horse', 'donkey',
+    'llama', 'wolf', 'cat', 'fox', 'rabbit', 'parrot', 'axolotl', 'frog', 'goat', 'bee', 'panda', 'polar_bear', 'camel',
+    'sniffer', 'armadillo', 'happy_ghast', 'armor_stand', 'item_frame', 'ender_dragon', 'wither', 'lightning_bolt', 'tnt'];
+  const EFFECTS = ['speed', 'slowness', 'haste', 'mining_fatigue', 'strength', 'instant_health', 'instant_damage', 'jump_boost',
+    'nausea', 'regeneration', 'resistance', 'fire_resistance', 'water_breathing', 'invisibility', 'blindness', 'night_vision',
+    'hunger', 'weakness', 'poison', 'wither', 'health_boost', 'absorption', 'saturation', 'glowing', 'levitation', 'luck',
+    'unluck', 'slow_falling', 'conduit_power', 'dolphins_grace', 'bad_omen', 'hero_of_the_village', 'darkness', 'trial_omen',
+    'raid_omen', 'wind_charged', 'weaving', 'oozing', 'infested'];
+  const COLORS = ['black', 'dark_blue', 'dark_green', 'dark_aqua', 'dark_red', 'dark_purple', 'gold', 'gray', 'dark_gray',
+    'blue', 'green', 'aqua', 'red', 'light_purple', 'yellow', 'white'];
+  const FLAGS = { CustomNameVisible: 'Name always shown', NoAI: 'No AI', Invulnerable: 'Invulnerable', Silent: 'Silent',
+    PersistenceRequired: "Doesn't despawn", Glowing: 'Glowing', NoGravity: 'No gravity' };
+
+  $('items').innerHTML = ITEMS.map(v => opt(v)).join('');
+  $('entities').innerHTML = ENTITIES.map(v => opt(v)).join('');
+  $('g-color').innerHTML = opt('', 'Default') + COLORS.map(c => opt(c, nice(c))).join('');
+  $('g-ench').innerHTML = Object.entries(Anvil.ENCH).sort((a, b) => a[1][0].localeCompare(b[1][0])).map(([k, [n]]) => opt(k, n)).join('');
+  $('s-fx').innerHTML = EFFECTS.map(e => opt(e, nice(e))).join('');
+  $('s-flags').innerHTML = Object.entries(FLAGS).map(([k, n]) => `<label class="chip"><input type="checkbox" data-flag="${k}"><span>${n}</span></label>`).join('');
+  const xyz = (el, vals) => el.innerHTML = ['x', 'y', 'z'].map((k, i) =>
+    `<label><span>${k}</span><input value="${vals[i]}" aria-label="${el.id} ${k}" spellcheck="false" autocomplete="off"></label>`).join('');
+  xyz($('s-pos'), ['~', '~', '~']); xyz($('f-from'), ['~', '~-1', '~']); xyz($('f-to'), ['~4', '~-1', '~4']);
+  const read = el => [...el.querySelectorAll('input')].map(i => i.value);
+
+  // Added enchantments and effects, shown as removable pills.
+  const ench = new Map(), fx = [];
+  const pills = (el, items, label, remove) => {
+    el.innerHTML = items.map((it, i) => `<span class="pill">${label(it)}<button type="button" data-i="${i}" aria-label="Remove">✕</button></span>`).join('');
+    el.querySelectorAll('button').forEach(b => b.onclick = () => { remove(+b.dataset.i); update(); });
+  };
+  $('g-add').onclick = () => { ench.set($('g-ench').value, Math.max(1, +$('g-lvl').value || 1)); update(); };
+  $('s-add').onclick = () => { fx.push({ id: $('s-fx').value, level: Math.max(1, +$('s-lvl').value || 1), seconds: Math.max(0, +$('s-sec').value || 0) }); update(); };
+
+  const kindFill = () => document.querySelector('[name=f-kind]:checked').value;
+  const setModes = () => {
+    const modes = kindFill() === 'fill' ? ['replace', 'destroy', 'keep', 'hollow', 'outline'] : ['replace', 'destroy', 'keep'];
+    const cur = $('f-mode').value;
+    $('f-mode').innerHTML = modes.map(m => opt(m, nice(m))).join('');
+    if (modes.includes(cur)) $('f-mode').value = cur;
+  };
+
+  let shown = '';
+  const update = () => {
+    const cmd = document.querySelector('[name=cmd]:checked').value;
+    for (const f of ['give', 'summon', 'fill']) $(f).hidden = f !== cmd;
+    pills($('g-list'), [...ench], ([k, l]) => `${Anvil.ENCH[k][0]} <small>${l}</small>`, i => ench.delete([...ench.keys()][i]));
+    pills($('s-list'), fx, e => `${nice(e.id)} <small>${e.level} · ${e.seconds ? e.seconds + 's' : '∞'}</small>`, i => fx.splice(i, 1));
+    const isFill = kindFill() === 'fill';
+    $('f-to-f').hidden = !isFill;
+    $('f-from-l').textContent = isFill ? 'from' : 'position';
+    $('f-filter-f').hidden = !isFill || $('f-mode').value !== 'replace';
+
+    let out, note = '', warn = false;
+    if (cmd === 'give') out = Commands.give({ item: $('g-item').value, count: +$('g-count').value, target: $('g-target').value.trim(),
+      name: $('g-name').value, style: { color: $('g-color').value, bold: $('g-bold').checked, italic: $('g-italic').checked },
+      lore: $('g-lore').value.split('\n'), ench: Object.fromEntries(ench), unbreakable: $('g-unbreakable').checked, glint: $('g-glint').checked });
+    else if (cmd === 'summon') out = Commands.summon({ entity: $('s-entity').value, pos: read($('s-pos')), name: $('s-name').value,
+      flags: Object.fromEntries([...document.querySelectorAll('[data-flag]')].map(c => [c.dataset.flag, c.checked])),
+      effects: fx, mainhand: $('s-hand').value, head: $('s-head').value });
+    else if (isFill) {
+      const from = read($('f-from')), to = read($('f-to'));
+      out = Commands.fill({ from, to, block: $('f-block').value, mode: $('f-mode').value, filter: $('f-filter').value });
+      const v = Commands.volume(from, to);
+      if (v !== null) { note = `${v.toLocaleString('en')} blocks.`; if (v > 32768) { note = `${v.toLocaleString('en')} blocks: /fill stops at 32,768. Split it into smaller boxes.`; warn = true; } }
+    } else out = Commands.setblock({ pos: read($('f-from')), block: $('f-block').value, mode: $('f-mode').value });
+
+    if (out.length > 256) { note = `${note} ${out.length} characters: too long for chat (256), so paste it into a command block.`.trim(); warn = true; }
+    $('note').textContent = note;
+    $('note').classList.toggle('warn', warn);
+    if (out !== shown) { $('out').textContent = shown = out; $('out').classList.remove('tick'); void $('out').offsetWidth; $('out').classList.add('tick'); }
+  };
+
+  document.querySelector('main').addEventListener('input', e => { if (!e.target.closest('.adder')) update(); });
+  document.querySelectorAll('[name=f-kind]').forEach(r => r.addEventListener('change', () => { setModes(); update(); }));
+  $('copy').onclick = () => WASD.copy($('copy'), shown);
+  setModes();
+  update();
+
+  // Block suggestions come from the gradient data; any block ID works.
+  const { blocks } = await (await fetch('../gradient/blocks.json')).json();
+  $('blocks').innerHTML = [...new Set(blocks.map(b => b.id))].sort().map(v => opt(v)).join('');
+})();
+</script>
+</body>
+</html>

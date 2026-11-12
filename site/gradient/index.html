@@ -67,6 +67,11 @@
     <p class="meta" id="meta"></p>
   </section>
 
+  <section class="panel" aria-label="Build command">
+    <span class="label">Build command</span>
+    <div id="build"></div>
+  </section>
+
   <section class="panel jar" aria-label="Textures">
     <p id="jar-text">Swatches show each block's average color. For real textures, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
     <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
@@ -75,6 +80,7 @@
 <script src="../shared/shell.js"></script>
 <script src="engine.js"></script>
 <script src="../shared/jar.js"></script>
+<script src="../shared/build.js"></script>
 <script src="../shared/swap.js"></script>
 <script>
 (async () => {
@@ -122,6 +128,7 @@
       ? `${pool.length} block faces considered · data from Java ${version}`
       : 'No blocks match these filters. Try turning some off.';
     last = row;
+    Build.panel($('build'), () => row.length ? { grid: row.map(b => Build.block(b, view)), w: row.length, h: 1, view } : null);
   };
 
   let queued;

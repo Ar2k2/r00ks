@@ -63,6 +63,11 @@
     <p class="meta" id="meta"></p>
   </section>
 
+  <section class="panel" aria-label="Build command">
+    <span class="label">Build command</span>
+    <div id="build"></div>
+  </section>
+
   <section class="panel jar" aria-label="Textures">
     <p id="jar-text">Swatches show each block's average color. For real textures, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
     <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
@@ -72,6 +77,7 @@
 <script src="../gradient/engine.js"></script>
 <script src="palette.js"></script>
 <script src="../shared/jar.js"></script>
+<script src="../shared/build.js"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
@@ -110,6 +116,10 @@
     $('meta').textContent = groups.length
       ? `${pool.length} block faces considered · data from Java ${version}`
       : 'No blocks match these filters. Try turning some off.';
+    // One row per group, stacked.
+    const w = Math.max(0, ...groups.map(g => g.blocks.length));
+    Build.panel($('build'), () => w ? { grid: groups.flatMap(g => [...g.blocks.map(b => Build.block(b, view)), ...Array(w - g.blocks.length).fill(null)]),
+      w, h: groups.length, view } : null);
   };
 
   let queued;

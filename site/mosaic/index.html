@@ -68,6 +68,11 @@
     <p class="meta" id="meta"></p>
   </section>
 
+  <section class="panel" aria-label="Build command">
+    <span class="label">Build command</span>
+    <div id="build"></div>
+  </section>
+
   <section class="panel jar" aria-label="Textures">
     <p id="jar-text">The preview shows each block's average color. For real textures, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
     <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
@@ -77,6 +82,7 @@
 <script src="../gradient/engine.js"></script>
 <script src="mosaic.js"></script>
 <script src="../shared/jar.js"></script>
+<script src="../shared/build.js"></script>
 <script src="../shared/swap.js"></script>
 <script>
 (async () => {
@@ -152,6 +158,8 @@
       ? `Click a block to swap it for a similar one. ${pool.length} block faces considered · data from Java ${version}`
       : 'No blocks match these filters. Try turning some off.';
     $('spot').textContent = 'Hover the preview to see each block.';
+    const placed = pool.map(b => Build.block(b, view)); // transparent pixels stay empty
+    Build.panel($('build'), () => ({ grid: Array.from(cells, k => k < 0 ? null : placed[k]), w, h, view }));
   };
 
   let queued;
