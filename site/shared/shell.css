@@ -166,10 +166,16 @@ a.dot:active svg.ic { transform: scale(.93); }
 .entry.soon svg.ic { opacity: .6; }
 .entry .tag { margin-left: auto; }
 
-/* Crane rook logo: the crane's load lifts with a bounce on hover. */
+/* Crane rook logo: the crane loops forever, lifting its block, carrying it in along the
+   jib, setting it down, then carrying it back out. Cable shortens as the hook rises. */
 .logo { height: 34px; width: auto; flex: none; color: var(--text); overflow: visible; }
-.logo .load { transition: transform .35s var(--spring); }
-.logo:hover .load, a:hover > .logo .load { transform: translateY(-14px); }
+.logo .trolley, .logo .hook, .logo .cable { animation: 6s ease-in-out infinite; }
+.logo .trolley { animation-name: crane-x; }
+.logo .hook { animation-name: crane-y; }
+.logo .cable { animation-name: crane-cable; transform-box: fill-box; transform-origin: top; }
+@keyframes crane-x { 0%, 15% { transform: none; } 35%, 72% { transform: translateX(-48px); } 88%, 100% { transform: none; } }
+@keyframes crane-y { 0%, 50%, 60%, 100% { transform: none; } 15%, 35%, 72%, 88% { transform: translateY(-40px); } }
+@keyframes crane-cable { 0%, 50%, 60%, 100% { transform: none; } 15%, 35%, 72%, 88% { transform: scaleY(.574); } }
 
 /* Wordmark: "R00K" in mono and the accent color, as in the logo. */
 .wordmark b { font: inherit; font-family: var(--mono); font-weight: 700; color: var(--accent); }

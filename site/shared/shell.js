@@ -85,8 +85,9 @@
       <path d="M126 30L140 12L154 30L168 12L182 30L196 12L210 30L224 12L238 30L246 12" stroke-width="3.5"/>
     </g>
     <rect x="100" y="6" width="14" height="16" fill="var(--accent)"/>
-    <g class="load"><path d="M228 30V124" stroke="var(--accent)" stroke-width="3"/><rect x="220" y="122" width="16" height="7" fill="var(--accent)"/>
-      <rect x="210" y="132" width="36" height="36" fill="var(--accent)"/><rect x="218" y="140" width="20" height="20" fill="none" stroke="var(--bg)" stroke-width="3"/></g>
+    <g class="trolley"><path class="cable" d="M228 30V124" stroke="var(--accent)" stroke-width="3"/>
+      <g class="hook"><rect x="220" y="122" width="16" height="7" fill="var(--accent)"/>
+      <rect x="210" y="132" width="36" height="36" fill="var(--accent)"/><rect x="218" y="140" width="20" height="20" fill="none" stroke="var(--bg)" stroke-width="3"/></g></g>
   </svg>`;
   document.querySelectorAll('[data-logo]').forEach(e => { e.outerHTML = logo; });
 

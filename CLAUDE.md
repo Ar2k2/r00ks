@@ -92,7 +92,7 @@ text color. No heavy black borders or hard offset shadows.
   highlight that springs from row to row.
 - Icons tilt slightly on hover.
 - Page content glides up about 12px while fading in.
-- The logo's crane lifts its block with a bounce on hover.
+- The logo's crane loops continuously: lifts its block, carries it along the jib, sets it down, and back.
 - The home color strip and gradient result blocks drop in one by one with a
   bounce (gradient blocks about 70ms apart).
 - Copy buttons morph into a checkmark. No particle bursts or click splashes: the owner removed them as too much.
