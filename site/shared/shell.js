@@ -6,15 +6,12 @@
   // The rail shows categories; the drawer, home and hub pages list every tool.
   // A category's path is its hub page (or its only tool).
   const cats = [
-    { id: 'updates', name: 'Updates', path: 'snapshots/' },
     { id: 'color', name: 'Color & art', path: 'color/' },
     { id: 'world', name: 'World', path: 'world/' },
     { id: 'build', name: 'Build', path: 'build/' },
     { id: 'mechanics', name: 'Mechanics', path: 'mechanics/' },
   ];
   const tools = [
-    { id: 'snapshots', name: 'Snapshots', path: 'snapshots/', cat: 'updates', built: true,
-      desc: 'What changed in each snapshot, read straight from the jar.' },
     { id: 'gradient', name: 'Gradient', path: 'gradient/', cat: 'color', built: true,
       desc: 'Smooth block gradients between any two colors.' },
     { id: 'palette', name: 'Palette', path: 'palette/', cat: 'color', built: true,
@@ -42,7 +39,6 @@
   // Original line icons on a 24px grid, keyed by tool or category id.
   const icons = {
     home: '<path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>',
-    snapshots: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M12 9v6M9 18h6"/>',
     gradient: '<rect x="3" y="8" width="5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="8" width="5" height="8" rx="1" fill="currentColor" fill-opacity=".45"/><rect x="16" y="8" width="5" height="8" rx="1"/>',
     mapart: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
     palette: '<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>',
@@ -54,7 +50,6 @@
     shapes: '<circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="8" ry="3"/>',
     anvil: '<path d="M3 6.5h14.5a3 3 0 0 0 3.5 3h-6l-1.5 4.5H16v3.5H8V14h2.5L9 10.5C5.5 10.5 3 9 3 6.5z"/>',
     commands: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15h4.5"/>',
-    updates: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M12 9v6M9 18h6"/>',
     color: '<path d="M12 3.5c3.5 4 6 7 6 10.5a6 6 0 0 1-12 0c0-3.5 2.5-6.5 6-10.5z"/><path d="M9 14.5a3 3 0 0 0 3 3"/>',
     world: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3.2 3.2 14.8 0 18M12 3c-3.2 3.2-3.2 14.8 0 18"/>',
     build: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',

@@ -1,7 +1,6 @@
 # WASD — Minecraft tools site
 
-WASD is a website of Minecraft **Java Edition** tools: snapshot breakdowns,
-block gradients, seed tools, building helpers and utilities. It is a personal
+WASD is a website of Minecraft **Java Edition** tools: block gradients, seed tools, building helpers and utilities. It is a personal
 project built from scratch. Prefer writing our own code over pulling in
 libraries, and ask before adding any dependency.
 
@@ -19,11 +18,10 @@ libraries, and ask before adding any dependency.
 ```
 CLAUDE.md
 .github/workflows/pages.yml
-tools/             local scripts: jar diffing, NBT parsing, block color extraction
+tools/             local scripts: NBT parsing, block color extraction
 site/
   index.html       home
   shared/          shared CSS, JS (sidebar, animations, color math)
-  snapshots/       one page per snapshot + index
   gradient/        block gradient tool
   ...              future tools, one folder each
 ```
@@ -48,13 +46,10 @@ manual toggle.
 
 **Seed color:** everything tinted (accent, the W keycap, highlights, and a
 faint tint on the backgrounds) derives from `--seed` in `shell.css` via
-`oklch(from var(--seed) ...)`. The seed is the average color (from
-`blocks.json`) of the **latest snapshot's featured block**. Currently oxidized
-copper `#54a587`. When a snapshot is published:
-1. Set `--seed` in `shell.css` and the matching fixed values in its
-   `@supports not` fallback block.
-2. Update `latest` in `site/index.html` (title, summary, changes, link, and
-   `strip`: a short run of related block averages ending in the seed).
+`oklch(from var(--seed) ...)`. The seed is a block's average color (from
+`blocks.json`), currently blue ice `#75a8fd`. To change it, set `--seed` and the
+matching fixed values in its `@supports not` fallback block, and end the home
+card's `strip` in the same color.
 
 No per-tool colors. The rainbow section colors were removed; tools are told
 apart by their icons.
@@ -72,10 +67,8 @@ controls and buttons 10px, keycaps 7px. Primary buttons are filled with the
 text color. No heavy black borders or hard offset shadows.
 
 **Layout:**
-- Tools are grouped into **categories** (Updates, Color & art, World, Build,
-  Mechanics), defined with the tool list in `shell.js`. Each category with a
-  built tool has a hub page (`color/`, `world/`, `mechanics/`; Updates links
-  straight to Snapshots). Add a hub when a category gets its first tool.
+- Tools are grouped into **categories** (Color & art, World, Build, Mechanics), defined with the tool list in `shell.js`. Each category with a
+  built tool has a hub page (`color/`, `world/`, `mechanics/`). Add a hub when a category gets its first tool.
 - A 72px icon rail is always on the left: a menu button at the top, then home
   and an icon per category. Clicking an icon navigates; the active highlight
   springs to the current tool's category.
@@ -84,8 +77,7 @@ text color. No heavy black borders or hard offset shadows.
   drawer closes about 300ms later. The X button or scrim also closes it.
 - The drawer has the WASD keycap logo, every tool grouped under its category,
   and "soon" tags on unbuilt tools.
-- Home leads with a featured card (latest snapshot, or the newest tool until
-  snapshot pages exist) with the block color strip, then the tools listed by
+- Home leads with a featured card (the newest tool) with the block color strip, then the tools listed by
   category.
 - **No keyboard shortcuts.** The owner explicitly removed them.
 
@@ -109,44 +101,12 @@ text color. No heavy black borders or hard offset shadows.
 ## Tools and build order
 
 1. **Foundation:** repo, Pages pipeline, shared shell (rail, drawer, home).
-2. **Snapshot diffs** (first real feature, see below).
-3. **Block gradient** (see below).
-4. **Quick wins:** Nether coordinate converter, slime chunk finder, circle /
+2. **Block gradient** (see below).
+3. **Quick wins:** Nether coordinate converter, slime chunk finder, circle /
    sphere / dome generator.
-5. **Bigger tools:** map art converter and palette builder (reuse the
+4. **Bigger tools:** map art converter and palette builder (reuse the
    gradient's color engine), structure finder (extends the slime chunk seed
    math), command and component builder.
-
-## Snapshot diffs (manual, owner-curated)
-
-Covers **Java snapshots**. Every snapshot page has two subpages:
-- **This update:** changes since the previous snapshot.
-- **Since release:** everything changed since the last full release
-  (e.g. 26.3 → 26.4-snapshot-8).
-
-**Script** (saved once and reused, not rewritten each time):
-- `python3 tools/java_diff.py [OLD] [NEW]` reads jars from the local launcher
-  `versions` folder. Defaults: newest snapshot vs the previous installed one;
-  `OLD=release` compares against the latest release. Registries are inferred
-  from files (blockstates, items, entity lang keys, sounds.json), not by
-  running game code. Ignores the DataVersion stamp in structure `.nbt` files.
-- It prints a markdown report and writes full JSON to `tools/work/diff/`
-  (git-ignored). `python3 tools/test_diffs.py` pins a few known facts.
-
-**Workflow:**
-1. The owner asks for the changes in a new snapshot.
-2. Run the script for both views (this update, and since release).
-3. Report findings, roughly in this priority: language key changes (often the
-   earliest hint of unreleased content), registry changes (blocks, items,
-   entities, sounds), data changes (worldgen, loot tables, recipes, tags),
-   asset file paths, and code changes (new classes, methods, constants).
-4. Group related changes into likely features (the script does a first pass by
-   shared names).
-5. **The owner decides what is important.** Only then write the pages and
-   update the index, and publish only when told to.
-
-Pages show names, keys, paths and summaries only, never Mojang's actual
-files, text or code.
 
 ## Block gradient spec
 

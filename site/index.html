@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WASD · Minecraft Java tools</title>
-<meta name="description" content="Tools for Minecraft Java Edition: snapshot breakdowns, block color tools, world helpers and game mechanics.">
+<meta name="description" content="Tools for Minecraft Java Edition: block color tools, world helpers and game mechanics.">
 <link rel="stylesheet" href="shared/shell.css">
 <style>
   .top { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
   .top .name { font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
   .top .ver { margin-left: auto; font: 13px var(--mono); color: var(--muted); }
 
-  /* Featured card: the latest snapshot (or newest tool until snapshots exist). */
+  /* Featured card: the newest tool. */
   .latest { overflow: hidden; padding: 0; }
   .strip { display: flex; height: 10px; }
   .strip i {
@@ -67,19 +67,13 @@
 </main>
 <script src="shared/shell.js"></script>
 <script>
-  // Featured card. Once snapshot pages exist this becomes the newest one:
-  // { label: 'Latest snapshot', version, date, title, summary, changes: [[kind, text, key]], link, cta }
-  // strip: average colors (blocks.json) of the featured block's family; its last color is --seed in shell.css.
+  // Featured card: the newest tool.
+  // { label, version, date?, title, summary, changes?: [[kind, text, key]], link, cta }
+  // strip: average colors (blocks.json) of a block family; its last color is --seed in shell.css.
   const latest = {
-    label: 'Latest snapshot', version: '26.4-snapshot-8', date: 'Nov 10, 2026',
-    title: 'Frostbite, Ice Caves and a stack of new ice blocks',
-    summary: 'Since 26.3 the theme is winter: a new icy mob, a cave biome, a throwable ice ball and full sets of calcite, packed ice and snow bricks.',
-    changes: [
-      ['mob', 'Frostbite, a new zombie that burns in daylight', 'frostbite'],
-      ['biome', 'Ice Caves, a new underground biome', 'ice_caves'],
-      ['blocks', 'Icicles, brittle ice, ice crystals and building sets', 'icicle'],
-    ],
-    link: 'snapshots/java/26.4-snapshot-8/since-release/', cta: 'Read the breakdown',
+    label: 'New tool', version: 'Java 26.3', title: 'Anvil optimizer',
+    summary: 'Pick the item and the books you want on it, and get the cheapest order to combine them without hitting Too Expensive.',
+    link: 'anvil/', cta: 'Open the optimizer',
     strip: ['#f9fefe', '#8fb4fb', '#75a8fd'], // snow block, packed ice, blue ice
   };
 
