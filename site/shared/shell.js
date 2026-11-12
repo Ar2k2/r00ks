@@ -1,4 +1,4 @@
-// WASD shell: injects the icon rail and drawer into every page.
+// R00K’s shell: injects the icon rail and drawer into every page.
 // A page opts in with <body data-tool="id"> and a script tag for this file.
 (() => {
   // Site root derived from this script's URL, so links work under any Pages subpath.
@@ -77,7 +77,18 @@
   const active = document.body.dataset.tool;
   // The rail highlights the category of the current tool (or the hub itself).
   const railId = id => tools.find(t => t.id === id)?.cat ?? id;
-  const logo = '<span class="logo" role="img" aria-label="WASD"><b>W</b><b>A</b><b>S</b><b>D</b></span>';
+  // Crane rook logo: a rook (text color) with a crane on top (accent) lifting a block.
+  const logo = `<svg class="logo" viewBox="0 0 260 230" role="img" aria-label="R00K’s">
+    <g fill="currentColor"><path d="M30 40H58V58H70V40H100V58H112V40H140V86H30Z"/><path d="M44 92H126L132 192H38Z"/><rect x="24" y="198" width="122" height="22"/></g>
+    <g class="crane" fill="none" stroke="var(--accent)" stroke-linecap="square">
+      <path d="M126 40V12" stroke-width="6"/><path d="M104 12H246M126 30H246" stroke-width="5"/>
+      <path d="M126 30L140 12L154 30L168 12L182 30L196 12L210 30L224 12L238 30L246 12" stroke-width="3.5"/>
+    </g>
+    <rect x="100" y="6" width="14" height="16" fill="var(--accent)"/>
+    <g class="load"><path d="M228 30V124" stroke="var(--accent)" stroke-width="3"/><rect x="220" y="122" width="16" height="7" fill="var(--accent)"/>
+      <rect x="210" y="132" width="36" height="36" fill="var(--accent)"/><rect x="218" y="140" width="20" height="20" fill="none" stroke="var(--bg)" stroke-width="3"/></g>
+  </svg>`;
+  document.querySelectorAll('[data-logo]').forEach(e => { e.outerHTML = logo; });
 
   // Built tools are links; unbuilt ones are inert spans.
   const item = (t, cls, inner, label, cur) => t.built
@@ -94,7 +105,7 @@
     </nav>
     <div class="scrim"></div>
     <aside class="drawer" id="drawer" aria-label="Menu" inert>
-      <header><a href="${root}">${logo}WASD</a><button class="btn drawer-close" aria-label="Close menu">
+      <header><a href="${root}">${logo}<span class="wordmark"><b>R00K</b>’s</span></a><button class="btn drawer-close" aria-label="Close menu">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button></header>
       <div class="drawer-list"><i class="hl"></i>${cats.map(c => `<h2>${c.name}</h2>` + tools.filter(t => t.cat === c.id).map(t =>

@@ -1,6 +1,6 @@
-# WASD — Minecraft tools site
+# R00K’s — Minecraft tools site
 
-WASD is a website of Minecraft **Java Edition** tools: block gradients, seed tools, building helpers and utilities. It is a personal
+R00K’s is a website of Minecraft **Java Edition** tools: block gradients, seed tools, building helpers and utilities. It is a personal
 project built from scratch. Prefer writing our own code over pulling in
 libraries, and ask before adding any dependency.
 
@@ -44,7 +44,7 @@ The look was refreshed in Nov 2026 to move away from a generic "AI site" feel.
 **Theme:** light and dark, following the device (`prefers-color-scheme`). No
 manual toggle.
 
-**Seed color:** everything tinted (accent, the W keycap, highlights, and a
+**Seed color:** everything tinted (accent, the logo's crane, highlights, and a
 faint tint on the backgrounds) derives from `--seed` in `shell.css` via
 `oklch(from var(--seed) ...)`. The seed is a block's average color (from
 `blocks.json`), currently blue ice `#75a8fd`. To change it, set `--seed` and the
@@ -63,7 +63,7 @@ coordinates, block IDs, diffs, labels). Labels are lowercase mono, not
 uppercase letter-spaced.
 
 **Surfaces:** soft and rounded. Panels 16px radius with a soft shadow,
-controls and buttons 10px, keycaps 7px. Primary buttons are filled with the
+controls and buttons 10px. Primary buttons are filled with the
 text color. No heavy black borders or hard offset shadows.
 
 **Layout:**
@@ -75,7 +75,7 @@ text color. No heavy black borders or hard offset shadows.
 - The menu button slides a ~312px drawer **over** the page, with a dimmed
   scrim behind it. Picking a tool slides the drawer highlight first, then the
   drawer closes about 300ms later. The X button or scrim also closes it.
-- The drawer has the WASD keycap logo, every tool grouped under its category,
+- The drawer has the crane rook logo (defined once in `shell.js`; pages place it with `<span data-logo>`), every tool grouped under its category,
   and "soon" tags on unbuilt tools.
 - Home leads with a featured card (the newest tool) with the block color strip, then the tools listed by
   category.
@@ -92,7 +92,7 @@ text color. No heavy black borders or hard offset shadows.
   highlight that springs from row to row.
 - Icons tilt slightly on hover.
 - Page content glides up about 12px while fading in.
-- Logo keycaps press down in a staggered ripple on hover.
+- The logo's crane lifts its block with a bounce on hover.
 - The home color strip and gradient result blocks drop in one by one with a
   bounce (gradient blocks about 70ms apart).
 - Copy buttons morph into a checkmark. No particle bursts or click splashes: the owner removed them as too much.

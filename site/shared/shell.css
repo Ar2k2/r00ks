@@ -166,23 +166,13 @@ a.dot:active svg.ic { transform: scale(.93); }
 .entry.soon svg.ic { opacity: .6; }
 .entry .tag { margin-left: auto; }
 
-/* WASD keycap logo: keys press down in a staggered ripple on hover. */
-.logo { display: inline-grid; grid-template-columns: repeat(3, 26px); gap: 3px; }
-.logo b {
-  display: grid; place-items: center; height: 26px; border-radius: 7px; font: 600 12px var(--mono);
-  background: var(--panel); border: 1px solid var(--control-border); color: var(--text);
-  box-shadow: 0 3px 0 var(--control-border);
-}
-.logo b:nth-child(1) {
-  grid-column: 2; background: var(--accent); border-color: transparent; color: var(--on-accent);
-  box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 60%, #000);
-}
-.logo b:nth-child(2) { grid-column: 1; }
-.logo:hover b { animation: press .35s var(--spring); }
-.logo:hover b:nth-child(2) { animation-delay: 60ms; }
-.logo:hover b:nth-child(3) { animation-delay: 120ms; }
-.logo:hover b:nth-child(4) { animation-delay: 180ms; }
-@keyframes press { 40% { transform: translateY(3px); box-shadow: 0 0 0 transparent; } }
+/* Crane rook logo: the crane's load lifts with a bounce on hover. */
+.logo { height: 34px; width: auto; flex: none; color: var(--text); overflow: visible; }
+.logo .load { transition: transform .35s var(--spring); }
+.logo:hover .load, a:hover > .logo .load { transform: translateY(-14px); }
+
+/* Wordmark: "R00K" in mono and the accent color, as in the logo. */
+.wordmark b { font: inherit; font-family: var(--mono); font-weight: 700; color: var(--accent); }
 
 /* Tool lists (home and hub pages): one hover highlight springs from row to row. */
 .in { animation: enter .55s var(--enter) both; animation-delay: calc(var(--i) * 60ms); }
