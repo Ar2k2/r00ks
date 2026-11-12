@@ -142,6 +142,10 @@
 
   // Tool pages: the tool's icon leads the page title.
   document.querySelector('.head h1')?.insertAdjacentHTML('afterbegin', icon(active));
+  // Breadcrumb above the title: the way back home (and to the hub) without the rail.
+  const cat = cats.find(c => c.id === railId(active));
+  if (active !== 'home') document.querySelector('.head')?.insertAdjacentHTML('afterbegin',
+    `<nav class="crumbs" aria-label="Breadcrumb"><a class="btn" href="${root}">${icon('home')}Home</a>${cat && cat.id !== active ? `<a class="btn" href="${root}${cat.path}"><span class="arr">←</span>${cat.name}</a>` : ''}</nav>`);
 
   const setOpen = open => {
     if (open === !drawer.inert) return;
