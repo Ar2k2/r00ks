@@ -35,6 +35,9 @@ site/
 - **No Mojang assets in the repo or on the site.** No textures, sounds,
   fonts, logos, or decompiled code. Allowed: names, IDs, translation keys,
   summarized changes, and numbers we compute ourselves (like average colors).
+  One exception, by the owner's choice (Nov 2026): gameplay screenshots of
+  the owner's own builds may go in `site/shots/` for sharing in posts.
+  Not used as page art, and never cropped textures.
 - Any feature that shows real textures must read them **locally in the
   visitor's browser** from a jar or resource pack they provide. Nothing is
   uploaded or redistributed.
