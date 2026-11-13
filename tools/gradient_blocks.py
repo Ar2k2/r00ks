@@ -36,7 +36,9 @@ def view_of(side, x):
     return ''
 
 
-SKIP = re.compile(r'^(infested_|waxed_)|^snow$')  # same look as another block (snow at 8 layers = snow_block)
+# Same look as another block (snow at 8 layers = snow_block), or doesn't keep its look:
+# live coral blocks die to dead coral within seconds unless they touch water.
+SKIP = re.compile(r'^(infested_|waxed_)|^snow$|^(tube|brain|bubble|fire|horn)_coral_block$')
 
 
 def png_rgba(data):

@@ -21,6 +21,8 @@ row.forEach((b, i) => assert.notStrictEqual(b, row[i - 1]));
 const L = pick(blocks, '#000000', '#ffffff', 9).map(b => b.lab[0]);
 assert.ok(L.every((v, i) => !i || v > L[i - 1]), 'lightness should rise: ' + L);
 assert.deepStrictEqual(pick([], '#000000', '#ffffff', 5), []);
+// Live coral blocks die out of water, so the data leaves them out (dead coral stays).
+assert.ok(!blocks.some(b => /^(tube|brain|bubble|fire|horn)_coral_block$/.test(b.id)), 'live coral in blocks.json');
 
 console.log('gradient engine: all checks passed');
 
