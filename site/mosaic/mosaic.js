@@ -64,8 +64,11 @@
     return [...n].sort((a, b) => b[1] - a[1]).map(([k, c]) => ({ block: blocks[k], count: c }));
   };
 
-  // "3 st + 12" style stack count (64 per stack).
-  const stacks = c => c < 64 ? `${c}` : `${Math.floor(c / 64)} st${c % 64 ? ` + ${c % 64}` : ''}`;
+  // "3 stacks + 12" style count (64 per stack).
+  const stacks = c => {
+    const s = Math.floor(c / 64), r = c % 64;
+    return !s ? `${c}` : `${s} stack${s > 1 ? 's' : ''}${r ? ` + ${r}` : ''}`;
+  };
 
   const api = { build, count, stacks };
   if (typeof module !== 'undefined') module.exports = api;

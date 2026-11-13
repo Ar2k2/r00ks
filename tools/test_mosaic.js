@@ -11,7 +11,7 @@ assert.strictEqual(cells[1], cells[0]);
 assert.strictEqual(cells[2], -1);
 assert.ok(blocks[cells[3]].lab[0] < 0.3, 'near-black maps to a dark block: ' + blocks[cells[3]].id);
 assert.deepStrictEqual(count(cells, blocks).map(r => r.count), [2, 1]);
-assert.deepStrictEqual([5, 64, 76, 128].map(stacks), ['5', '1 st', '1 st + 12', '2 st']);
+assert.deepStrictEqual([5, 64, 76, 128].map(stacks), ['5', '1 stack', '1 stack + 12', '2 stacks']);
 // A limit caps the block types; a limit of one paints every solid pixel with the same block.
 const many = new Uint8ClampedArray([255, 0, 0, 255, 0, 0, 255, 255, 0, 200, 0, 255, 255, 255, 255, 255, 250, 10, 10, 255]);
 assert.strictEqual(count(build(many, blocks), blocks).length, 4);

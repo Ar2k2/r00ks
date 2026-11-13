@@ -29,6 +29,17 @@
   #art { display: block; max-width: 100%; max-height: 70vh; image-rendering: pixelated; cursor: crosshair;
     animation: drop .5s var(--spring) both; }
   .spot { min-height: 1.5em; }
+
+  /* Blocks needed: one row per block so the counts read like a shopping list. */
+  .mats { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px 20px; }
+  .mats .pick { display: flex; align-items: center; gap: 12px; padding: 6px 8px; margin: 0 -8px;
+    width: calc(100% + 16px); box-sizing: border-box; transition: background .2s; }
+  .mats .pick:hover { background: var(--raised); }
+  .mats .tile { width: 34px; flex: none; border-radius: 8px; box-shadow: 0 4px 0 -1px rgb(0 0 0 / .25); }
+  .mats .pick:hover .tile { transform: translateY(-2px) rotate(-4deg); }
+  .mats b { flex: 1; min-width: 0; margin: 0; font-size: 14px; }
+  .need { text-align: right; font: 500 15px var(--mono); white-space: nowrap; }
+  .need small { color: var(--faint); font-size: 11px; }
   @media (max-width: 640px) { .controls { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -73,7 +84,7 @@
       <span class="label" id="total"></span>
       <button class="btn copy" id="copy">Copy list</button>
     </div>
-    <ol class="row" id="mats"></ol>
+    <ol class="row mats" id="mats"></ol>
     <p class="meta" id="meta"></p>
   </section>
 
@@ -162,7 +173,7 @@
     $('mats').innerHTML = mats.map(({ block: b, count: c }, i) => { const t = textures.get(b.tex); return `<li class="${swapped.has(b) ? 'swapped' : ''}" style="--i:${Math.min(i, 14)}">
       <button class="pick" data-i="${i}" title="Swap ${b.name} for another block" aria-haspopup="dialog">
       <div class="tile${t ? ' tex' : ''}" style="--hex:${b.hex}${t ? `;--tex:url(${t})` : ''}"></div>
-      <b>${b.name}${face(b)}</b><small>${c} · ${Mosaic.stacks(c)}</small></button></li>`; }).join('');
+      <b>${b.name}${face(b)}</b><span class="need">${Mosaic.stacks(c)}${c >= 64 ? `<small>${c} blocks</small>` : ''}</span></button></li>`; }).join('');
     $('meta').textContent = pool.length
       ? `Click a block to swap it for a similar one. ${pool.length} block faces considered · data from Java ${version}`
       : 'No blocks match these filters. Try turning some off.';
