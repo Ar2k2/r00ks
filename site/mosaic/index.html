@@ -53,7 +53,7 @@
   <section class="panel controls" aria-label="Settings">
     <label class="btn primary file">Choose image<input type="file" id="file" accept="image/*"></label>
     <label class="size"><span class="label">Width in blocks: <output id="dims">64</output></span>
-      <input type="range" id="width" min="16" max="256" step="8" value="64"></label>
+      <input type="range" id="width" min="16" max="256" data-step="8" value="64"></label>
     <label class="size"><span class="label">Block types: <output id="kinds-out">no limit</output></span>
       <input type="range" id="kinds" min="2" max="41" value="41" aria-describedby="kinds-help"></label>
     <p class="help" id="kinds-help">Fewer block types means a simpler build and fewer blocks to gather, with less detail.</p>
@@ -130,7 +130,7 @@
     const view = document.querySelector('[name=view]:checked').value;
     pool = blocks.filter(b => b.views.includes(view) && ($('wool').checked || !b.id.endsWith('_wool')) &&
       Object.entries(filters).every(([k, f]) => !$(k).checked || f(b)));
-    w = +$('width').value; h = Math.max(1, Math.round(w * img.height / img.width));
+    w = WASD.val($('width')); h = Math.max(1, Math.round(w * img.height / img.width));
     if (h > MAX_H) { h = MAX_H; w = Math.max(1, Math.round(h * img.width / img.height)); }
     $('dims').textContent = `${w} × ${h}`;
 
@@ -139,7 +139,7 @@
     const small = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true });
     small.imageSmoothingQuality = 'high';
     small.drawImage(img, 0, 0, w, h);
-    const kinds = +$('kinds').value, limit = kinds > 40 ? Infinity : kinds; // the top of the slider means no limit
+    const kinds = WASD.val($('kinds')), limit = kinds > 40 ? Infinity : kinds; // the top of the slider means no limit
     $('kinds-out').textContent = isFinite(limit) ? limit : 'no limit';
     cells = pool.length ? Mosaic.build(small.getImageData(0, 0, w, h).data, pool, limit) : new Int32Array(w * h).fill(-1);
     // Swaps: a substitute the filters now hide is skipped rather than snuck back in.

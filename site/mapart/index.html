@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft Map Art Generator (Flat & Staircase) · R00K’s</title>
+<meta name="description" content="Turn any image into Minecraft Java map art, flat or staircased, with a block list and a one-command build. The image never leaves your browser.">
+<meta name="robots" content="noindex"> <!-- behind the mapart flag until release -->
+<link rel="canonical" href="https://rooks.rookstudio.net/mapart/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="R00K’s">
+<meta property="og:title" content="Minecraft Map Art Generator (Flat & Staircase) · R00K’s">
+<meta property="og:description" content="Turn any image into Minecraft Java map art, flat or staircased, with a block list and a one-command build. The image never leaves your browser.">
+<meta property="og:url" content="https://rooks.rookstudio.net/mapart/">
+<meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../shared/shell.css">
+<style>
+  .controls { display: grid; grid-template-columns: auto 1fr 1fr; gap: 16px 20px; align-items: end; }
+  .controls .view { grid-column: auto; }
+  .size { display: grid; gap: 8px; }
+  .size output { font: 500 13px var(--mono); color: var(--text); }
+  .file input { display: none; }
+  .file { cursor: pointer; justify-self: start; }
+  .help { margin: 0; align-self: center; color: var(--faint); font-size: 13px; grid-column: span 2; }
+
+  .stage { margin-top: 16px; display: grid; place-items: center; padding: 12px; border-radius: 12px; background: var(--raised); }
+  #art { display: block; max-width: 100%; max-height: 70vh; image-rendering: pixelated; cursor: crosshair;
+    animation: drop .5s var(--spring) both; }
+  .spot { min-height: 1.5em; }
+  .warn { margin: 12px 0 0; color: var(--warn); font-size: 14px; }
+
+  .mats { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px 20px; }
+  .mats .pick { display: flex; align-items: center; gap: 12px; padding: 6px 8px; margin: 0 -8px;
+    width: calc(100% + 16px); box-sizing: border-box; transition: background .2s; }
+  .mats .pick:hover { background: var(--raised); }
+  .mats .tile { width: 34px; flex: none; border-radius: 8px; box-shadow: 0 4px 0 -1px rgb(0 0 0 / .25); }
+  .mats .pick:hover .tile { transform: translateY(-2px) rotate(-4deg); }
+  .mats b { flex: 1; min-width: 0; margin: 0; font-size: 14px; }
+  .need { text-align: right; font: 500 15px var(--mono); white-space: nowrap; }
+  .need small { color: var(--faint); font-size: 11px; }
+  .place { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+  @media (max-width: 640px) { .controls { grid-template-columns: 1fr; } .help { grid-column: auto; } }
+</style>
+</head>
+<body data-tool="mapart">
+<main>
+  <header class="head">
+    <h1>Map art</h1>
+    <p>Pick a picture and it becomes map art: a 128 × 128 block area per map, colored so a held map shows your image. Your image is read here in the browser and never uploaded.</p>
+  </header>
+
+  <section class="panel controls" aria-label="Settings">
+    <label class="btn primary file">Choose image<input type="file" id="file" accept="image/*"></label>
+    <label class="size"><span class="label">Maps across: <output id="mw-out">1</output></span>
+      <input type="range" id="mw" min="1" max="4" value="1"></label>
+    <label class="size"><span class="label">Maps down: <output id="mh-out">1</output></span>
+      <input type="range" id="mh" min="1" max="4" value="1"></label>
+    <div class="view" role="radiogroup" aria-label="Build style">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="mode" value="f" checked><span>Flat <small>60 colors</small></span></label>
+      <label><input type="radio" name="mode" value="s"><span>Staircase <small>180</small></span></label>
+    </div>
+    <p class="help">Flat is one layer, easy to build. Staircase steps blocks up and down so the map shades them lighter or darker, for three times the colors.</p>
+    <fieldset class="filters">
+      <legend class="label">Options</legend>
+      <label class="chip"><input type="checkbox" id="dither" checked><span>Dither</span></label>
+    </fieldset>
+  </section>
+
+  <section class="panel" aria-label="Result">
+    <div class="result-head"><span class="label spot" id="spot">Choose an image to start.</span></div>
+    <div class="stage" id="stage" hidden><canvas id="art" aria-label="Map art preview"></canvas></div>
+    <p class="warn" id="warn" hidden></p>
+  </section>
+
+  <section class="panel" aria-label="Blocks needed" id="mats-panel" hidden>
+    <div class="result-head">
+      <span class="label" id="total"></span>
+      <button class="btn copy" id="copy">Copy list</button>
+    </div>
+    <ol class="row mats" id="mats"></ol>
+  </section>
+
+  <section class="panel" aria-label="Build command">
+    <span class="label">Build command</span>
+    <p class="place">The build starts with a line of cobblestone just north of the art, which the top row's shade is measured against, so the art itself begins 3 blocks south of the command block. To line it up with a map, put the command block on the map's west edge and 3 blocks north of its north edge. Map edges fall every 128 blocks at X and Z of −64, 64, 192 and so on, so for the map around 0, 0 that is X −64, Z −67.</p>
+    <div id="build"></div>
+  </section>
+</main>
+<script src="../shared/shell.js"></script>
+<script src="../gradient/engine.js"></script>
+<script src="../mosaic/mosaic.js"></script>
+<script src="../shared/build.js"></script>
+<script src="../shared/swap.js"></script>
+<script src="mapart.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const { BASES } = MapArt, PALS = { f: MapArt.colors(false), s: MapArt.colors(true) };
+  const NORTH = BASES.findIndex(b => b.id === 'cobblestone'), SHADE = ['lower', 'level', 'higher'];
+  let img = null, cells = null, ys = null, pal = null, w = 0, h = 0, mats = [];
+  const subs = new Map(); // block index -> block index the visitor swapped in, everywhere in the picture
+
+  const render = () => {
+    const mw = WASD.val($('mw')), mh = WASD.val($('mh')), stairs = document.querySelector('[name=mode]:checked').value === 's';
+    $('mw-out').textContent = mw; $('mh-out').textContent = mh;
+    if (!img) return;
+    w = mw * 128; h = mh * 128; pal = PALS[stairs ? 's' : 'f'];
+
+    // Fill the maps, cropping the picture's overflow evenly; transparent parts read as white.
+    const ctx = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true });
+    const s = Math.max(w / img.width, h / img.height);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, (w - img.width * s) / 2, (h - img.height * s) / 2, img.width * s, img.height * s);
+    cells = MapArt.convert(ctx.getImageData(0, 0, w, h).data, w, h, pal, $('dither').checked);
+    cells = MapArt.swap(cells, pal, subs);
+    ys = stairs ? MapArt.heights(cells, w, h, pal) : null;
+
+    // Preview: exactly the colors the map will show.
+    const art = $('art'), out = new ImageData(w, h);
+    cells.forEach((k, p) => out.data.set([...pal[k].rgb, 255], p * 4));
+    art.width = w; art.height = h;
+    art.style.width = `min(100%, ${Math.max(w * 3, 384)}px)`;
+    art.getContext('2d').putImageData(out, 0, 0);
+    $('stage').hidden = false;
+    art.style.animation = 'none'; void art.offsetWidth; art.style.animation = '';
+    $('spot').textContent = `${mw} × ${mh} map${mw * mh > 1 ? 's' : ''} · ${w} × ${h} blocks · hover the preview to see each block`;
+
+    const top = ys ? Math.max(...ys) : 0;
+    $('warn').hidden = top < 200;
+    $('warn').textContent = `The tallest column is ${top + 1} blocks, so place the command block low enough that it fits under the build limit (Y 319). Turning dither off usually makes the steps shorter.`;
+
+    // Blocks needed (the cobblestone line included), most first.
+    const byBlock = Int32Array.from({ length: w * (h + 1) }, (_, i) => i < w ? NORTH : pal[cells[i - w]].block);
+    mats = Mosaic.count(byBlock, BASES);
+    $('mats-panel').hidden = false;
+    $('total').textContent = `${byBlock.length.toLocaleString('en')} blocks · ${mats.length} kinds`;
+    const swapped = new Set(subs.values());
+    $('mats').innerHTML = mats.map(({ block: b, count: c }, i) => `<li class="${swapped.has(BASES.indexOf(b)) ? 'swapped' : ''}" style="--i:${Math.min(i, 14)}">
+      <button class="pick" data-i="${i}" title="Swap ${b.name} for another color" aria-haspopup="dialog">
+      <div class="tile" style="--hex:${b.hex}"></div><b>${b.name}</b>
+      <span class="need">${Mosaic.stacks(c)}${c >= 64 ? `<small>${c} blocks</small>` : ''}</span></button></li>`).join('');
+
+    Build.panel($('build'), () => ({ grid: Array.from(byBlock, k => BASES[k].id), w, h: h + 1, view: 't', ys }));
+  };
+
+  let queued;
+  const update = () => queued ||= requestAnimationFrame(() => { queued = 0; render(); });
+
+  $('file').onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const i = new Image();
+    i.onload = () => { URL.revokeObjectURL(i.src); img = i; subs.clear(); update(); };
+    i.onerror = () => { $('spot').textContent = `Could not read ${f.name} as an image.`; };
+    i.src = URL.createObjectURL(f);
+    e.target.value = '';
+  };
+  $('mw').oninput = $('mh').oninput = update;
+  document.querySelectorAll('[name=mode], #dither').forEach(el => el.onchange = update);
+
+  // Hover: which block sits where, counted from the north-west corner of the art.
+  $('art').onmousemove = e => {
+    if (!cells) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left) / r.width * w), y = Math.floor((e.clientY - r.top) / r.height * h);
+    const c = pal[cells[y * w + x]];
+    if (!c) return;
+    $('spot').textContent = `${x + 1} east, ${y + 1} south · ${BASES[c.block].name}`
+      + (ys ? ` · ${SHADE[c.shade]} than north · height ${ys[(y + 1) * w + x]}` : '');
+  };
+
+  // Click a block in the list: swap it for a nearby map color everywhere it is used.
+  $('mats').onclick = e => {
+    const btn = e.target.closest('.pick');
+    if (!btn) return;
+    const b = mats[btn.dataset.i].block, k = BASES.indexOf(b);
+    btn.classList.remove('hop'); void btn.offsetWidth; btn.classList.add('hop');
+    const undo = [...subs].filter(([, n]) => n === k).map(([o]) => o);
+    const actions = undo.length ? [{ label: 'Undo swap', run: () => { Swap.close(); undo.forEach(o => subs.delete(o)); update(); } }] : [];
+    Swap.open(btn, b, BASES, new Map(), { actions, onPick: nb => {
+      // Everything showing this block now shows the new one, including earlier swaps onto it.
+      const n = BASES.indexOf(nb);
+      for (const [o, m] of subs) if (m === k) o === n ? subs.delete(o) : subs.set(o, n);
+      subs.set(k, n);
+      update();
+    } });
+  };
+
+  $('copy').onclick = () => WASD.copy($('copy'), mats.map(({ block: b, count: c }) => `${c}\t${b.name}\tminecraft:${b.id.split('[')[0]}`).join('\n'));
+  render();
+})();
+</script>
+</body>
+</html>

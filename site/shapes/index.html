@@ -59,11 +59,11 @@
       <label><input type="radio" name="kind" value="dome"><span>Dome</span></label>
     </div>
     <label class="slider"><span class="label">diameter</span>
-      <input type="range" id="size-range" min="1" max="128" step="0.01" value="15" aria-label="Diameter slider">
+      <input type="range" id="size-range" min="1" max="128" value="15" aria-label="Diameter slider">
       <input type="number" id="size" min="1" max="128" value="15" aria-label="Diameter in blocks">
     </label>
     <label class="slider" id="layer-row" hidden><span class="label">layer</span>
-      <input type="range" id="layer" min="1" step="0.01" value="1" aria-label="Layer, from the bottom">
+      <input type="range" id="layer" min="1" value="1" aria-label="Layer, from the bottom">
       <output id="layer-out">1 / 1</output>
     </label>
     <div class="opts">
@@ -98,7 +98,7 @@
 
   const draw = () => {
     const d = clampSize($('size').value), k = kind(), filled = !$('hollow').checked;
-    const n = Shapes.layers(d, k), li = Math.min(Math.round($('layer').value), n) - 1;
+    const n = Shapes.layers(d, k), li = Math.min(WASD.val($('layer')), n) - 1;
     const g = Shapes.layer(d, k, li, filled);
     const below = li > 0 ? Shapes.layer(d, k, li - 1, filled) : null;
 
@@ -148,40 +148,16 @@
   // Shape or size changed: reset the layer slider (spheres start in the middle, domes at the base).
   const reshape = () => {
     const d = clampSize($('size').value), k = kind(), n = Shapes.layers(d, k);
-    $('size-range').dataset.v = d;
     $('layer-row').hidden = k === 'circle';
     $('layer').max = n;
     $('layer').value = k === 'sphere' ? Math.ceil(n / 2) : 1;
     setLayer($('layer').value);
   };
 
-  // Smooth sliders (like the gradient's): step="0.01" lets the thumb move freely while the value
-  // snaps to whole blocks; on release it glides onto the nearest step. Arrow keys move one whole step.
-  const smooth = (el, update) => {
-    // data-v holds the value last drawn, so dragging within one step does not redraw.
-    el.oninput = () => { const v = Math.round(el.value); if (v !== +el.dataset.v) update(v); };
-    el.onchange = () => {
-      const from = +el.value, to = Math.round(from), t0 = performance.now();
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return el.value = to;
-      const tick = now => {
-        const k = Math.min(1, (now - t0) / 180);
-        el.value = from + (to - from) * (1 - (1 - k) ** 3);
-        if (k < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    };
-    el.onkeydown = e => {
-      const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
-      if (!d) return;
-      e.preventDefault();
-      el.value = Math.min(+el.max, Math.max(+el.min, Math.round(el.value) + d));
-      el.oninput();
-    };
-  };
-  const setLayer = v => { $('layer').dataset.v = v; $('layer').setAttribute('aria-valuetext', v); $('layer-out').textContent = `${v} / ${$('layer').max}`; draw(); };
+  const setLayer = v => { $('layer-out').textContent = `${v} / ${$('layer').max}`; draw(); };
 
-  smooth($('size-range'), v => { $('size').value = v; $('size-range').setAttribute('aria-valuetext', v); reshape(); });
-  smooth($('layer'), setLayer);
+  $('size-range').oninput = () => { $('size').value = WASD.val($('size-range')); reshape(); };
+  $('layer').oninput = () => setLayer(WASD.val($('layer')));
   $('size').oninput = () => { if ($('size').value) { $('size-range').value = clampSize($('size').value); reshape(); } };
   $('size').onchange = () => { $('size').value = clampSize($('size').value); reshape(); };
   document.querySelectorAll('[name=kind]').forEach(r => r.onchange = () => { reshape(); pop(); });

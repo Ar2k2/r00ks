@@ -26,7 +26,7 @@
       desc: 'Build block palettes that sit well together.' },
     { id: 'mosaic', name: 'Image mosaic', path: 'mosaic/', cat: 'color', built: true,
       desc: 'Turn a picture into a wall or floor of blocks.' },
-    { id: 'mapart', name: 'Map art', path: 'mapart/', cat: 'color',
+    { id: 'mapart', name: 'Map art', path: 'mapart/', cat: 'color', built: true, flag: 'mapart',
       desc: 'Turn an image into a map art block layout.' },
     { id: 'nether', name: 'Nether coordinates', path: 'nether/', cat: 'world', built: true,
       desc: 'Overworld and Nether coordinates for linking portals.' },
@@ -43,6 +43,16 @@
     { id: 'commands', name: 'Command builder', path: 'commands/', cat: 'mechanics', built: true,
       desc: 'Build give, summon and component commands.' },
   ];
+  // Feature flags: a tool with flag: 'x' shows as "soon" until this browser opts in with ?flags=x
+  // (comma-separated, saved; ?flags= clears). Its page still works by URL for testing.
+  let flags = '';
+  try {
+    const q = new URLSearchParams(location.search).get('flags');
+    if (q !== null) localStorage.setItem('rooks-flags', q);
+    flags = localStorage.getItem('rooks-flags') ?? '';
+  } catch {}
+  const on = new Set(flags.split(',').filter(Boolean));
+  for (const t of tools) if (t.flag && !on.has(t.flag)) t.built = false;
   for (const c of cats) c.built = tools.some(t => t.cat === c.id && t.built);
   // Original line icons on a 24px grid, keyed by tool or category id.
   const icons = {
@@ -81,7 +91,47 @@
     try { await navigator.clipboard.writeText(text); } catch { label.textContent = 'Copy failed'; return; }
     btn.classList.add('done'); label.textContent = 'Copied';
   };
-  window.WASD = { root, cats, tools, copy, dress, icon };
+  // Smooth sliders, on every <input type=range>: the thumb moves freely while dragging, then glides onto
+  // the nearest step (data-step, default 1) on release. Arrow keys move one whole step. The page only gets
+  // an input event when the stepped value changes, and reads it with WASD.val(el).
+  const val = el => {
+    const s = +(el.dataset.step || 1), lo = +el.min || 0, hi = el.max === '' ? 100 : +el.max;
+    return Math.min(hi, Math.max(lo, lo + Math.round((el.value - lo) / s) * s));
+  };
+  const isRange = el => el instanceof HTMLInputElement && el.type === 'range';
+  document.querySelectorAll('input[type=range]').forEach(el => { el.step = 'any'; el.setAttribute('aria-valuetext', val(el)); });
+  // Remember the value a drag starts from (pages may have set it in code since).
+  for (const type of ['pointerdown', 'focusin']) document.addEventListener(type, e => { if (isRange(e.target)) e.target.last = val(e.target); }, true);
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (!isRange(el)) return;
+    const v = val(el);
+    if (v === el.last) return e.stopImmediatePropagation();
+    el.last = v;
+    el.setAttribute('aria-valuetext', v);
+  }, true);
+  document.addEventListener('change', e => {
+    const el = e.target;
+    if (!isRange(el)) return;
+    const from = +el.value, to = val(el), t0 = performance.now();
+    if (reduced) { el.value = to; return; }
+    const tick = now => {
+      const k = Math.min(1, (now - t0) / 180);
+      el.value = from + (to - from) * (1 - (1 - k) ** 3);
+      if (k < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, true);
+  document.addEventListener('keydown', e => {
+    const el = e.target, d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+    if (!isRange(el) || !d) return;
+    e.preventDefault();
+    el.last = val(el);
+    el.value = el.last + d * +(el.dataset.step || 1);
+    el.value = val(el);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }, true);
+  window.WASD = { root, cats, tools, copy, dress, icon, val };
 
   const active = document.body.dataset.tool;
   // The rail highlights the category of the current tool (or the hub itself).

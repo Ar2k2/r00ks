@@ -49,10 +49,12 @@
   // Where things go, relative to the command block: the build starts 2 blocks south of it and runs east.
   // A wall stands up from the command block's level; a floor lies at that level and spreads south.
   // Commands run from minecarts on the rail 1 block above the command block, hence the -1 on Y.
+  // ys (floors only): a height per cell, for map art staircases; rectangles then also share a height.
   const at = n => n ? `~${n}` : '~';
-  const commands = (grid, w, h, view) => rects(grid, w, h).map(({ c, r, w: rw, h: rh, block: b }) => {
+  const commands = (grid, w, h, view, ys) => rects(ys ? grid.map((b, i) => b && `${b} ${ys[i]}`) : grid, w, h).map(({ c, r, w: rw, h: rh, block: key }) => {
+    const [b, y] = ys ? key.split(' ') : [key, 0];
     const [x1, x2] = [c, c + rw - 1];
-    const [y1, y2] = view === 't' ? [0, 0] : [h - r - rh, h - 1 - r];
+    const [y1, y2] = view === 't' ? [+y, +y] : [h - r - rh, h - 1 - r];
     const [z1, z2] = view === 't' ? [2 + r, 2 + r + rh - 1] : [2, 2];
     const a = `${at(x1)} ${at(y1 - 1)} ${at(z1)}`;
     return rw * rh === 1 ? `setblock ${a} ${b}` : `fill ${a} ${at(x2)} ${at(y2 - 1)} ${at(z2)} ${b}`;
@@ -84,7 +86,7 @@
   const panel = (el, getGrid) => {
     const g = getGrid();
     if (!g) { el.innerHTML = ''; return; }
-    const cmds = commands(g.grid, g.w, g.h, g.view), parts = pack(cmds);
+    const cmds = commands(g.grid, g.w, g.h, g.view, g.ys), parts = pack(cmds);
     const where = g.view === 't' ? 'as a floor at its level, 2 blocks south of it, spreading east and south'
       : 'as a wall standing on its level, 2 blocks south of it, running east (read it from the south)';
     el.innerHTML = `<p class="build-help">Get a command block with <code>/give @p command_block</code> (cheats on) and place it. Put an <b>activator rail</b> on top and a <b>lever</b> on its side. Paste the command, leave it on Impulse and Needs Redstone, and flip the lever on. The build appears ${where}.${parts.length > 1 ? ' Big builds come in parts: flip the lever off, paste the next part, and flip it on again.' : ''}</p>

@@ -55,7 +55,7 @@
       <div><input type="color" id="to-pick" value="#f472b6" aria-label="To color"><input class="hex" id="to" value="#f472b6" pattern="#[0-9a-fA-F]{6}" spellcheck="false" aria-label="To hex"></div>
     </label>
     <div class="ideal" id="ideal" aria-hidden="true"></div>
-    <label class="steps"><span class="label">Steps</span><input type="range" id="steps" min="2" max="32" step="0.01" value="9" aria-valuetext="9"><output id="steps-out">9</output></label>
+    <label class="steps"><span class="label">Steps</span><input type="range" id="steps" min="2" max="32" value="9" aria-valuetext="9"><output id="steps-out">9</output></label>
     <fieldset class="filters">
       <legend class="label">Filters</legend>
       <label class="chip"><input type="checkbox" id="smooth"><span>Smooth only</span></label>
@@ -110,7 +110,7 @@
   };
 
   const render = () => {
-    const from = $('from').value, to = $('to').value, steps = Math.round($('steps').value);
+    const from = $('from').value, to = $('to').value, steps = WASD.val($('steps'));
     if (!HEX.test(from) || !HEX.test(to)) return;
     $('steps-out').value = steps;
     $('steps').setAttribute('aria-valuetext', steps);
@@ -157,27 +157,7 @@
     $('from-pick').value = $('from').value; $('to-pick').value = $('to').value;
     last = []; update();
   };
-  // The thumb moves freely while dragging, then glides onto the nearest whole step on release.
-  const glide = (el, to) => {
-    const from = +el.value, t0 = performance.now();
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return el.value = to;
-    const tick = now => {
-      const k = Math.min(1, (now - t0) / 180);
-      el.value = from + (to - from) * (1 - (1 - k) ** 3);
-      if (k < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  };
   $('steps').oninput = update;
-  $('steps').onchange = e => glide(e.target, Math.round(e.target.value));
-  // Fine-grained step="0.01" would make arrow keys crawl; keep them one whole step per press.
-  $('steps').onkeydown = e => {
-    const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
-    if (!d) return;
-    e.preventDefault();
-    e.target.value = Math.min(32, Math.max(2, Math.round(e.target.value) + d));
-    update();
-  };
   document.querySelectorAll('.filters input, [name=view]').forEach(el => el.onchange = update);
 
   $('copy').onclick = () => WASD.copy($('copy'),

@@ -13,10 +13,15 @@ assert.deepStrictEqual(ids(blocks, '#ffffff', '#ffffff', 1), ['snow_block']);
 // A smooth block's own average color gives that block back (noisy ones lose to smoother lookalikes).
 for (const id of ['black_concrete', 'red_wool', 'white_concrete', 'lime_terracotta'])
   assert.deepStrictEqual(ids(blocks, byId(id).hex, byId(id).hex, 1), [id]);
-// Avoid repeats never puts the same face twice in a row.
-const row = pick(blocks, '#202020', '#303030', 12, { avoidRepeats: true });
-assert.strictEqual(row.length, 12);
-row.forEach((b, i) => assert.notStrictEqual(b, row[i - 1]));
+// Avoid repeats: no block twice anywhere in the row, whichever face shows. Brown to gray used to
+// alternate stripped spruce log with planks and barrels.
+for (const [from, to, n] of [['#202020', '#303030', 12], ['#6b4a2f', '#808080', 32], ['#7a5230', '#9a9a9a', 9]]) {
+  const row = ids(blocks, from, to, n, { avoidRepeats: true });
+  assert.strictEqual(row.length, n);
+  assert.strictEqual(new Set(row).size, n, row.join(' '));
+}
+// More steps than blocks: the row still fills, repeating as little as it can.
+assert.strictEqual(pick(blocks.slice(0, 3), '#000000', '#ffffff', 9, { avoidRepeats: true }).length, 9);
 // Black to white runs dark to light.
 const L = pick(blocks, '#000000', '#ffffff', 9).map(b => b.lab[0]);
 assert.ok(L.every((v, i) => !i || v > L[i - 1]), 'lightness should rise: ' + L);

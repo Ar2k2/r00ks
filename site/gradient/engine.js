@@ -30,6 +30,7 @@
   // Pick one block per step, scoring the whole row at once (Viterbi-style DP):
   //   unary:    distance to that step's target + noisy texture penalty
   //   pairwise: neighbors should step like the targets do + repeat penalty
+  // avoidRepeats: no block twice anywhere in the row (when there are enough blocks).
   const W = { noise: 0.25, smooth: 1, repeat: 0.002 };
 
   function pick(blocks, fromHex, toHex, steps, { avoidRepeats = false } = {}) {
@@ -40,33 +41,60 @@
       const t = steps === 1 ? 0 : i / (steps - 1);
       return a.map((v, k) => v + (b[k] - v) * t);
     });
-    const unary = i => blocks.map(o => d2(o.lab, targets[i]) + W.noise * o.noise ** 2);
 
-    let cost = unary(0);
-    const back = [];
-    for (let i = 1; i < steps; i++) {
-      const u = unary(i), dt = targets[i].map((v, k) => v - targets[i - 1][k]);
-      const next = new Array(K), from = new Int32Array(K);
-      for (let k = 0; k < K; k++) {
-        const c = blocks[k].lab;
-        let best = Infinity, arg = 0;
-        for (let j = 0; j < K; j++) {
-          if (cost[j] >= best) continue; // cannot win: pairwise terms are never negative
-          const p = blocks[j].lab;
-          let v = cost[j] + W.smooth * ((c[0] - p[0] - dt[0]) ** 2 + (c[1] - p[1] - dt[1]) ** 2 + (c[2] - p[2] - dt[2]) ** 2);
-          if (j === k) v += avoidRepeats ? Infinity : W.repeat;
-          if (v < best) { best = v; arg = j; }
+    // One DP pass. ban[i]: block ids not allowed at step i. Each step only considers its M closest
+    // allowed blocks: anything further off loses on distance anyway, and it keeps re-scoring quick.
+    const M = 48;
+    const solve = ban => {
+      const cand = targets.map((t, i) => blocks.map((o, k) => [k, d2(o.lab, t) + W.noise * o.noise ** 2])
+        .filter(([k]) => !ban[i].has(blocks[k].id)).sort((p, q) => p[1] - q[1]).slice(0, M));
+      if (cand.some(c => !c.length)) return [];
+      let cost = cand[0].map(([, u]) => u);
+      const back = [];
+      for (let i = 1; i < steps; i++) {
+        const dt = targets[i].map((v, k) => v - targets[i - 1][k]), prev = cand[i - 1];
+        const next = [], from = [];
+        for (const [k, u] of cand[i]) {
+          const c = blocks[k].lab;
+          let best = Infinity, arg = 0;
+          prev.forEach(([j], n) => {
+            if (cost[n] >= best) return; // cannot win: pairwise terms are never negative
+            const p = blocks[j].lab;
+            let v = cost[n] + W.smooth * ((c[0] - p[0] - dt[0]) ** 2 + (c[1] - p[1] - dt[1]) ** 2 + (c[2] - p[2] - dt[2]) ** 2);
+            // A repeat is the same block, whichever face shows (log end next to log side counts).
+            if (blocks[j].id === blocks[k].id) v += avoidRepeats ? Infinity : W.repeat;
+            if (v < best) { best = v; arg = n; }
+          });
+          next.push(best + u);
+          from.push(arg);
         }
-        next[k] = best + u[k];
-        from[k] = arg;
+        cost = next;
+        back.push(from);
       }
-      cost = next;
-      back.push(from);
+      let n = cost.indexOf(Math.min(...cost));
+      if (!isFinite(cost[n])) return []; // e.g. one block left and repeats forbidden
+      const row = [blocks[cand[steps - 1][n][0]]];
+      for (let i = back.length - 1; i >= 0; i--) row.unshift(blocks[cand[i][n = back[i][n]][0]]);
+      return row;
+    };
+
+    const ban = targets.map(() => new Set());
+    let row = solve(ban);
+    // A block used more than once stays only at the step it fits best; re-score until none repeat.
+    // If the blocks run out, the last row that worked stands (with some repeats).
+    while (avoidRepeats && row.length) {
+      const at = new Map();
+      row.forEach((o, i) => at.set(o.id, [...at.get(o.id) ?? [], i]));
+      const dups = [...at].filter(([, is]) => is.length > 1);
+      if (!dups.length) break;
+      for (const [id, is] of dups) {
+        const keep = is.reduce((p, i) => d2(row[i].lab, targets[i]) < d2(row[p].lab, targets[p]) ? i : p);
+        ban.forEach((s, i) => i !== keep && s.add(id));
+      }
+      const next = solve(ban);
+      if (!next.length) break;
+      row = next;
     }
-    let k = cost.indexOf(Math.min(...cost));
-    if (!isFinite(cost[k])) return []; // e.g. one block left and repeats forbidden
-    const row = [blocks[k]];
-    for (let i = back.length - 1; i >= 0; i--) row.unshift(blocks[k = back[i][k]]);
     return row;
   }
 

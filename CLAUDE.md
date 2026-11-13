@@ -16,6 +16,13 @@ libraries, and ask before adding any dependency.
   unless we explicitly decide otherwise.
 - Every tool is its own folder under `site/`.
 - Only commit and push when the owner asks (for example "publish it").
+- **Feature flags** for tools not ready for release: give the tool
+  `flag: 'id'` in `shell.js`. It then shows as "soon" everywhere unless the
+  browser opted in by visiting any page with `?flags=id` (comma-separated,
+  saved in localStorage; `?flags=` clears). Keep a flagged tool out of
+  `sitemap.xml`, the home featured card and hub text, and give its page
+  `<meta name="robots" content="noindex">`. Map art (`mapart`) is flagged
+  as of Nov 2026. To release, remove all of that.
 
 ## Repo layout
 
@@ -38,6 +45,9 @@ site/
   One exception, by the owner's choice (Nov 2026): gameplay screenshots of
   the owner's own builds may go in `site/shots/` for sharing in posts.
   Not used as page art, and never cropped textures.
+  Also by the owner's choice (Nov 2026): the map base colors (RGB values,
+  from the wiki's map item format table) are treated as allowed facts, like
+  IDs. They live in `site/mapart/mapart.js`.
 - Any feature that shows real textures must read them **locally in the
   visitor's browser** from a jar or resource pack they provide. Nothing is
   uploaded or redistributed.
@@ -110,6 +120,11 @@ text color. No heavy black borders or hard offset shadows.
 - The logo's crane loops continuously: lifts its block, carries it along the jib, sets it down, and back.
 - The home color strip and gradient result blocks drop in one by one with a
   bounce (gradient blocks about 70ms apart).
+- **Sliders are always smooth.** Every `<input type=range>` gets this from
+  `shell.js`: the thumb moves freely while dragging and glides onto the
+  nearest step on release. Set the step with `data-step` (default 1), not
+  `step`, and read the value with `WASD.val(el)`. Never use a plain snapping
+  slider.
 - Copy buttons morph into a checkmark. No particle bursts or click splashes: the owner removed them as too much.
 - Everything must respect `prefers-reduced-motion`.
 
