@@ -317,6 +317,22 @@ input[type=range] { accent-color: var(--c); width: 100%; }
 .filters legend { padding: 0; margin-bottom: 10px; }
 .result-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .result-head .label { margin-right: auto; }
+/* Dye swatches (banner, fireworks): <div class="dyes"> of <button class="dye" style="--hex">.
+   Picked with aria-checked (pick one) or aria-pressed (pick several). */
+.dyes { display: grid; grid-template-columns: repeat(auto-fill, 36px); gap: 8px; }
+.dye {
+  width: 36px; height: 36px; padding: 0; border-radius: 10px; cursor: pointer; background: var(--hex);
+  border: 1px solid color-mix(in srgb, var(--text) 14%, transparent); box-shadow: 0 4px 0 -1px rgb(0 0 0 / .22);
+  transition: transform .2s var(--spring), box-shadow .2s, opacity .2s;
+}
+.dye:hover { transform: translateY(-3px); }
+.dye:active { transform: scale(.93); }
+.dye[aria-checked=true], .dye[aria-pressed=true] {
+  box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--text); animation: chip-pop .35s var(--spring);
+}
+.dye:disabled { opacity: .3; cursor: not-allowed; transform: none; }
+.dye:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
 /* Coordinate fieldsets: <fieldset class="side"><legend> + .xyz labels with inputs. */
 .side {
   margin: 0; padding: 16px; border-radius: 12px; min-width: 0;

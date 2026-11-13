@@ -16,6 +16,11 @@ libraries, and ask before adding any dependency.
   unless we explicitly decide otherwise.
 - Every tool is its own folder under `site/`.
 - Only commit and push when the owner asks (for example "publish it").
+- **Cache-busting:** every local `.js`/`.css` link carries `?v=<stamp>`.
+  Before publishing a change to any `.js` or `.css`, run
+  `python3 tools/version.py` (restamps them all). Otherwise returning visitors
+  can get new HTML with an old cached `shell.css`/`shell.js`, which breaks
+  pages. New pages need the `?v=` on their links too (the script adds it).
 - **Feature flags** for tools not ready for release: give the tool
   `flag: 'id'` in `shell.js`. It then shows as "soon" everywhere unless the
   browser opted in by visiting any page with `?flags=id` (comma-separated,
@@ -47,7 +52,9 @@ site/
   Not used as page art, and never cropped textures.
   Also by the owner's choice (Nov 2026): the map base colors (RGB values,
   from the wiki's map item format table) are treated as allowed facts, like
-  IDs. They live in `site/mapart/mapart.js`.
+  IDs. They live in `site/mapart/mapart.js`. Same for the 16 dye colors
+  (banner color and firework color per dye, from the wiki's dye table), in
+  `site/shared/dyes.js`.
 - Any feature that shows real textures must read them **locally in the
   visitor's browser** from a jar or resource pack they provide. Nothing is
   uploaded or redistributed.

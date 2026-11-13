@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft Banner Designer (Loom Steps & Commands) · R00K’s</title>
+<meta name="description" content="Design a Minecraft Java banner layer by layer and get the exact loom steps, the dyes and pattern items you need, and /give commands for the banner and a shield.">
+<link rel="canonical" href="https://rooks.rookstudio.net/banner/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="R00K’s">
+<meta property="og:title" content="Minecraft Banner Designer (Loom Steps & Commands) · R00K’s">
+<meta property="og:description" content="Design a Minecraft Java banner layer by layer and get the exact loom steps, the dyes and pattern items you need, and /give commands for the banner and a shield.">
+<meta property="og:url" content="https://rooks.rookstudio.net/banner/">
+<meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../shared/shell.css?v=202611131428">
+<style>
+  .designer { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .preview { position: sticky; top: 24px; display: grid; gap: 12px; justify-items: center; }
+  .flag { width: 160px; aspect-ratio: 1 / 2; border-radius: 6px; overflow: hidden;
+    box-shadow: 0 12px 28px -12px rgb(0 0 0 / .45); transform-origin: 50% 0; animation: sway 4s ease-in-out infinite alternate; }
+  @keyframes sway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
+  .flag svg, .flag img, .pat svg, .pat img, .layer svg, .layer img { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .flag .new { animation: ink .45s var(--spring) both; transform-origin: 50% 50%; }
+  @keyframes ink { from { opacity: 0; transform: scale(.6); } }
+  .count { font: 500 13px var(--mono); color: var(--muted); }
+  .count.over { color: var(--warn); }
+
+  .layers { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .layer { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 6px 8px;
+    border-radius: 10px; border: 1px solid transparent; cursor: pointer; transition: background .2s, border-color .2s; }
+  .layer:hover { background: var(--raised); }
+  .layer[aria-selected=true] { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  .layer .thumb { width: 22px; height: 44px; border-radius: 3px; overflow: hidden; box-shadow: 0 2px 6px -2px rgb(0 0 0 / .4); }
+  .layer b { font-weight: 600; font-size: 14px; }
+  .layer small { display: block; color: var(--faint); font: 11px var(--mono); }
+  .layer .acts { display: flex; gap: 4px; }
+  .icon-btn { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; font: 600 15px var(--mono); }
+  .add { margin-top: 12px; }
+
+  .group { margin-top: 18px; }
+  .group > .label { display: block; margin-bottom: 8px; }
+  .pats { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 8px; }
+  .pat { padding: 0; aspect-ratio: 1 / 2; border-radius: 6px; overflow: hidden; border: 1px solid var(--panel-border); background: none; cursor: pointer;
+    transition: transform .2s var(--spring), box-shadow .2s; position: relative; }
+  .pat:hover { transform: translateY(-3px) rotate(-2deg); box-shadow: var(--shadow); }
+  .pat:active { transform: scale(.93); }
+  .pat[aria-checked=true] { outline: 2px solid var(--text); outline-offset: 2px; }
+  .pat i { position: absolute; right: 3px; top: 3px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1.5px var(--panel); }
+  .hint { margin: 8px 0 0; color: var(--faint); font-size: 13px; }
+
+  .steps { margin: 12px 0 0; padding-left: 22px; display: grid; gap: 8px; }
+  .steps li::marker { font: 500 13px var(--mono); color: var(--muted); }
+  .need { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+  .need .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 8px; background: var(--hex); border: 1px solid rgb(0 0 0 / .18); }
+  .need small { color: var(--faint); }
+  .cmds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .warn { margin: 12px 0 0; color: var(--warn); font-size: 14px; }
+
+  @media (max-width: 720px) {
+    .designer { grid-template-columns: minmax(0, 1fr); }
+    .layer { grid-template-columns: 22px minmax(0, 1fr); }
+    .layer .acts { grid-column: 2; }
+    .preview { position: static; }
+  }
+</style>
+</head>
+<body data-tool="banner">
+<main>
+  <header class="head">
+    <h1>Banner designer</h1>
+    <p>Build a banner layer by layer and get the loom steps in order, the dyes and pattern items to gather, and commands for the banner and a shield.</p>
+  </header>
+
+  <section class="panel designer" aria-label="Designer">
+    <div class="preview">
+      <div class="flag" id="flag" role="img" aria-label="Banner preview"></div>
+      <span class="count" id="count"></span>
+    </div>
+    <div>
+      <span class="label">Layers, bottom first</span>
+      <ol class="layers" id="layers" role="listbox" aria-label="Layers"></ol>
+      <button class="btn add" id="add" type="button">+ Add layer</button>
+
+      <div class="group"><span class="label" id="dye-label">Banner color</span>
+        <div class="dyes" id="dyes" role="radiogroup" aria-labelledby="dye-label"></div></div>
+      <div class="group" id="pat-group"><span class="label">Pattern</span>
+        <div class="pats" id="pats" role="radiogroup" aria-label="Pattern"></div>
+        <p class="hint">A dot marks patterns that need a banner pattern item in the loom.</p></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="How to make it">
+    <span class="label">In survival</span>
+    <ol class="steps" id="steps"></ol>
+    <p class="warn" id="warn" hidden></p>
+    <ul class="need" id="need"></ul>
+    <div class="cmds">
+      <button class="btn copy" id="give" type="button">Copy banner command</button>
+      <button class="btn copy" id="shield" type="button">Copy shield command</button>
+    </div>
+  </section>
+
+  <section class="panel jar" aria-label="Textures">
+    <p id="jar-text">The preview uses our own drawings of each pattern. For the real ones, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
+    <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
+  </section>
+</main>
+<script src="../shared/shell.js?v=202611131428"></script>
+<script src="../shared/dyes.js?v=202611131428"></script>
+<script src="../shared/jar.js?v=202611131428"></script>
+<script src="banner.js?v=202611131428"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const { DYES, byId } = Dyes, { PATTERNS } = Banner, pat = id => PATTERNS.find(p => p.id === id);
+  const dyeName = id => byId(id).name;
+  // Starts as a sun over waves so the page is never blank.
+  const design = { base: 'light_blue', layers: [{ pattern: 'triangles_bottom', color: 'white' }, { pattern: 'circle', color: 'yellow' }] };
+  let sel = -1, fresh = -1; // selected layer (-1 = the banner itself); layer to animate in the preview
+  const textures = new Map(), imgs = new Map(); // jar textures: path -> object URL, pattern id -> Image
+
+  // Our drawings as SVG on the 20 x 40 face. A soft shade on top reads as cloth.
+  let gid = 0;
+  const svg = (base, layers, mark = -1) => {
+    const defs = [], body = layers.map((l, i) => {
+      const s = pat(l.pattern).shape, c = byId(l.color).hex, cls = i === mark ? ' class="new"' : '';
+      if (s.grad) {
+        const id = `g${gid++}`, [a, b] = s.grad === 'down' ? [1, 0] : [0, 1];
+        defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity="${a}"/><stop offset="1" stop-color="${c}" stop-opacity="${b}"/></linearGradient>`);
+        return `<rect${cls} width="20" height="40" fill="url(#${id})"/>`;
+      }
+      return `<g${cls} fill="${c}" fill-rule="evenodd">${s.map(d => `<path d="${d}"/>`).join('')}</g>`;
+    }).join('');
+    return `<svg viewBox="0 0 20 40" preserveAspectRatio="none" aria-hidden="true"><defs>${defs.join('')}<linearGradient id="cloth" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".12"/><stop offset=".5" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient></defs>
+      <rect width="20" height="40" fill="${byId(base).hex}"/>${body}<rect width="20" height="40" fill="url(#cloth)"/></svg>`;
+  };
+  // Real textures from a loaded jar: each layer's mask tinted with its dye (the face is at 1,1 in a 64 x 64 sheet).
+  const canvas = (base, layers) => {
+    const out = new OffscreenCanvas(20, 40), ctx = out.getContext('2d'), tmp = new OffscreenCanvas(20, 40), t = tmp.getContext('2d');
+    for (const [id, color] of [['base', base], ...layers.map(l => [l.pattern, l.color])]) {
+      const img = imgs.get(id);
+      if (!img) continue;
+      t.globalCompositeOperation = 'copy'; t.drawImage(img, 1, 1, 20, 40, 0, 0, 20, 40);
+      t.globalCompositeOperation = 'multiply'; t.fillStyle = byId(color).hex; t.fillRect(0, 0, 20, 40);
+      t.globalCompositeOperation = 'destination-in'; t.drawImage(img, 1, 1, 20, 40, 0, 0, 20, 40);
+      ctx.drawImage(tmp, 0, 0);
+    }
+    const c = document.createElement('canvas'); c.width = 20; c.height = 40; c.getContext('2d').drawImage(out, 0, 0);
+    return `<img alt="" src="${c.toDataURL()}">`;
+  };
+  const art = (base, layers, mark) => imgs.size ? canvas(base, layers) : svg(base, layers, mark);
+
+  const render = () => {
+    gid = 0;
+    const { base, layers } = design, layer = layers[sel];
+    $('flag').innerHTML = art(base, layers, fresh);
+    $('flag').setAttribute('aria-label', `${dyeName(base)} banner${layers.length ? ' with ' + layers.map(l => `${dyeName(l.color)} ${pat(l.pattern).name}`).join(', ') : ''}`);
+    fresh = -1;
+    const over = layers.length > Banner.LOOM_MAX;
+    $('count').textContent = `${layers.length} of ${Banner.LOOM_MAX} loom layers`;
+    $('count').classList.toggle('over', over);
+
+    $('layers').innerHTML = `<li class="layer" role="option" data-i="-1" aria-selected="${sel === -1}"><span class="thumb">${art(base, [])}</span>
+        <span><b>${dyeName(base)} Banner</b><small>${base}_banner</small></span></li>`
+      + layers.map((l, i) => `<li class="layer in" style="--i:${i}" role="option" data-i="${i}" aria-selected="${sel === i}">
+        <span class="thumb">${art(base, layers.slice(0, i + 1))}</span>
+        <span><b>${dyeName(l.color)} ${pat(l.pattern).name}</b><small>${l.pattern}</small></span>
+        <span class="acts"><button class="btn icon-btn" data-act="up" aria-label="Apply earlier" title="Apply earlier" ${i ? '' : 'disabled'}>↑</button>
+        <button class="btn icon-btn" data-act="down" aria-label="Apply later" title="Apply later" ${i < layers.length - 1 ? '' : 'disabled'}>↓</button>
+        <button class="btn icon-btn" data-act="del" aria-label="Remove layer">×</button></span></li>`).join('');
+    $('add').disabled = layers.length >= 16; // the game draws at most 16
+
+    // Color for the selected layer (or the banner); pattern grid previews each pattern in that color.
+    const color = layer ? layer.color : base;
+    $('dye-label').textContent = layer ? 'Layer color' : 'Banner color';
+    $('dyes').innerHTML = DYES.map(d => `<button class="dye" role="radio" style="--hex:${d.hex}" data-dye="${d.id}" aria-checked="${d.id === color}" aria-label="${d.name}" title="${d.name}"></button>`).join('');
+    $('pat-group').hidden = !layer;
+    if (layer) $('pats').innerHTML = PATTERNS.map(p => `<button class="pat" role="radio" data-pat="${p.id}" aria-checked="${p.id === layer.pattern}"
+        aria-label="${p.name}${p.item ? ' (needs a pattern item)' : ''}" title="${p.name}">${art(base, [...layers.slice(0, sel), { pattern: p.id, color }])}${p.item ? '<i></i>' : ''}</button>`).join('');
+
+    $('steps').innerHTML = Banner.steps(design, dyeName).map(s => `<li>${s}</li>`).join('');
+    $('warn').hidden = !over;
+    $('warn').textContent = `A loom stops at ${Banner.LOOM_MAX} layers, so layers past the sixth only come with the commands.`;
+    const { dyes, items } = Banner.needs(design);
+    $('need').innerHTML = [...dyes].map(([id, n]) => `<li><span class="sw" style="--hex:${byId(id).hex}"></span>${n} × ${dyeName(id)} Dye</li>`).join('')
+      + items.map(([, name, how]) => `<li>${name} <small>· ${how} · not used up</small></li>`).join('');
+  };
+
+  $('layers').onclick = e => {
+    const row = e.target.closest('.layer'), act = e.target.closest('[data-act]');
+    if (!row) return;
+    const i = +row.dataset.i, L = design.layers;
+    if (act?.dataset.act === 'del') { L.splice(i, 1); sel = Math.min(sel, L.length - 1); }
+    else if (act) { const j = act.dataset.act === 'up' ? i - 1 : i + 1; [L[i], L[j]] = [L[j], L[i]]; sel = j; fresh = j; }
+    else sel = i;
+    render();
+  };
+  $('add').onclick = () => {
+    const L = design.layers, last = L.at(-1)?.color ?? design.base;
+    L.push({ pattern: 'stripe_middle', color: last === 'black' ? 'white' : 'black' });
+    sel = fresh = L.length - 1;
+    render();
+  };
+  $('dyes').onclick = e => {
+    const b = e.target.closest('[data-dye]');
+    if (!b) return;
+    if (sel < 0) design.base = b.dataset.dye; else { design.layers[sel].color = b.dataset.dye; fresh = sel; }
+    render();
+  };
+  $('pats').onclick = e => {
+    const b = e.target.closest('[data-pat]');
+    if (!b) return;
+    design.layers[sel].pattern = b.dataset.pat; fresh = sel;
+    render();
+  };
+  $('give').onclick = () => WASD.copy($('give'), Banner.give(design));
+  $('shield').onclick = () => WASD.copy($('shield'), Banner.shield(design));
+
+  // Jar: banner masks live at textures/entity/banner/<id>.png.
+  const paths = ['base', ...PATTERNS.map(p => p.id)].map(id => ({ tex: `entity/banner/${id}`, id }));
+  Jar.wire($('jar'), $('jar-text'), paths, textures, async () => {
+    await Promise.all(paths.filter(p => textures.has(p.tex)).map(p => new Promise(ok => {
+      const i = new Image(); i.onload = () => { imgs.set(p.id, i); ok(); }; i.onerror = ok; i.src = textures.get(p.tex);
+    })));
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="shared/shell.css">
+<link rel="stylesheet" href="shared/shell.css?v=202611131428">
 <style>
   .top { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
   .top .name { font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
@@ -74,15 +74,15 @@
 
   <footer>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</footer>
 </main>
-<script src="shared/shell.js"></script>
+<script src="shared/shell.js?v=202611131428"></script>
 <script>
   // Featured card: the newest tool.
   // { label, version, date?, title, summary, changes?: [[kind, text, key]], link, cta }
   // strip: average colors (blocks.json) of a block family; its last color is --seed in shell.css.
   const latest = {
-    label: 'New tool', version: 'Java 26.3', title: 'Slime chunks',
-    summary: 'Paste your world seed to map the slime chunks around you and find the nearest one for a slime farm.',
-    link: 'slime/', cta: 'Find slime chunks',
+    label: 'New tool', version: 'Java 26.3', title: 'Banner designer',
+    summary: 'Design a banner layer by layer and get the exact loom steps. The new firework designer does the same for rockets, with a live preview.',
+    link: 'banner/', cta: 'Design a banner',
     strip: ['#e08e2b', '#a42e26', '#c75b17'], // yellow, red, orange poplar leaves
   };
 

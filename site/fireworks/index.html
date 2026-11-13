@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft Firework Designer (Stars, Rockets & Commands) · R00K’s</title>
+<meta name="description" content="Design Minecraft Java firework rockets: shapes, colors, fades, trail and twinkle. See each burst, then get the crafting steps, what to gather and a /give command.">
+<link rel="canonical" href="https://rooks.rookstudio.net/fireworks/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="R00K’s">
+<meta property="og:title" content="Minecraft Firework Designer (Stars, Rockets & Commands) · R00K’s">
+<meta property="og:description" content="Design Minecraft Java firework rockets: shapes, colors, fades, trail and twinkle. See each burst, then get the crafting steps, what to gather and a /give command.">
+<meta property="og:url" content="https://rooks.rookstudio.net/fireworks/">
+<meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../shared/shell.css?v=202611131428">
+<style>
+  /* Night sky: dark in both themes, faintly tinted by the seed like everything else. */
+  .sky, .thumb { background: #0e0d14; background: oklch(from var(--seed) .17 .018 h); }
+  .sky { height: 280px; border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .06); }
+  .sky canvas { display: block; width: 100%; height: 100%; }
+  .sky.pop canvas { animation: burst .45s var(--spring); }
+  @keyframes burst { from { transform: scale(.94); opacity: .5; } }
+
+  .bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-top: 16px; }
+  .bar .label { display: block; margin-bottom: 8px; }
+
+  /* Star tabs: a little burst, the star's number and its shape. */
+  .stars { display: flex; flex-wrap: wrap; gap: 8px; }
+  .star-tab { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px 0 6px; text-align: left; }
+  .star-tab .thumb { width: 36px; height: 36px; border-radius: 8px; flex: none; }
+  .star-tab b { display: block; font-size: 13px; font-weight: 600; line-height: 1.2; }
+  .star-tab small { display: block; color: var(--faint); font: 11px var(--mono); }
+  .star-tab[aria-selected=true] { background: color-mix(in srgb, var(--accent) 12%, var(--control)); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+  .add-star { height: 48px; border-style: dashed; color: var(--muted); }
+
+  /* Three-way pill, the same look as the site's Top / Side pill. */
+  .seg { position: relative; display: inline-grid; grid-template-columns: repeat(3, 1fr); padding: 4px; border-radius: 12px;
+    background: var(--control); border: 1px solid var(--control-border); }
+  .seg-hl { position: absolute; inset: 4px auto 4px 4px; width: calc((100% - 8px) / 3); border-radius: 8px;
+    background: color-mix(in srgb, var(--c) 18%, transparent); border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
+    transition: transform .3s var(--spring); }
+  .seg:has([value="2"]:checked) .seg-hl { transform: translateX(100%); }
+  .seg:has([value="3"]:checked) .seg-hl { transform: translateX(200%); }
+  .seg label { position: relative; cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg span { display: block; height: 36px; line-height: 36px; padding: 0 18px; text-align: center; color: var(--muted);
+    font-weight: 500; font-size: 14px; transition: color .2s, transform .2s var(--spring); }
+  .seg input:checked + span { color: var(--text); }
+  .seg label:active span { transform: scale(.93); }
+  .seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+
+  .group { margin-top: 22px; }
+  .group-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .group-head output { font: 12px var(--mono); color: var(--faint); }
+
+  /* Shape cards: a drawing of the burst, its name and the item that makes it. */
+  .shapes { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+  .shape { position: relative; }
+  .shape input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .shape span { display: grid; justify-items: center; gap: 2px; padding: 10px 8px 12px; border-radius: 12px; text-align: center;
+    background: var(--control); border: 1px solid var(--control-border); transition: transform .2s var(--spring), background .2s, border-color .2s; }
+  .shape .thumb { width: 64px; height: 64px; border-radius: 10px; margin-bottom: 8px; transition: transform .25s var(--spring); }
+  .shape b { font-size: 13px; font-weight: 600; }
+  .shape small { color: var(--faint); font: 11px var(--mono); }
+  .shape:hover span { transform: translateY(-2px); }
+  .shape:hover .thumb { transform: rotate(-4deg); }
+  .shape:active span { transform: scale(.93); }
+  .shape input:checked + span { background: color-mix(in srgb, var(--c) 12%, var(--control)); border-color: color-mix(in srgb, var(--c) 55%, transparent); animation: chip-pop .35s var(--spring); }
+  .shape input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Crafting: numbered cards, ingredients then what they make. */
+  .crafts { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+  .crafts li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 14px;
+    border-radius: 12px; background: var(--raised); border: 1px solid var(--panel-border); animation: drop .45s var(--spring) both; animation-delay: calc(var(--i) * 70ms); }
+  .crafts li.same { animation: none; }
+  .crafts .n { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--control);
+    border: 1px solid var(--control-border); font: 500 12px var(--mono); color: var(--muted); }
+  .ings { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ing { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 13px;
+    background: var(--control); border: 1px solid var(--control-border); }
+  .ing i { width: 12px; height: 12px; border-radius: 4px; background: var(--hex); border: 1px solid rgb(0 0 0 / .2); }
+  .ing small { font: 11px var(--mono); color: var(--faint); }
+  .out { display: flex; align-items: center; gap: 10px; white-space: nowrap; font-size: 13px; font-weight: 600; }
+  .out::before { content: '→'; color: var(--faint); font-weight: 400; }
+
+  .gather-h { display: block; margin-top: 22px; }
+  .gather { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 24px; }
+  .gather li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--panel-border); font-size: 14px; }
+  .gather li i { width: 16px; height: 16px; border-radius: 5px; background: var(--hex, transparent); border: 1px solid rgb(0 0 0 / .2); flex: none; }
+  .gather li i.none { visibility: hidden; }
+  .gather span { flex: 1; }
+  .gather b { font: 500 14px var(--mono); }
+
+  @media (max-width: 640px) {
+    .sky { height: 220px; }
+    .crafts li { grid-template-columns: 26px minmax(0, 1fr); }
+    .out { grid-column: 2; white-space: normal; }
+  }
+</style>
+</head>
+<body data-tool="fireworks">
+<main>
+  <header class="head">
+    <h1>Firework designer</h1>
+    <p>Choose a shape, colors and effects for each firework star and see how it bursts. Then get every craft in order, what to gather, and a command.</p>
+  </header>
+
+  <section class="panel" aria-label="Rocket">
+    <div class="sky" id="sky"><canvas id="cv" role="img" aria-label="Firework preview"></canvas></div>
+    <div class="bar">
+      <div><span class="label">Stars in the rocket</span><div class="stars" id="stars" role="tablist" aria-label="Firework stars"></div></div>
+      <div><span class="label">Flight duration</span>
+        <div class="seg" role="radiogroup" aria-label="Flight duration"><i class="seg-hl"></i>
+          <label><input type="radio" name="flight" value="1" checked><span>1</span></label>
+          <label><input type="radio" name="flight" value="2"><span>2</span></label>
+          <label><input type="radio" name="flight" value="3"><span>3</span></label>
+        </div></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Star settings" id="editor">
+    <div class="result-head"><span class="label" id="ed-title"></span><button class="btn" id="remove" type="button">Remove star</button></div>
+    <div id="ed-body">
+      <div class="group"><div class="group-head"><span class="label">Shape</span></div>
+        <div class="shapes" id="shapes" role="radiogroup" aria-label="Shape"></div></div>
+      <div class="group"><div class="group-head"><span class="label">Colors</span><output id="colors-n"></output></div>
+        <div class="dyes" id="colors" aria-label="Colors"></div></div>
+      <div class="group"><div class="group-head"><span class="label">Fade to <small>optional</small></span><output id="fades-n"></output></div>
+        <div class="dyes" id="fades" aria-label="Fade colors"></div></div>
+      <fieldset class="filters group">
+        <legend class="label">Effects</legend>
+        <label class="chip"><input type="checkbox" id="trail"><span>Trail · diamond</span></label>
+        <label class="chip"><input type="checkbox" id="twinkle"><span>Twinkle · glowstone dust</span></label>
+      </fieldset>
+    </div>
+    <p class="empty" id="ed-empty" hidden>No stars: the rocket just flies, which is all you need for an elytra. Add a star for a burst.</p>
+  </section>
+
+  <section class="panel" aria-label="How to make it">
+    <div class="result-head"><span class="label">In survival · one craft makes 3 rockets</span>
+      <button class="btn copy" id="give" type="button">Copy command</button></div>
+    <ol class="crafts" id="crafts"></ol>
+    <span class="label gather-h">To gather</span>
+    <ul class="gather" id="gather"></ul>
+    <p class="meta">The command gives 64 rockets and needs cheats on.</p>
+  </section>
+</main>
+<script src="../shared/shell.js?v=202611131428"></script>
+<script src="../shared/dyes.js?v=202611131428"></script>
+<script src="fireworks.js?v=202611131428"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const { DYES, byId } = Dyes, F = Fireworks, shapeOf = id => F.SHAPES.find(x => x.id === id);
+  const newStar = () => ({ shape: 'small_ball', colors: ['red'], fades: [], trail: false, twinkle: false });
+  const rocket = { flight: 1, stars: [{ shape: 'large_ball', colors: ['orange', 'yellow'], fades: ['white'], trail: true, twinkle: false }] };
+  let sel = 0, lastCards = [];
+  const star = () => rocket.stars[sel];
+
+  // Bursts, drawn our own way. Points are on a unit scale; a fixed seed keeps the picture steady between edits.
+  const rand = seed => () => ((seed = Math.imul(seed ^ seed >>> 15, seed | 1) + 0x6d2b79f5 | 0) >>> 0) / 2 ** 32;
+  const ring = (n, r) => Array.from({ length: n }, (_, i) => [Math.cos(i / n * 2 * Math.PI) * r, Math.sin(i / n * 2 * Math.PI) * r]);
+  const starPts = () => { const p = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .42 : 1, b = a + Math.PI / 5, q = i % 2 ? 1 : .42;
+    for (let t = 0; t < 1; t += .25) p.push([Math.cos(a) * r * (1 - t) + Math.cos(b) * q * t, Math.sin(a) * r * (1 - t) + Math.sin(b) * q * t]); } return p; };
+  // Creeper face: each cell of the 8 x 6 mask is a 3 x 3 cluster of dots, so the face reads.
+  const creeperPts = () => { const m = ['.XX..XX.', '.XX..XX.', '...XX...', '..XXXX..', '..XXXX..', '..X..X..'], p = [];
+    m.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'X') for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++)
+      p.push([(x - 3.5 + (a - 1) / 3) / 4.2, (y - 2.5 + (b - 1) / 3) / 4.2]); })); return p; };
+  const POINTS = {
+    small_ball: () => [...ring(18, .55), ...ring(10, .32)],
+    large_ball: () => [...ring(30, 1), ...ring(20, .7), ...ring(12, .4)],
+    star: () => starPts(),
+    creeper: () => creeperPts(),
+    burst: r => Array.from({ length: 34 }, () => [(r() - .5) * 1.3, .45 - r() * 1]), // a spray, centred on the burst point
+  };
+
+  // One star's burst at (cx, cy), radius R. k: device pixels per CSS pixel. small: thumbnails skip the fine details.
+  const burst = (ctx, s, cx, cy, R, k, seed, small) => {
+    const r = rand(seed), cols = s.colors.map(c => byId(c).fwHex), fades = s.fades.map(c => byId(c).fwHex);
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.1);
+    g.addColorStop(0, cols[0] + '40'); g.addColorStop(1, cols[0] + '00');
+    ctx.fillStyle = g; ctx.fillRect(cx - R * 1.1, cy - R * 1.1, R * 2.2, R * 2.2);
+    ctx.lineCap = 'round';
+    // Balls and bursts streak out from the middle; star and creeper keep their outline, so only a short tail.
+    const outline = s.shape === 'star' || s.shape === 'creeper', dot = (small ? .9 : outline ? 1.6 : 2) * k;
+    POINTS[s.shape](r).forEach(([x, y], j) => {
+      const c = cols[j % cols.length], f = fades.length ? fades[j % fades.length] : c;
+      const x1 = cx + x * R, y1 = cy + y * R, from = outline ? (s.trail ? .82 : 1) : s.trail ? .15 : .7;
+      if (from < 1) {
+        const line = ctx.createLinearGradient(cx + x * R * from, cy + y * R * from, x1, y1);
+        line.addColorStop(0, c + (s.trail ? '00' : '66')); line.addColorStop(.6, c); line.addColorStop(1, f);
+        ctx.strokeStyle = line; ctx.lineWidth = (small ? .8 : s.trail ? 1.4 : 2.2) * k;
+        ctx.beginPath(); ctx.moveTo(cx + x * R * from, cy + y * R * from); ctx.lineTo(x1, y1); ctx.stroke();
+      }
+      ctx.fillStyle = outline ? (j % 2 ? f : c) : f; ctx.beginPath(); ctx.arc(x1, y1, dot, 0, 2 * Math.PI); ctx.fill();
+      if (s.twinkle && !small && j % 3 === 0) { // twinkle: little sparkles past the tips
+        const sx = cx + x * R * 1.12 + (r() - .5) * 6 * k, sy = cy + y * R * 1.12 + (r() - .5) * 6 * k, z = 3.5 * k;
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = k;
+        ctx.beginPath(); ctx.moveTo(sx - z, sy); ctx.lineTo(sx + z, sy); ctx.moveTo(sx, sy - z); ctx.lineTo(sx, sy + z); ctx.stroke();
+      }
+    });
+  };
+  // A canvas sized for the screen, with one burst in the middle (thumbnails).
+  const thumb = (cv, s, seed) => {
+    const k = devicePixelRatio || 1, w = cv.width = cv.clientWidth * k, h = cv.height = cv.clientHeight * k, ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+    burst(ctx, s, w / 2, h / 2, w * .38, k, seed, w < 50 * k);
+  };
+
+  const sky = () => {
+    const cv = $('cv'), k = devicePixelRatio || 1, w = cv.width = cv.clientWidth * k, h = cv.height = cv.clientHeight * k, n = rocket.stars.length;
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+    const r = rand(99); // faint background stars
+    for (let i = 0; i < 60; i++) { ctx.fillStyle = `rgba(255,255,255,${.08 + r() * .25})`; ctx.fillRect(r() * w, r() * h, k, k); }
+    rocket.stars.forEach((s, i) => {
+      const cx = w * (i + .5) / n, cy = h * .46, R = Math.min(w / n * .4, h * .36);
+      ctx.globalAlpha = n > 1 && i !== sel ? .75 : 1; // the star being edited stands out
+      burst(ctx, s, cx, cy, R, k, i + 1);
+      if (n > 1) { ctx.fillStyle = i === sel ? '#fff' : '#ffffff88'; ctx.font = `500 ${12 * k}px "IBM Plex Mono", monospace`; ctx.textAlign = 'center'; ctx.fillText(`star ${i + 1}`, cx, h - 16 * k); }
+    });
+    ctx.globalAlpha = 1;
+    if (!n) { ctx.fillStyle = '#ffffff88'; ctx.font = `500 ${13 * k}px "IBM Plex Mono", monospace`; ctx.textAlign = 'center'; ctx.fillText('no stars: no burst', w / 2, h / 2); }
+    cv.setAttribute('aria-label', n ? rocket.stars.map((s, i) => `Star ${i + 1}: ${shapeOf(s.shape).name}, ${s.colors.map(c => byId(c).name).join(', ')}`
+      + `${s.fades.length ? `, fading to ${s.fades.map(c => byId(c).name).join(', ')}` : ''}${s.trail ? ', trail' : ''}${s.twinkle ? ', twinkle' : ''}`).join('; ') : 'No stars, so no burst');
+  };
+
+  const cap = t => t[0].toUpperCase() + t.slice(1);
+  const render = () => {
+    const s = star(), n = rocket.stars.length;
+    $('stars').innerHTML = rocket.stars.map((t, i) => `<button class="btn star-tab" role="tab" data-i="${i}" aria-selected="${i === sel}">
+        <canvas class="thumb" data-thumb="${i}" aria-hidden="true"></canvas><span><b>Star ${i + 1}</b><small>${shapeOf(t.shape).name}</small></span></button>`).join('')
+      + (n < F.maxStars(rocket.flight) ? '<button class="btn add-star" id="add" type="button">+ Add star</button>' : '');
+    $('ed-body').hidden = $('remove').hidden = !s;
+    $('ed-empty').hidden = !!s;
+    $('ed-title').textContent = s ? `Star ${sel + 1}` : 'Stars';
+    if (s) {
+      $('shapes').innerHTML = F.SHAPES.map(h => `<label class="shape"><input type="radio" name="shape" value="${h.id}" ${h.id === s.shape ? 'checked' : ''}>
+        <span><canvas class="thumb" data-shape="${h.id}" aria-hidden="true"></canvas><b>${h.name}</b><small>${h.item ?? 'nothing extra'}</small></span></label>`).join('');
+      const max = F.maxColors(s);
+      s.colors.length = Math.min(s.colors.length, max); // a shape item or effect can take a dye's slot
+      $('colors-n').textContent = `${s.colors.length} of ${max}`;
+      $('fades-n').textContent = `${s.fades.length} of ${F.MAX_FADES}`;
+      const swatches = (list, cap) => DYES.map(d => { const on = list.includes(d.id);
+        return `<button class="dye" type="button" style="--hex:${d.fwHex}" data-dye="${d.id}" aria-pressed="${on}" aria-label="${d.name}" title="${d.name}" ${!on && list.length >= cap ? 'disabled' : ''}></button>`; }).join('');
+      $('colors').innerHTML = swatches(s.colors, max);
+      $('fades').innerHTML = swatches(s.fades, F.MAX_FADES);
+      $('trail').checked = s.trail; $('twinkle').checked = s.twinkle;
+      document.querySelectorAll('[data-shape]').forEach(cv => thumb(cv, { ...s, shape: cv.dataset.shape }, sel + 1));
+    }
+    document.querySelectorAll('[data-thumb]').forEach(cv => thumb(cv, rocket.stars[cv.dataset.thumb], +cv.dataset.thumb + 1));
+
+    // Crafts as cards; repeated ingredients collapse into "× n".
+    const dyeOf = name => DYES.find(d => `${d.name} Dye` === name);
+    const ing = (name, count) => { const d = dyeOf(name);
+      return `<span class="ing">${d ? `<i style="--hex:${d.fwHex}"></i>` : ''}${cap(name)}${count > 1 ? ` <small>× ${count}</small>` : ''}</span>`; };
+    // Only a card whose craft changed drops in again.
+    const cards = F.crafts(rocket).map((c, i) => {
+      const m = new Map(); c.from.forEach(f => m.set(f, (m.get(f) ?? 0) + 1));
+      return `<span class="n">${i + 1}</span><span class="ings">${[...m].map(([f, k]) => ing(f, k)).join('')}</span><span class="out">${c.make}</span>`;
+    });
+    $('crafts').innerHTML = cards.map((c, i) => `<li class="${lastCards[i] === c ? 'same' : ''}" style="--i:${i}">${c}</li>`).join('');
+    lastCards = cards;
+    $('gather').innerHTML = [...F.gather(rocket)].map(([name, c]) => { const d = dyeOf(name);
+      return `<li><i class="${d ? '' : 'none'}" style="${d ? `--hex:${d.fwHex}` : ''}"></i><span>${cap(name)}</span><b>${c}</b></li>`; }).join('');
+    sky();
+  };
+  const changed = () => { render(); $('sky').classList.remove('pop'); void $('sky').offsetWidth; $('sky').classList.add('pop'); };
+
+  $('stars').onclick = e => {
+    if (e.target.closest('#add')) { rocket.stars.push(newStar()); sel = rocket.stars.length - 1; changed(); return; }
+    const t = e.target.closest('[data-i]');
+    if (t) { sel = +t.dataset.i; render(); }
+  };
+  // Clicking a burst in the sky picks that star.
+  $('sky').onclick = e => {
+    const n = rocket.stars.length, r = e.currentTarget.getBoundingClientRect();
+    if (n > 1) { sel = Math.min(n - 1, Math.floor((e.clientX - r.left) / r.width * n)); render(); }
+  };
+  $('shapes').onchange = e => { star().shape = e.target.value; changed(); };
+  const toggle = key => e => {
+    const b = e.target.closest('[data-dye]');
+    if (!b || b.disabled) return;
+    const list = star()[key], i = list.indexOf(b.dataset.dye);
+    if (i >= 0) { if (key === 'fades' || list.length > 1) list.splice(i, 1); } // a star needs at least one color
+    else list.push(b.dataset.dye);
+    changed();
+  };
+  $('colors').onclick = toggle('colors');
+  $('fades').onclick = toggle('fades');
+  $('trail').onchange = e => { star().trail = e.target.checked; changed(); };
+  $('twinkle').onchange = e => { star().twinkle = e.target.checked; changed(); };
+  $('remove').onclick = () => { rocket.stars.splice(sel, 1); sel = Math.max(0, sel - 1); changed(); };
+  document.querySelectorAll('[name=flight]').forEach(r => r.onchange = () => {
+    rocket.flight = +r.value;
+    rocket.stars.length = Math.min(rocket.stars.length, F.maxStars(rocket.flight)); // more gunpowder leaves fewer slots
+    sel = Math.min(sel, Math.max(0, rocket.stars.length - 1));
+    changed();
+  });
+  $('give').onclick = () => WASD.copy($('give'), F.give(rocket));
+  addEventListener('resize', sky);
+  render();
+})();
+</script>
+</body>
+</html>
