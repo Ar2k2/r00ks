@@ -32,7 +32,7 @@
       desc: 'Overworld and Nether coordinates for linking portals.' },
     { id: 'stronghold', name: 'Stronghold finder', path: 'stronghold/', cat: 'world', built: true,
       desc: 'Find the stronghold from two Eye of Ender throws.' },
-    { id: 'slime', name: 'Slime chunks', path: 'slime/', cat: 'world',
+    { id: 'slime', name: 'Slime chunks', path: 'slime/', cat: 'world', built: true,
       desc: 'Slime chunks around you from a world seed.' },
     { id: 'structures', name: 'Structure finder', path: 'structures/', cat: 'world',
       desc: 'Villages, monuments and more from a seed.' },

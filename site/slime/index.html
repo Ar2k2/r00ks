@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft Slime Chunk Finder (Java Seed Map) · R00K’s</title>
+<meta name="description" content="Find slime chunks in Minecraft Java from your world seed: a map of the chunks around you and the nearest slime chunk.">
+<link rel="canonical" href="https://rooks.rookstudio.net/slime/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="R00K’s">
+<meta property="og:title" content="Minecraft Slime Chunk Finder (Java Seed Map) · R00K’s">
+<meta property="og:description" content="Find slime chunks in Minecraft Java from your world seed: a map of the chunks around you and the nearest slime chunk.">
+<meta property="og:url" content="https://rooks.rookstudio.net/slime/">
+<meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../shared/shell.css">
+<style>
+  .xyz.wide { grid-template-columns: 2fr 1fr 1fr; }
+  .how { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+  .how b { font-weight: 600; color: var(--text); }
+
+  .found { display: grid; grid-template-columns: 1fr auto; gap: 12px 20px; align-items: start; }
+  .found p { margin: 6px 0 0; }
+  .coords { font: 700 clamp(26px, 4vw, 38px)/1.1 var(--mono); letter-spacing: -.02em; }
+  .note { margin: 14px 0 0; color: var(--faint); font-size: 13px; }
+
+  .map-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .map {
+    display: grid; grid-template-columns: repeat(25, 1fr); gap: 2px; max-width: 560px;
+    touch-action: manipulation;
+  }
+  .map i {
+    aspect-ratio: 1; border-radius: 3px; background: var(--raised); border: 1px solid var(--panel-border);
+    transition: transform .2s var(--spring);
+  }
+  .map i:hover { transform: scale(1.25); position: relative; z-index: 1; }
+  .map i.s {
+    background: var(--accent); border-color: transparent;
+    animation: pop .4s var(--spring) both; animation-delay: calc(var(--d) * 22ms);
+  }
+  .map i.you { outline: 2px solid var(--text); outline-offset: 1px; position: relative; z-index: 1; }
+  .map-info { margin: 12px 0 0; min-height: 1.5em; font: 13px var(--mono); color: var(--muted); }
+
+  @media (max-width: 640px) {
+    .xyz.wide { grid-template-columns: 1fr 1fr; }
+    .xyz.wide label:first-child { grid-column: 1 / -1; }
+    .found { grid-template-columns: 1fr; }
+    .map { gap: 1px; }
+    .map i { border-radius: 2px; }
+  }
+</style>
+</head>
+<body data-tool="slime">
+<main>
+  <header class="head">
+    <h1>Slime chunks</h1>
+    <p>One chunk in ten is a slime chunk, picked by the world seed. Below Y 40 slimes spawn there at any light level, which makes them the place for a slime farm.</p>
+  </header>
+
+  <section class="panel" aria-label="World">
+    <p class="how">Get the <b>seed</b> with <b>/seed</b> in game. <b>X</b> and <b>Z</b> are where you stand (F3), or press <b>F3 + C</b> in game and paste into either box.</p>
+    <fieldset class="side" id="world"><legend>Your world</legend>
+      <div class="xyz wide">
+        <label><span class="label">seed</span><input id="seed" placeholder="-4172144997902289642" autocomplete="off" spellcheck="false"></label>
+        <label><span class="label">x</span><input id="x" data-k="x" placeholder="0" inputmode="decimal" pattern="-?\d+(\.\d+)?" autocomplete="off" spellcheck="false"></label>
+        <label><span class="label">z</span><input id="z" data-k="z" placeholder="0" inputmode="decimal" pattern="-?\d+(\.\d+)?" autocomplete="off" spellcheck="false"></label>
+      </div>
+    </fieldset>
+  </section>
+
+  <section class="panel found" aria-label="Nearest slime chunk" aria-live="polite">
+    <div id="out"></div>
+    <button class="btn copy" id="copy" type="button" hidden>Copy</button>
+  </section>
+
+  <section class="panel" aria-label="Chunk map" id="map-panel" hidden>
+    <div class="map-head"><span class="label">25 × 25 chunks around you · north is up</span><span class="label">outlined: your chunk</span></div>
+    <div class="map" id="map" role="img" aria-label="Map of slime chunks around you"></div>
+    <p class="map-info" id="info">Point at a chunk to see its blocks.</p>
+  </section>
+</main>
+<script src="../shared/shell.js"></script>
+<script src="../stronghold/stronghold.js"></script>
+<script src="slime.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const NUM = /^-?\d+(\.\d+)?$/, R = 12;
+  const { parseSeed, isSlime, nearest } = Slime;
+  const span = c => `${c * 16} to ${c * 16 + 15}`;
+  let target = null, mapKey = '', seed = null, px = 0, pz = 0;
+
+  const num = id => { const s = $(id).value.trim(); return s === '' ? 0 : NUM.test(s) ? +s : null; };
+
+  const render = () => {
+    seed = parseSeed($('seed').value);
+    const x = num('x'), z = num('z'), out = $('out');
+    target = null; $('copy').hidden = true;
+    if (seed === null) { out.innerHTML = '<p class="empty">Paste your world seed to start.</p>'; $('map-panel').hidden = true; mapKey = ''; return; }
+    if (x === null || z === null) { out.innerHTML = '<p class="empty">X and Z should be plain numbers, like 120 or -64.</p>'; return; }
+    px = Math.floor(x / 16); pz = Math.floor(z / 16);
+
+    const n = nearest(seed, x, z);
+    if (n) {
+      target = n;
+      out.innerHTML = `<span class="label">${n.dist < 12 ? 'You are in a slime chunk' : 'Nearest slime chunk'}</span>
+        <div class="coords in" style="--i:0">X ${span(n.cx)} · Z ${span(n.cz)}</div>
+        <p class="in" style="--i:1">Chunk ${n.cx}, ${n.cz}${n.dist < 12 ? '' : `, about ${Math.round(n.dist)} blocks from you to its center`}.</p>
+        <p class="note">Dig out the whole chunk below Y 40 and light the caves around it, so slimes are the only thing that can spawn.</p>`;
+      $('copy').hidden = false;
+    } else out.innerHTML = '<p class="empty">No slime chunk within 64 chunks, which should never happen. Check the seed.</p>';
+
+    // Only rebuild the map (and replay its pop-in) when the seed or your chunk changes.
+    const key = `${seed} ${px} ${pz}`;
+    if (key === mapKey) return;
+    mapKey = key;
+    let cells = '';
+    for (let dz = -R; dz <= R; dz++) for (let dx = -R; dx <= R; dx++) {
+      const cls = [isSlime(seed, px + dx, pz + dz) && 's', !dx && !dz && 'you'].filter(Boolean).join(' ');
+      cells += `<i${cls ? ` class="${cls}"` : ''} style="--d:${Math.max(Math.abs(dx), Math.abs(dz))}"></i>`;
+    }
+    $('map').innerHTML = cells;
+    $('map-panel').hidden = false;
+  };
+
+  // Hover (or tap) a cell: its chunk and block range.
+  const show = e => {
+    const i = [...$('map').children].indexOf(e.target);
+    if (i < 0) return;
+    const cx = px + i % 25 - R, cz = pz + Math.floor(i / 25) - R;
+    $('info').textContent = `chunk ${cx}, ${cz} · x ${span(cx)} · z ${span(cz)}${isSlime(seed, cx, cz) ? ' · slime chunk' : ''}`;
+  };
+  $('map').addEventListener('pointerover', show);
+  $('map').addEventListener('pointerdown', show);
+
+  $('copy').onclick = () => target && WASD.copy($('copy'), `${target.cx * 16 + 8} ~ ${target.cz * 16 + 8}`);
+  $('world').addEventListener('input', render);
+  // An F3 + C line fills X and Z.
+  for (const id of ['x', 'z']) $(id).addEventListener('paste', e => {
+    const p = Stronghold.parse(e.clipboardData.getData('text'));
+    if (!p) return;
+    e.preventDefault();
+    $('x').value = Math.floor(p.x); $('z').value = Math.floor(p.z);
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
