@@ -135,8 +135,9 @@ text color. No heavy black borders or hard offset shadows.
 3. **Quick wins:** Nether coordinate converter, slime chunk finder, circle /
    sphere / dome generator.
 4. **Bigger tools:** map art converter and palette builder (reuse the
-   gradient's color engine), structure finder (extends the slime chunk seed
-   math), command and component builder.
+   gradient's color engine), command and component builder. No structure
+   finder: the owner dropped it (Nov 2026) as too close to cheating; the
+   site should stay vanilla-feeling.
 
 ## Block gradient spec
 
