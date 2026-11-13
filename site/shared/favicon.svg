@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 0 234 226">
+  <!-- Static copy of the crane rook logo in shell.js. Colors are the "@supports not" fallbacks in shell.css; update them when the seed color changes. -->
+  <style>
+    .t { fill: #1b1b1f } .a { fill: #ab4500 } .s { stroke: #ab4500 } .b { stroke: #f7f2f0 }
+    @media (prefers-color-scheme: dark) {
+      .t { fill: #f2edeb } .a { fill: #ff9965 } .s { stroke: #ff9965 } .b { stroke: #150f0c }
+    }
+  </style>
+  <g class="t"><path d="M30 40H58V58H70V40H100V58H112V40H140V86H30Z"/><path d="M44 92H126L132 192H38Z"/><rect x="24" y="198" width="122" height="22"/></g>
+  <g class="s" fill="none" stroke-linecap="square">
+    <path d="M126 40V12" stroke-width="6"/><path d="M104 12H246M126 30H246" stroke-width="5"/>
+    <path d="M126 30L140 12L154 30L168 12L182 30L196 12L210 30L224 12L238 30L246 12" stroke-width="3.5"/>
+    <path d="M228 30V124" stroke-width="3"/>
+  </g>
+  <rect class="a" x="100" y="6" width="14" height="16"/>
+  <rect class="a" x="220" y="122" width="16" height="7"/>
+  <rect class="a" x="210" y="132" width="36" height="36"/><rect class="b" x="218" y="140" width="20" height="20" fill="none" stroke-width="3"/>
+</svg>
