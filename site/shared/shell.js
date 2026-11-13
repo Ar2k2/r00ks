@@ -3,6 +3,14 @@
 (() => {
   // Site root derived from this script's URL, so links work under any Pages subpath.
   const root = new URL('..', document.currentScript.src).href;
+  // Cloudflare Web Analytics: cookie-free page views. Live host only, so local testing isn't counted.
+  if (location.hostname === 'rooks.rookstudio.net') {
+    const s = document.createElement('script');
+    s.defer = true;
+    s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    s.dataset.cfBeacon = '{"token": "f556d096d873493d8433eb3fe3550f68"}';
+    document.head.append(s);
+  }
   // The rail shows categories; the drawer, home and hub pages list every tool.
   // A category's path is its hub page (or its only tool).
   const cats = [
