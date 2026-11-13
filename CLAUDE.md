@@ -6,7 +6,11 @@ libraries, and ask before adding any dependency.
 
 ## Hosting and workflow
 
-- The repo is on GitHub and the site is served by **GitHub Pages**.
+- The repo is on GitHub and the site is served by **GitHub Pages** at
+  **https://rooks.rookstudio.net** (custom domain set in repo Settings → Pages,
+  not a `CNAME` file; DNS is on Cloudflare, DNS only, not proxied).
+  `rookstudio.net` is the owner's umbrella domain for all their sites; the bare
+  domain is reserved for a future projects homepage.
 - `.github/workflows/pages.yml` publishes the `site/` folder. Keep that pipeline minimal.
 - The stack is plain HTML, CSS and JavaScript. No framework and no build step
   unless we explicitly decide otherwise.
