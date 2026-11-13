@@ -55,6 +55,13 @@ faint tint on the backgrounds) derives from `--seed` in `shell.css` via
 for the Wilderness Bound release (26.3). Switch back to blue ice `#75a8fd` when 26.4 drops. To change it, set `--seed` and the
 matching fixed values in its `@supports not` fallback block, update the same fixed colors in `shared/favicon.svg`
 (a static copy of the logo), and end the home card's `strip` in the same color.
+Also update the colors in `tools/og-image.html` and regenerate `shared/og.png`
+(the link preview image; the command is in that file).
+
+**Search:** `site/sitemap.xml` lists every page; add a line for each new tool
+or hub. Each page's `<title>` uses the words people search for ("Minecraft
+Circle & Sphere Generator"), and its head carries a canonical link and
+Open Graph tags matching the title and description.
 
 No per-tool colors. The rainbow section colors were removed; tools are told
 apart by their icons.
