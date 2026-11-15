@@ -237,7 +237,7 @@ a.trow:hover small { transform: translateX(-3px); }
   background: color-mix(in srgb, var(--c) 18%, transparent); border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
   transition: transform .3s var(--spring);
 }
-.view:has([value=s]:checked) .view-hl { transform: translateX(100%); }
+.view:has(label:last-of-type input:checked) .view-hl { transform: translateX(100%); }
 .view label { position: relative; cursor: pointer; }
 .view input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 .view span {
