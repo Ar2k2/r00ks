@@ -98,7 +98,24 @@
     return row;
   }
 
-  const api = { hexToLab, labToHex, pick };
+  // Lay a row of n blocks out as a w*h pattern (row 0 at the top), returning a block index per cell.
+  // Each block gets a band `width` wide. noise (0..1) blends the bands: 0 is hard edges, 0.5 mixes
+  // neighbors across one band in a tidy 4x4 ordered dither, 1 scatters blocks at random across two bands.
+  // The random part is a hash of the cell, so the same settings always give the same pattern.
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  const hash = (x, y) => { let h = Math.imul(x, 374761393) + Math.imul(y, 668265263) | 0; h = Math.imul(h ^ h >>> 13, 1274126177); return ((h ^ h >>> 16) >>> 0) / 4294967296; };
+  function pattern(n, width, height, noise) {
+    const w = n * width, out = [];
+    for (let y = 0; y < height; y++) for (let x = 0; x < w; x++) {
+      const order = (BAYER[(y % 4) * 4 + x % 4] + 0.5) / 16;
+      const r = order + (hash(x, y) - order) * noise; // tidy dither -> random as noise rises
+      const i = Math.floor((x + 0.5) / width + (r - 0.5) * noise * 2);
+      out.push(Math.min(n - 1, Math.max(0, i)));
+    }
+    return { cells: out, w, h: height };
+  }
+
+  const api = { hexToLab, labToHex, pick, pattern };
   if (typeof module !== 'undefined') module.exports = api;
   else window.Gradient = api;
 })();

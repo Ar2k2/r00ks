@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611131428">
+<link rel="stylesheet" href="../shared/shell.css?v=202611151047">
 <style>
   /* Controls */
   .controls { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px 12px; align-items: end; }
@@ -24,7 +24,15 @@
   .steps { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
   .steps output { font: 500 14px var(--mono); min-width: 2ch; text-align: right; }
 
-
+  /* Pattern: the row laid out as a wall or floor */
+  .pat-controls { display: grid; grid-template-columns: auto 1fr auto; gap: 12px 14px; align-items: center; margin-top: 14px; }
+  .pat-controls output { font: 500 14px var(--mono); min-width: 2ch; text-align: right; }
+  .pattern { display: grid; margin-top: 18px; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); max-width: 100%;
+    animation: drop .45s var(--spring) both; }
+  .pattern i { aspect-ratio: 1; background: var(--hex); }
+  .pattern i.tex { background: var(--hex) var(--tex) top / 100% auto; image-rendering: pixelated; }
+  .materials { list-style: none; margin: 14px 0 0; padding: 0; columns: 220px; font-size: 13px; color: var(--muted); }
+  .materials b { font: 500 13px var(--mono); color: var(--text); display: inline-block; min-width: 4ch; }
 
   @media (max-width: 640px) {
     .controls { grid-template-columns: 1fr; }
@@ -76,6 +84,18 @@
     <p class="meta" id="meta"></p>
   </section>
 
+  <section class="panel" aria-label="Pattern">
+    <span class="label">Pattern</span>
+    <p class="build-help">How to build it: each block in the row gets a band of columns. Noise mixes neighboring blocks where bands meet: low gives a tidy blend, high a random scatter. Copy it from this preview, or use the command below.</p>
+    <div class="pat-controls">
+      <span class="label">Band width</span><input type="range" id="bandw" min="1" max="6" value="3" aria-valuetext="3"><output id="bandw-out">3</output>
+      <span class="label">Height</span><input type="range" id="path" min="1" max="16" value="6" aria-valuetext="6"><output id="path-out">6</output>
+      <span class="label">Noise</span><input type="range" id="noise" min="0" max="100" value="50" data-step="5" aria-valuetext="50%"><output id="noise-out">50%</output>
+    </div>
+    <div class="pattern" id="pattern" role="img"></div>
+    <ul class="materials" id="materials" aria-label="Blocks needed"></ul>
+  </section>
+
   <section class="panel" aria-label="Build command">
     <span class="label">Build command</span>
     <div id="build"></div>
@@ -86,18 +106,18 @@
     <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611131428"></script>
-<script src="engine.js?v=202611131428"></script>
-<script src="../shared/jar.js?v=202611131428"></script>
-<script src="../shared/build.js?v=202611131428"></script>
-<script src="../shared/swap.js?v=202611131428"></script>
+<script src="../shared/shell.js?v=202611151047"></script>
+<script src="engine.js?v=202611151047"></script>
+<script src="../shared/jar.js?v=202611151047"></script>
+<script src="../shared/build.js?v=202611151047"></script>
+<script src="../shared/swap.js?v=202611151047"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
   const HEX = /^#[0-9a-f]{6}$/i;
   const { version, blocks } = await (await fetch('blocks.json')).json();
   const textures = new Map(); // texture path -> object URL, filled by "Load jar"
-  let last = [], pool = [], inputs = '';
+  let last = [], pool = [], inputs = '', patKey = '';
   const subs = new Map(); // step index -> block the visitor swapped in
 
   const filters = {
@@ -137,7 +157,29 @@
       ? `${pool.length} block faces considered · data from Java ${version}`
       : 'No blocks match these filters. Try turning some off.';
     last = row;
-    Build.panel($('build'), () => row.length ? { grid: row.map(b => Build.block(b, view)), w: row.length, h: 1, view } : null);
+
+    // Pattern preview, materials and build command all use the same layout.
+    const bw = WASD.val($('bandw')), ph = WASD.val($('path'));
+    const noise = WASD.val($('noise'));
+    $('bandw-out').value = bw; $('path-out').value = ph; $('noise-out').value = noise + '%';
+    $('noise').setAttribute('aria-valuetext', noise + '%');
+    const pat = Gradient.pattern(row.length, bw, ph, noise / 100);
+    const key = [row.map(b => b.id + b.face).join(), bw, ph, noise, textures.size].join('|');
+    if (key !== patKey) { // only redraw when the pattern changed, so the drop-in plays once
+      patKey = key;
+      $('pattern').style.gridTemplateColumns = `repeat(${pat.w}, 1fr)`;
+      $('pattern').style.width = `${pat.w * 28}px`;
+      $('pattern').innerHTML = pat.cells.map(k => {
+        const b = row[k], tex = textures.get(b.tex);
+        return `<i class="${tex ? 'tex' : ''}" style="--hex:${b.hex}${tex ? `;--tex:url(${tex})` : ''}"></i>`;
+      }).join('');
+      $('pattern').style.animation = 'none'; void $('pattern').offsetWidth; $('pattern').style.animation = '';
+      $('pattern').setAttribute('aria-label', `${pat.w} by ${pat.h} block pattern`);
+      const n = row.map((_, k) => pat.cells.filter(c => c === k).length);
+      $('materials').innerHTML = row.map((b, k) => `<li><b>${n[k]}</b> ${b.name}${b.face ? ` (${b.face})` : ''}</li>`).join('');
+    }
+    $('pattern').hidden = $('materials').hidden = !row.length;
+    Build.panel($('build'), () => row.length ? { grid: pat.cells.map(k => Build.block(row[k], view)), w: pat.w, h: pat.h, view } : null);
   };
 
   let queued;
@@ -157,7 +199,7 @@
     $('from-pick').value = $('from').value; $('to-pick').value = $('to').value;
     last = []; update();
   };
-  $('steps').oninput = update;
+  $('steps').oninput = $('bandw').oninput = $('path').oninput = $('noise').oninput = update;
   document.querySelectorAll('.filters input, [name=view]').forEach(el => el.onchange = update);
 
   $('copy').onclick = () => WASD.copy($('copy'),
