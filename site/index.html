@@ -14,14 +14,14 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="shared/shell.css?v=202611151050">
+<link rel="stylesheet" href="shared/shell.css?v=202611161126">
 <style>
   .top { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
   .top .name { font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
   .top .ver { margin-left: auto; font: 13px var(--mono); color: var(--muted); }
 
   /* Featured card: the newest tool. */
-  .latest { overflow: hidden; padding: 0; }
+  .latest { overflow: hidden; padding: 0; margin: 0 0 28px; }
   .strip { display: flex; height: 10px; }
   .strip i {
     flex: 1; background: var(--b); box-shadow: 1px 0 0 var(--b); /* hides subpixel seams */
@@ -44,7 +44,7 @@
   .actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 24px 24px; }
   .actions .btn { display: inline-flex; gap: 8px; padding: 0 18px; }
 
-  .intro { margin: -8px 0 28px; max-width: 54ch; font-size: 18px; line-height: 1.5; color: var(--muted); }
+  .intro { margin: 0 0 28px; max-width: 54ch; font-size: 18px; line-height: 1.5; color: var(--muted); }
   .intro b { color: var(--text); font-weight: 600; }
 
   footer { margin-top: 44px; color: var(--faint); font: 12px var(--mono); }
@@ -62,9 +62,7 @@
     <span class="ver" id="ver"></span>
   </div>
 
-  <p class="intro in" style="--i:0"><b>Free tools for Minecraft Java Edition.</b> Turn colors into block gradients and palettes, design banners and fireworks, find slime chunks and strongholds, and work out builds, anvil combos and commands.</p>
-
-  <article class="panel latest in" style="--i:1" aria-labelledby="latest-h">
+  <article class="panel latest in" style="--i:0" aria-labelledby="latest-h">
     <div class="strip" id="strip" aria-hidden="true"></div>
     <div class="meta" id="latest-meta"></div>
     <div class="body">
@@ -75,19 +73,22 @@
     <div class="actions" id="latest-actions"></div>
   </article>
 
+  <p class="intro in" style="--i:1"><b>Free tools for Minecraft Java Edition.</b> Turn colors into block gradients and palettes, design banners and fireworks, find slime chunks and strongholds, and work out builds, anvil combos and commands.</p>
+
   <div data-all-tools></div>
 
   <footer>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</footer>
 </main>
-<script src="shared/shell.js?v=202611151050"></script>
+<script src="shared/shell.js?v=202611161126"></script>
 <script>
   // Featured card: the newest tool.
-  // { label, version, date?, title, summary, changes?: [[kind, text, key]], link, cta }
+  // { label, version, date?, title, summary?, changes?: [[kind, text, key]], links?: [[cta, link]] }
   // strip: average colors (blocks.json) of a block family; its last color is --seed in shell.css.
   const latest = {
-    label: 'New tool', version: 'Java 26.3', title: 'Banner designer',
-    summary: 'Design a banner layer by layer and get the exact loom steps. The new firework designer does the same for rockets, with a live preview.',
-    link: 'banner/', cta: 'Design a banner',
+    label: 'Breaking news!', version: 'Java 26.3',
+    title: 'Drop name for 26.4 and features for next year’s first game drop announced at TwitchCon',
+    links: [['See the 26.4 drop name', 'https://www.minecraft.net/en-us/article/twitchcon-gamedrop-name'],
+      ['See next year’s first drop', 'https://www.minecraft.net/en-us/article/twitchcon-gamedrop-features']],
     strip: ['#e08e2b', '#a42e26', '#c75b17'], // yellow, red, orange poplar leaves
   };
 
@@ -97,13 +98,15 @@
   $('latest-meta').innerHTML = `<span class="pill">${esc(latest.label)}</span>`
     + (latest.date ? `<span class="date">${esc(latest.date)}</span>` : '');
   $('latest-h').textContent = latest.title;
-  $('latest-sum').textContent = latest.summary;
+  $('latest-sum').textContent = latest.summary ?? '';
   if (latest.changes?.length) {
     $('latest-changes').hidden = false;
     $('latest-changes').innerHTML = latest.changes.map(([k, t, key]) =>
       `<li><span class="kind">${esc(k)}</span><span>${esc(t)}</span><code>${esc(key)}</code></li>`).join('');
   }
-  $('latest-actions').innerHTML = `<a class="btn primary" href="${WASD.root}${latest.link}">${esc(latest.cta)} <span class="arr">→</span></a>`;
+  // First link is the filled button; site paths get the root, full URLs go as-is.
+  $('latest-actions').innerHTML = (latest.links ?? []).map(([cta, link], i) =>
+    `<a class="btn${i ? '' : ' primary'}" href="${/^https?:/.test(link) ? '' : WASD.root}${link}">${esc(cta)} <span class="arr">→</span></a>`).join('');
 
   // Strip: 16 cells blended in OKLab across the given colors, dropping in one by one.
   const n = latest.strip.length - 1;
