@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 0 234 226">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 -4 234 234">
   <!-- Static copy of the crane rook logo in shell.js. Colors are the "@supports not" fallbacks in shell.css; update them when the seed color changes. -->
   <style>
     .t { fill: #1b1b1f } .a { fill: #ab4500 } .s { stroke: #ab4500 } .b { stroke: #f7f2f0 }
