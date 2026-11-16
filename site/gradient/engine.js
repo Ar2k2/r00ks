@@ -33,13 +33,15 @@
   // avoidRepeats: no block twice anywhere in the row (when there are enough blocks).
   const W = { noise: 0.25, smooth: 1, repeat: 0.002 };
 
-  function pick(blocks, fromHex, toHex, steps, { avoidRepeats = false } = {}) {
+  // colors: two or more hex stops, spaced evenly along the row.
+  function pick(blocks, colors, steps, { avoidRepeats = false } = {}) {
     const K = blocks.length;
-    if (!K || steps < 1) return [];
-    const a = hexToLab(fromHex), b = hexToLab(toHex);
+    if (!K || steps < 1 || !colors.length) return [];
+    const labs = colors.map(hexToLab), segs = Math.max(1, labs.length - 1);
     const targets = Array.from({ length: steps }, (_, i) => {
-      const t = steps === 1 ? 0 : i / (steps - 1);
-      return a.map((v, k) => v + (b[k] - v) * t);
+      const t = steps === 1 ? 0 : i / (steps - 1) * segs, s = Math.min(Math.floor(t), segs - 1);
+      const a = labs[s], b = labs[s + 1] ?? a;
+      return a.map((v, k) => v + (b[k] - v) * (t - s));
     });
 
     // One DP pass. ban[i]: block ids not allowed at step i. Each step only considers its M closest

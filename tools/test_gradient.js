@@ -9,25 +9,31 @@ const ids = (...a) => pick(...a).map(b => b.id);
 const byId = id => blocks.find(b => b.id === id);
 
 // Pure white: snow block is the whitest texture (white concrete averages #cfd5d6, noticeably grey).
-assert.deepStrictEqual(ids(blocks, '#ffffff', '#ffffff', 1), ['snow_block']);
+assert.deepStrictEqual(ids(blocks, ['#ffffff', '#ffffff'], 1), ['snow_block']);
 // A smooth block's own average color gives that block back (noisy ones lose to smoother lookalikes).
 for (const id of ['black_concrete', 'red_wool', 'white_concrete', 'lime_terracotta'])
-  assert.deepStrictEqual(ids(blocks, byId(id).hex, byId(id).hex, 1), [id]);
+  assert.deepStrictEqual(ids(blocks, [byId(id).hex, byId(id).hex], 1), [id]);
 // Avoid repeats: no block twice anywhere in the row, whichever face shows. Brown to gray used to
 // alternate stripped spruce log with planks and barrels.
 for (const [from, to, n] of [['#202020', '#303030', 12], ['#6b4a2f', '#808080', 32], ['#7a5230', '#9a9a9a', 9]]) {
-  const row = ids(blocks, from, to, n, { avoidRepeats: true });
+  const row = ids(blocks, [from, to], n, { avoidRepeats: true });
   assert.strictEqual(row.length, n);
   assert.strictEqual(new Set(row).size, n, row.join(' '));
 }
 // More steps than blocks: the row still fills, repeating as little as it can.
-assert.strictEqual(pick(blocks.slice(0, 3), '#000000', '#ffffff', 9, { avoidRepeats: true }).length, 9);
+assert.strictEqual(pick(blocks.slice(0, 3), ['#000000', '#ffffff'], 9, { avoidRepeats: true }).length, 9);
 // Black to white runs dark to light.
-const L = pick(blocks, '#000000', '#ffffff', 9).map(b => b.lab[0]);
+const L = pick(blocks, ['#000000', '#ffffff'], 9).map(b => b.lab[0]);
 assert.ok(L.every((v, i) => !i || v > L[i - 1]), 'lightness should rise: ' + L);
-assert.deepStrictEqual(pick([], '#000000', '#ffffff', 5), []);
+assert.deepStrictEqual(pick([], ['#000000', '#ffffff'], 5), []);
 // Live coral blocks die out of water, so the data leaves them out (dead coral stays).
 assert.ok(!blocks.some(b => /^(tube|brain|bubble|fire|horn)_coral_block$/.test(b.id)), 'live coral in blocks.json');
+
+// Multi-stop: black -> white -> black peaks in the middle and comes back down.
+const M = pick(blocks, ['#000000', '#ffffff', '#000000'], 9).map(b => b.lab[0]);
+assert.ok(M[4] > M[0] && M[4] > M[8] && M.slice(0, 5).every((v, i) => !i || v > M[i - 1]), 'should peak mid-row: ' + M);
+// The middle stop lands exactly on the middle step.
+assert.deepStrictEqual(ids(blocks, ['#000000', '#ffffff', '#000000'], 9)[4], 'snow_block');
 
 console.log('gradient engine: all checks passed');
 
