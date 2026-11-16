@@ -26,12 +26,16 @@
   };
 
   const d2 = (p, q) => (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2;
+  // A pixel color packed as r << 16 | g << 8 | b.
+  const keyToLab = key => hexToLab('#' + key.toString(16).padStart(6, '0'));
 
   // Pick one block per step, scoring the whole row at once (Viterbi-style DP):
   //   unary:    distance to that step's target + noisy texture penalty
   //   pairwise: neighbors should step like the targets do + repeat penalty
   // avoidRepeats: no block twice anywhere in the row (when there are enough blocks).
   const W = { noise: 0.25, smooth: 1, repeat: 0.002 };
+  // How well one block matches a target color: distance plus the noisy texture penalty. Mosaic and palette use it too.
+  const score = (b, t) => d2(b.lab, t) + W.noise * b.noise ** 2;
 
   // colors: two or more hex stops, spaced evenly along the row.
   function pick(blocks, colors, steps, { avoidRepeats = false } = {}) {
@@ -48,7 +52,7 @@
     // allowed blocks: anything further off loses on distance anyway, and it keeps re-scoring quick.
     const M = 48;
     const solve = ban => {
-      const cand = targets.map((t, i) => blocks.map((o, k) => [k, d2(o.lab, t) + W.noise * o.noise ** 2])
+      const cand = targets.map((t, i) => blocks.map((o, k) => [k, score(o, t)])
         .filter(([k]) => !ban[i].has(blocks[k].id)).sort((p, q) => p[1] - q[1]).slice(0, M));
       if (cand.some(c => !c.length)) return [];
       let cost = cand[0].map(([, u]) => u);
@@ -117,7 +121,7 @@
     return { cells: out, w, h: height };
   }
 
-  const api = { hexToLab, labToHex, pick, pattern };
+  const api = { hexToLab, labToHex, keyToLab, score, pick, pattern };
   if (typeof module !== 'undefined') module.exports = api;
   else window.Gradient = api;
 })();

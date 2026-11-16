@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161248">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161259">
 <style>
   /* Controls */
   .controls { display: grid; grid-template-columns: 1fr; gap: 16px 12px; align-items: end; }
@@ -128,11 +128,12 @@
     <p>If the version you want is missing, launch it once in the Minecraft launcher and it will appear. Other launchers keep their own copy inside each instance's folder. A resource pack works too: use its .zip as it is.</p>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611161248"></script>
-<script src="engine.js?v=202611161248"></script>
-<script src="../shared/jar.js?v=202611161248"></script>
-<script src="../shared/build.js?v=202611161248"></script>
-<script src="../shared/swap.js?v=202611161248"></script>
+<script src="../shared/shell.js?v=202611161259"></script>
+<script src="engine.js?v=202611161259"></script>
+<script src="../shared/blocks.js?v=202611161259"></script>
+<script src="../shared/jar.js?v=202611161259"></script>
+<script src="../shared/build.js?v=202611161259"></script>
+<script src="../shared/swap.js?v=202611161259"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
@@ -141,15 +142,6 @@
   const textures = new Map(); // texture path -> object URL, filled by "Load jar"
   let last = [], pool = [], inputs = '', patKey = '';
   const subs = new Map(); // step index -> block the visitor swapped in
-
-  const filters = {
-    smooth: b => b.noise < 0.05,
-    wool: null, // inverse: unchecked removes wool
-    norepeat: null,
-    survival: b => !b.flags?.includes('u'),
-    nogravity: b => !b.flags?.includes('g'),
-    nolight: b => !b.flags?.includes('l'),
-  };
 
   // Color stops: From, any number of Via colors (up to MAX in all), To.
   const MAX = 6;
@@ -172,21 +164,16 @@
     $('ideal').style.background = `linear-gradient(to right in oklab, ${stops.join(', ')})`;
 
     const view = document.querySelector('[name=view]:checked').value;
-    pool = blocks.filter(b => b.views.includes(view) &&
-      ($('wool').checked || !b.id.endsWith('_wool')) &&
-      Object.entries(filters).every(([k, f]) => !f || !$(k).checked || f(b)));
+    pool = Blocks.pool(blocks, view);
     // Swaps hold until a setting changes.
     const now = [...stops, steps, view, ...[...document.querySelectorAll('.filters input')].map(c => c.checked)].join();
     if (now !== inputs) { subs.clear(); inputs = now; }
     const row = Gradient.pick(pool, stops, steps, { avoidRepeats: $('norepeat').checked }).map((b, i) => subs.get(i) ?? b);
 
     // Only tiles whose block changed drop in again, so dragging the slider stays calm.
-    $('row').innerHTML = row.map((b, i) => {
-      const tex = textures.get(b.tex);
-      return `<li class="${last[i] === b ? 'same' : ''}${subs.has(i) ? ' swapped' : ''}" style="--i:${i}"><button class="pick" data-i="${i}" style="--c:${b.hex}" title="Swap or copy ${b.name}" aria-haspopup="dialog">
-        <div class="tile${tex ? ' tex' : ''}" style="--hex:${b.hex}${tex ? `;--tex:url(${tex})` : ''}"></div>
-        <b>${b.name}</b><small>${b.id}${b.face ? ' · ' + b.face : ''}</small></button></li>`;
-    }).join('') || '';
+    $('row').innerHTML = row.map((b, i) => `<li class="${last[i] === b ? 'same' : ''}${subs.has(i) ? ' swapped' : ''}" style="--i:${i}"><button class="pick" data-i="${i}" style="--c:${b.hex}" title="Swap or copy ${b.name}" aria-haspopup="dialog">
+        ${Blocks.tile(b, textures)}
+        <b>${b.name}</b><small>${b.id}${b.face ? ' · ' + b.face : ''}</small></button></li>`).join('');
     $('row').hidden = !row.length;
     $('meta').textContent = row.length
       ? `${pool.length} block faces considered · data from Java ${version}`

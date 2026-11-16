@@ -2,10 +2,7 @@
 // Plain script for the browser (window.Mosaic) and Node (module.exports) for tests. Needs Gradient (engine.js).
 (() => {
   const G = typeof module !== 'undefined' ? require('../gradient/engine.js') : window.Gradient;
-  const NOISE = 0.25; // same texture penalty weight as the gradient engine
-
-  const lab = key => G.hexToLab('#' + key.toString(16).padStart(6, '0'));
-  const score = (b, t) => (b.lab[0] - t[0]) ** 2 + (b.lab[1] - t[1]) ** 2 + (b.lab[2] - t[2]) ** 2 + NOISE * b.noise ** 2;
+  const { keyToLab: lab, score } = G;
   // Opaque pixels by color: Map(rgb key -> pixel count).
   const colors = rgba => {
     const m = new Map();

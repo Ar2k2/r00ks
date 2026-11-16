@@ -58,7 +58,7 @@
     for (let p = 0; p < w * h; p++) {
       const i = p * 4, key = rgba[i] << 16 | rgba[i + 1] << 8 | rgba[i + 2];
       let l = cache.get(key);
-      if (!l) cache.set(key, l = G.hexToLab('#' + key.toString(16).padStart(6, '0')));
+      if (!l) cache.set(key, l = G.keyToLab(key));
       lab.set(l, p * 3);
     }
     const near = (L, a, b) => {
@@ -109,7 +109,7 @@
     return cells.map(k => subs.has(pal[k].block) ? at.get(subs.get(pal[k].block) * 3 + pal[k].shade) : k);
   }
 
-  const api = { BASES, MULT, colors, convert, heights, swap };
+  const api = { BASES, colors, convert, heights, swap };
   if (typeof module !== 'undefined') module.exports = api;
   else window.MapArt = api;
 })();

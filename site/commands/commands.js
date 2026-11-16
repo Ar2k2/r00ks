@@ -12,8 +12,6 @@
     return `{${f.join(',')}}`;
   };
   const id = s => String(s).trim().toLowerCase().replace(/^minecraft:/, '');
-  const ID = /^[a-z0-9_.\-/]+$/;
-  const COORD = /^([~^]-?\d*\.?\d*|-?\d+(\.\d+)?)$/;
   const pos = p => p.map(v => String(v).trim() || '~');
 
   // { item, count, target, name, style: {color, bold, italic}, lore: [], ench: {id: level}, unbreakable, glint }
@@ -60,7 +58,7 @@
     return Number.isFinite(v) ? v : null;
   };
 
-  const api = { give, summon, fill, setblock, volume, str, ID, COORD };
+  const api = { give, summon, fill, setblock, volume, str };
   if (typeof module !== 'undefined') module.exports = api;
   else window.Commands = api;
 })();

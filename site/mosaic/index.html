@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161248">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161259">
 <style>
   .controls { display: grid; grid-template-columns: auto 1fr; gap: 16px 20px; align-items: end; }
   .controls .view { grid-column: auto; }
@@ -117,12 +117,13 @@
     <p>If the version you want is missing, launch it once in the Minecraft launcher and it will appear. Other launchers keep their own copy inside each instance's folder. A resource pack works too: use its .zip as it is.</p>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611161248"></script>
-<script src="../gradient/engine.js?v=202611161248"></script>
-<script src="mosaic.js?v=202611161248"></script>
-<script src="../shared/jar.js?v=202611161248"></script>
-<script src="../shared/build.js?v=202611161248"></script>
-<script src="../shared/swap.js?v=202611161248"></script>
+<script src="../shared/shell.js?v=202611161259"></script>
+<script src="../gradient/engine.js?v=202611161259"></script>
+<script src="mosaic.js?v=202611161259"></script>
+<script src="../shared/blocks.js?v=202611161259"></script>
+<script src="../shared/jar.js?v=202611161259"></script>
+<script src="../shared/build.js?v=202611161259"></script>
+<script src="../shared/swap.js?v=202611161259"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
@@ -133,12 +134,6 @@
   let img = null, pool = [], cells = null, w = 0, h = 0, mats = [];
   const subs = new Map(); // block -> block the visitor swapped in, everywhere in the picture
 
-  const filters = {
-    smooth: b => b.noise < 0.05,
-    survival: b => !b.flags?.includes('u'),
-    nogravity: b => !b.flags?.includes('g'),
-    nolight: b => !b.flags?.includes('l'),
-  };
   const face = b => b.face ? ` (${b.face})` : '';
   const loadImg = src => images.get(src) ?? images.set(src, new Promise(ok => {
     const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src;
@@ -147,8 +142,7 @@
   const render = async () => {
     if (!img) return;
     const view = document.querySelector('[name=view]:checked').value;
-    pool = blocks.filter(b => b.views.includes(view) && ($('wool').checked || !b.id.endsWith('_wool')) &&
-      Object.entries(filters).every(([k, f]) => !$(k).checked || f(b)));
+    pool = Blocks.pool(blocks, view);
     w = WASD.val($('width')); h = Math.max(1, Math.round(w * img.height / img.width));
     if (h > MAX_H) { h = MAX_H; w = Math.max(1, Math.round(h * img.width / img.height)); }
     $('dims').textContent = `${w} × ${h}`;
@@ -189,10 +183,10 @@
     $('mats-panel').hidden = false;
     $('total').textContent = `${total} blocks · ${mats.length} kinds`;
     const swapped = new Set(subs.values());
-    $('mats').innerHTML = mats.map(({ block: b, count: c }, i) => { const t = textures.get(b.tex); return `<li class="${swapped.has(b) ? 'swapped' : ''}" style="--i:${Math.min(i, 14)}">
+    $('mats').innerHTML = mats.map(({ block: b, count: c }, i) => `<li class="${swapped.has(b) ? 'swapped' : ''}" style="--i:${Math.min(i, 14)}">
       <button class="pick" data-i="${i}" title="Swap ${b.name} for another block" aria-haspopup="dialog">
-      <div class="tile${t ? ' tex' : ''}" style="--hex:${b.hex}${t ? `;--tex:url(${t})` : ''}"></div>
-      <b>${b.name}${face(b)}</b><span class="need">${Mosaic.stacks(c)}${c >= 64 ? `<small>${c} blocks</small>` : ''}</span></button></li>`; }).join('');
+      ${Blocks.tile(b, textures)}
+      <b>${b.name}${face(b)}</b><span class="need">${Mosaic.stacks(c)}${c >= 64 ? `<small>${c} blocks</small>` : ''}</span></button></li>`).join('');
     $('meta').textContent = pool.length
       ? `Click a block to swap it for a similar one. ${pool.length} block faces considered · data from Java ${version}`
       : 'No blocks match these filters. Try turning some off.';

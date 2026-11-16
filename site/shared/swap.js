@@ -1,5 +1,5 @@
 // Substitute picker: a popover of the blocks closest in color to the one clicked.
-// Swap.open(anchor, block, pool, textures, { onPick(block), actions: [{ label, run }] })
+// Swap.open(anchor, block, pool, textures, { onPick(block), actions: [{ label, run }] }). Needs blocks.js.
 (() => {
   const SHOW = 8;
   let open = null;
@@ -21,7 +21,7 @@
   function show(anchor, block, pool, textures, { onPick, actions = [] }) {
     close();
     const list = nearest(block, pool), face = b => b.face ? ` · ${b.face}` : '';
-    const tile = b => { const t = textures.get(b.tex); return `<i class="tile${t ? ' tex' : ''}" style="--hex:${b.hex}${t ? `;--tex:url(${t})` : ''}"></i>`; };
+    const tile = b => Blocks.tile(b, textures, 'i');
     const el = document.createElement('div');
     el.className = 'swap-pop';
     el.setAttribute('role', 'dialog');

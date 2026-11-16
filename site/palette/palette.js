@@ -1,6 +1,7 @@
 // Palette builder: from one base color, pick blocks for a color-harmony scheme in OKLab.
-// Plain script for the browser (window.Palette) and Node (module.exports) for tests.
+// Plain script for the browser (window.Palette) and Node (module.exports) for tests. Needs Gradient (engine.js).
 (() => {
+  const { score } = typeof module !== 'undefined' ? require('../gradient/engine.js') : window.Gradient;
   // Each scheme: hue offsets (degrees) and, per hue, lightness offsets from the base.
   const SCHEMES = {
     tonal: [[0, [-0.3, -0.2, -0.1, 0.1, 0.2]]],
@@ -8,10 +9,6 @@
     complementary: [[0, [-0.15, 0.15]], [180, [-0.1, 0, 0.1]]],
     triad: [[-120, [-0.06, 0.06]], [120, [-0.06, 0.06]]],
   };
-  const NOISE = 0.25; // same texture penalty weight as the gradient engine
-
-  const d2 = (p, q) => (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2;
-  const score = (b, t) => d2(b.lab, t) + NOISE * b.noise ** 2;
 
   // Groups of blocks: the base first, then one group per scheme hue. A block ID is used once.
   function build(blocks, base, scheme) {

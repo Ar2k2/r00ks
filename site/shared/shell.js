@@ -134,7 +134,7 @@
     el.value = val(el);
     el.dispatchEvent(new Event('input', { bubbles: true }));
   }, true);
-  window.WASD = { root, cats, tools, copy, dress, icon, val };
+  window.WASD = { root, copy, dress, icon, val };
 
   const active = document.body.dataset.tool;
   // The rail highlights the category of the current tool (or the hub itself).
