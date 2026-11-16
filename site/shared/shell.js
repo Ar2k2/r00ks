@@ -192,8 +192,10 @@
 
   // Tool lists (home and hub pages): <nav class="panel tools" data-cat="id">. One hover
   // highlight springs from row to row. Home asks for every category with <div data-all-tools>.
-  document.querySelector('[data-all-tools]')?.insertAdjacentHTML('beforeend', cats.map((c, i) =>
-    `<h2 class="tools-h in" style="--i:${i + 2}">${c.name}</h2><nav class="panel tools in" style="--i:${i + 2}" data-cat="${c.id}" aria-label="${c.name}"></nav>`).join(''));
+  // The HTML ships plain links in these for crawlers; they are replaced here.
+  const all = document.querySelector('[data-all-tools]');
+  if (all) all.innerHTML = cats.map((c, i) =>
+    `<h2 class="tools-h in" style="--i:${i + 2}">${c.name}</h2><nav class="panel tools in" style="--i:${i + 2}" data-cat="${c.id}" aria-label="${c.name}"></nav>`).join('');
   document.querySelectorAll('.tools[data-cat]').forEach(list => {
     list.innerHTML = '<i class="hl"></i>' + tools.filter(t => t.cat === list.dataset.cat).map(t => t.built
       ? `<a class="trow" href="${root}${t.path}">${icon(t.id)}<b>${t.name}</b><span>${t.desc}</span><small>Open →</small></a>`
