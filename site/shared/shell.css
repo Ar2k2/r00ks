@@ -352,7 +352,7 @@ input[type=range] { accent-color: var(--c); width: 100%; }
 @keyframes tick { 40% { transform: translateY(-3px); color: var(--c); } }
 /* Build command panel (shared/build.js) */
 .build-help { margin: 12px 0 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
-.build-help code, .meta code { font: 13px var(--mono); color: var(--text); }
+.build-help code, .meta code, .about code { font: 13px var(--mono); color: var(--text); }
 .build-parts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 /* Load jar panel (shared/jar.js) */
 .jar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
@@ -386,3 +386,9 @@ input[type=range] { accent-color: var(--c); width: 100%; }
 .swap-pop footer .btn { flex: 1; height: 38px; font-size: 13px; }
 /* A tile the visitor swapped by hand. */
 .swapped .tile { outline: 2px dashed var(--accent); outline-offset: 3px; }
+
+/* About: plain help text under a tool (how it works, common questions) */
+.about { margin: 44px 4px 0; max-width: 68ch; }
+.about h2 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+.about h3 { margin: 22px 0 0; font-size: 16px; font-weight: 600; }
+.about p { margin: 8px 0 0; color: var(--muted); }

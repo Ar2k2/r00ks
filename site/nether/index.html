@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
 
   .convert { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
@@ -55,6 +55,15 @@
     <p class="warn" id="warn" role="status"></p>
     <p class="note">Y stays the same. A portal links to the closest portal within 16 blocks of the converted spot in the Nether, or 128 blocks in the Overworld, so build the pair within that range.</p>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the Nether portal calculator works</h2>
+    <p>The Nether is scaled 8 to 1 against the Overworld on X and Z, so one block walked in the Nether covers eight in the Overworld. Going in, the calculator divides X and Z by 8 and rounds down. Coming back, it multiplies by 8. Rounding down matches the game, which is why X -1 in the Overworld becomes -1 in the Nether, not 0. Height is not scaled, so Y is copied across as it is.</p>
+    <p>You can paste three numbers, just X and Z, or the whole line you get from F3 + C. That line names the dimension you were standing in, so the numbers land on the right side by themselves. The copy button gives "x y z" ready for /tp, with ~ in place of a missing Y.</p>
+    <h3>How do I link two Nether portals?</h3>
+    <p>Build your Overworld portal, put its coordinates in, and build the Nether portal at the converted spot, or as close as the terrain allows. Then check the trip back: the Nether portal's coordinates times 8 should land on or near the Overworld one. The game sends you to the nearest portal it finds around the converted spot, so if an older portal is closer, it wins. That is the usual reason a portal drops you somewhere unexpected.</p>
+    <h3>Why does it warn about Y 128?</h3>
+    <p>The Nether has a bedrock ceiling at Y 128, and anything above it is the Nether roof. If a converted Nether Y lands up there, the tool points it out, since a portal at that height is almost never what you want.</p>
+  </section>
 </main>
 <script>
   // Build both sides before shell.js runs, so the shell dresses their copy buttons.
@@ -66,8 +75,8 @@
       <button class="btn copy" type="button">Copy</button>`);
   }
 </script>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="nether.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="nether.js?v=202611161144"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);

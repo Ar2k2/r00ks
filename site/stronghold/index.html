@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   .throws { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .how { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
@@ -51,6 +51,15 @@
     <div id="out"></div>
     <button class="btn copy" id="copy" type="button" hidden>Copy</button>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the stronghold finder works</h2>
+    <p>An Eye of Ender flies toward the nearest stronghold, so each throw draws a line on the map. Your X and Z mark where the line starts and the facing angle from F3 gives its direction. Two lines from two different spots cross at one point, and the finder works out that point with plain geometry. It also gives the distance from your second throw and the matching Nether coordinates, in case the trip is shorter through the Nether.</p>
+    <p>The result is then checked against the rings. In Minecraft Java, strongholds generate in eight rings around 0, 0: the first ring, 1280 to 2816 blocks out, holds 3, the second holds 6, and so on, 128 in all. If the crossing lands outside every ring, one of the angles is probably off.</p>
+    <h3>How far apart should the two throws be?</h3>
+    <p>Farther is better. When two lines meet at a shallow angle, a small aiming error moves the crossing by hundreds of blocks, and the finder warns you when the angle is under 8 degrees. A few hundred blocks to the side of the first line is usually enough. Line the crosshair up with the eye's path before it drops, then read the angle.</p>
+    <h3>Can I find a stronghold with one throw?</h3>
+    <p>Only roughly. If you throw from within 1280 blocks of 0, 0, the finder shows the stretch of that line that passes through the first ring, where the closest strongholds generate. Walk along it and throw again partway to pin it down.</p>
+  </section>
 </main>
 <script>
   // Both throws are built from one template.
@@ -59,9 +68,9 @@
       `<label><span class="label">${l}</span><input data-k="${k}" aria-label="Throw ${n} ${l}" placeholder="${k === 'yaw' ? '-45.3' : '0'}"
         inputmode="decimal" pattern="-?\\d+(\\.\\d+)?" autocomplete="off" spellcheck="false"></label>`).join('')}</div></fieldset>`).join('');
 </script>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="../nether/nether.js?v=202611161134"></script>
-<script src="stronghold.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="../nether/nether.js?v=202611161144"></script>
+<script src="stronghold.js?v=202611161144"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);

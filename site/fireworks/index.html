@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   /* Night sky: dark in both themes, faintly tinted by the seed like everything else. */
   .sky, .thumb { background: #0e0d14; background: oklch(from var(--seed) .17 .018 h); }
@@ -146,10 +146,21 @@
     <ul class="gather" id="gather"></ul>
     <p class="meta">The command gives 64 rockets and needs cheats on.</p>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the firework designer works</h2>
+    <p>A firework rocket takes two kinds of craft. First each firework star: gunpowder and at least one dye, plus an optional shape item, a diamond for a trail and glowstone dust for a twinkle. Fade colors are a second craft, the star with more dyes. Then the rocket: paper, 1 to 3 gunpowder for the flight duration, and the stars. The designer lists every craft in order and adds up what to gather for one rocket craft, which makes 3 rockets in Minecraft Java.</p>
+    <p>The preview launches the rocket and bursts each star with its shape, colors and fade, so you can try a design before spending any gunpowder. The command gives 64 of the same rocket in a world with cheats on.</p>
+    <h3>How many colors can a firework star have?</h3>
+    <p>A star is made in one crafting grid, so gunpowder leaves room for 8 dyes. A shape item, a trail and a twinkle each take one of those slots, so a large ball with both effects fits 5 colors. The fade craft takes the star plus up to 8 more dyes.</p>
+    <h3>What items make each firework shape?</h3>
+    <p>A small ball needs nothing extra. A large ball takes a fire charge, star-shaped a gold nugget, creeper-shaped any mob head, and burst a feather.</p>
+    <h3>How many stars fit in one rocket?</h3>
+    <p>Paper and gunpowder share the grid with the stars, so a flight 1 rocket holds up to 7 stars, flight 2 up to 6 and flight 3 up to 5. For elytra flying, leave the stars out: the rocket just flies without a burst.</p>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="../shared/dyes.js?v=202611161134"></script>
-<script src="fireworks.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="../shared/dyes.js?v=202611161144"></script>
+<script src="fireworks.js?v=202611161144"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);

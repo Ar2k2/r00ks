@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   .xyz.wide { grid-template-columns: 2fr 1fr 1fr; }
   .how { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
@@ -79,10 +79,19 @@
     <div class="map" id="map" role="img" aria-label="Map of slime chunks around you"></div>
     <p class="map-info" id="info">Point at a chunk to see its blocks.</p>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the slime chunk finder works</h2>
+    <p>Whether a chunk is a slime chunk depends only on the world seed and the chunk's coordinates. The game feeds both into Java's random number generator and rolls a number from 0 to 9; a 0 makes it a slime chunk. This page runs that same calculation in your browser, so the answer matches your world. Text seeds work too: they are turned into a number the same way the game does it.</p>
+    <p>From your X and Z it searches outward for the closest slime chunk and shows its block range, so you know exactly where its borders are. The map shows 25 by 25 chunks around you. Point at any square to read its chunk number and block range. Copy gives the chunk's center, ready for /tp.</p>
+    <h3>How do I find slime chunks without the seed?</h3>
+    <p>You need the seed for a tool like this. In single player, type /seed. On a server the command needs operator rights, so ask an admin. Without the seed, the old way still works: dig out a wide room below Y 40 and watch where slimes appear.</p>
+    <h3>Where do slimes spawn in Minecraft Java?</h3>
+    <p>In slime chunks below Y 40, at any light level. They also spawn in swamps and mangrove swamps between Y 51 and 69 in darkness, more often near a full moon. They never spawn on Peaceful or in mushroom fields.</p>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="../stronghold/stronghold.js?v=202611161134"></script>
-<script src="slime.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="../stronghold/stronghold.js?v=202611161144"></script>
+<script src="slime.js?v=202611161144"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);

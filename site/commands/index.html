@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   .view.three { grid-template-columns: repeat(3, 1fr); }
   .three .view-hl { width: calc((100% - 8px) / 3); }
@@ -127,10 +127,21 @@
   </section>
 
   <datalist id="items"></datalist><datalist id="entities"></datalist><datalist id="blocks"></datalist>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the command builder works</h2>
+    <p>Since the item component update, Minecraft Java no longer writes item data as one block of NBT tags. A give command now lists components in square brackets after the item ID, like custom_name, lore, enchantments and unbreakable. This minecraft give command generator writes that syntax for you, with the quotes and escapes in the right places, so a typo cannot break the whole line.</p>
+    <p>The summon tab builds entity data: a custom name, options like No AI or Invulnerable, potion effects, and items held in the hand or worn on the head. The fill tab writes /fill for a box between two corners, or /setblock for one block, with modes such as hollow, outline, keep or replace only a chosen block. Coordinates accept numbers, ~ for relative to you, and ^ for relative to where you look.</p>
+    <h3>Why is my custom item name in italics?</h3>
+    <p>Minecraft shows renamed items and lore lines in italics unless you say otherwise. The builder turns italics off for you, so the name looks the way you typed it. Tick Italic if you want it slanted.</p>
+    <h3>Why won't my command fit in chat?</h3>
+    <p>Chat takes at most 256 characters. Longer commands, which come quickly with lore and several enchantments, need a command block. The builder warns you when you pass the limit.</p>
+    <h3>How many blocks can /fill change at once?</h3>
+    <p>By default, 32,768 blocks, for example a 32 by 32 by 32 cube. The builder counts the blocks for you and tells you when to split the area into smaller boxes.</p>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="../anvil/anvil.js?v=202611161134"></script>
-<script src="commands.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="../anvil/anvil.js?v=202611161144"></script>
+<script src="commands.js?v=202611161144"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);

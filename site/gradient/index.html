@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   /* Controls */
   .controls { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px 12px; align-items: end; }
@@ -110,12 +110,29 @@
     <p id="jar-text">Swatches show each block's average color. For real textures, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
     <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the gradient generator works</h2>
+    <p>Every full, solid block in Minecraft Java 26.3 was measured once: the average color of each face's texture, in linear light, so a log's bark and its cut end count as two different options. There are 460 faces in all. Your two colors are blended in OKLab, a color space where equal steps look equal to the eye, and that gives one target color per step.</p>
+    <p>Then the whole row is picked at once instead of block by block. Each choice is scored on how close it is to its target, how evenly it steps from its neighbors, whether it repeats a block, and how noisy its texture is. That is why the result reads as one smooth run, not a string of closest matches.</p>
+    <h3>Why does the top or side setting matter?</h3>
+    <p>Many blocks look different from above than from the side: logs, crafting tables, pumpkins, basalt. Pick top for a floor and side for a wall, and the colors are matched to the face you will actually see.</p>
+    <h3>What do the filters do?</h3>
+    <p>Smooth only drops busy textures like logs, bookshelves and glazed terracotta. Survival only leaves out blocks you cannot get without commands, like bedrock and command blocks. No gravity blocks removes sand, gravel and concrete powder, which fall when built in a wall. No light sources removes glowstone, sea lanterns and the like.</p>
+    <h3>Can I see real textures?</h3>
+    <p>The textures belong to Mojang, so for legal reasons this site does not include or share them. That is why the swatches show average colors. You can still see the real thing: load your own Minecraft client jar or a resource pack and the swatches switch to real textures. The file is read in your browser and never uploaded.</p>
+    <h3>Where do I find my Minecraft .jar file?</h3>
+    <p>Each game version you have played in the official launcher has its own jar in the <code>versions</code> folder, for example <code>versions/26.3/26.3.jar</code>. The <code>versions</code> folder is in:</p>
+    <p>Windows: <code>%appdata%\.minecraft\versions</code> (paste that into the File Explorer address bar).<br>
+    macOS: <code>~/Library/Application Support/minecraft/versions</code> (in Finder, use Go → Go to Folder).<br>
+    Linux: <code>~/.minecraft/versions</code></p>
+    <p>If the version you want is missing, launch it once in the Minecraft launcher and it will appear. Other launchers keep their own copy inside each instance's folder. A resource pack works too: use its .zip as it is.</p>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="engine.js?v=202611161134"></script>
-<script src="../shared/jar.js?v=202611161134"></script>
-<script src="../shared/build.js?v=202611161134"></script>
-<script src="../shared/swap.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="engine.js?v=202611161144"></script>
+<script src="../shared/jar.js?v=202611161144"></script>
+<script src="../shared/build.js?v=202611161144"></script>
+<script src="../shared/swap.js?v=202611161144"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);

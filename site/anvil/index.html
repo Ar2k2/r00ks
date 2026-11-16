@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   .controls { display: grid; gap: 20px; }
   .ench { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -73,9 +73,20 @@
     </div>
     <div id="out"></div>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the anvil optimizer works</h2>
+    <p>Every time an item or book goes through an anvil, its next use costs more. This prior work penalty is 1, 3, 7, 15 and then 31 extra levels, doubling plus one each time, and it stacks with the cost of the enchantments being added. In Minecraft Java, any single step that reaches 40 levels shows Too Expensive and cannot be done in survival.</p>
+    <p>The optimizer tries every way of pairing your books, including merging books with each other before they touch the item, and keeps the order with the lowest total levels where no step goes over the limit. Each enchantment is charged at its level times its book multiplier, so heavy ones like Thorns, Silk Touch or Infinity cost more to apply than Protection or Sharpness.</p>
+    <h3>Why does my anvil say Too Expensive?</h3>
+    <p>Usually the item has been on an anvil too many times, so the penalty alone eats most of the 39 levels you are allowed. Applying books one by one to the item is the usual cause. Combining books in pairs first keeps every piece fresh for longer, which is the order the optimizer looks for.</p>
+    <h3>Does the order of the two slots matter?</h3>
+    <p>Yes. The item goes in the left slot and the book in the right one, and the right slot's enchantments are what you pay for. Follow the steps as listed, left to right, to get the costs shown.</p>
+    <h3>What if my item already has enchantments?</h3>
+    <p>Tick them under already on the item and set how many times it has been on an anvil. The plan then starts from that penalty instead of from zero.</p>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="anvil.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="anvil.js?v=202611161144"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);

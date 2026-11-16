@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; align-items: end; }
   .search {
@@ -81,12 +81,29 @@
     <p id="jar-text">Swatches show each block's average color. For real textures, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
     <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the block palette generator works</h2>
+    <p>Every full, solid block in Minecraft Java 26.3 has a measured average color for each face, so a log's bark and its cut end are separate options. Your starting point becomes the base: the block you picked, or the closest block to your color. The palette then turns around the color wheel in OKLab from there, keeping the same color strength, and asks for a few lighter and darker targets at each hue.</p>
+    <p>Each target gets the closest block that is not used yet, with a small penalty for busy textures, so calm blocks win close calls. Every group is sorted dark to light. Click any block to copy its ID, or use the build command to place it in your world, one row per group.</p>
+    <h3>What do tonal, analogous, complementary and triad mean?</h3>
+    <p>Tonal gives five shades of the base hue, good for depth in one material family. Analogous adds neighbors 30 degrees either side, which feel related but less flat. Complementary pairs two base shades with three blocks from the opposite side of the wheel, for a strong accent. Triad picks blocks 120 degrees away in both directions, the boldest of the four.</p>
+    <h3>How do I find blocks that go together in a Minecraft build?</h3>
+    <p>Start from the block your build is mostly made of, like stone bricks or spruce planks, and try tonal first for trims and shading. Switch to analogous or complementary when you want details that stand out. Set top or side to match whether the blocks go in a floor or a wall, and the filters work the same as in the gradient tool.</p>
+    <h3>Can I see real textures?</h3>
+    <p>The textures belong to Mojang, so for legal reasons this site does not include or share them. That is why the swatches show average colors. You can still see the real thing: load your own Minecraft client jar or a resource pack and the swatches switch to real textures. The file is read in your browser and never uploaded.</p>
+    <h3>Where do I find my Minecraft .jar file?</h3>
+    <p>Each game version you have played in the official launcher has its own jar in the <code>versions</code> folder, for example <code>versions/26.3/26.3.jar</code>. The <code>versions</code> folder is in:</p>
+    <p>Windows: <code>%appdata%\.minecraft\versions</code> (paste that into the File Explorer address bar).<br>
+    macOS: <code>~/Library/Application Support/minecraft/versions</code> (in Finder, use Go → Go to Folder).<br>
+    Linux: <code>~/.minecraft/versions</code></p>
+    <p>If the version you want is missing, launch it once in the Minecraft launcher and it will appear. Other launchers keep their own copy inside each instance's folder. A resource pack works too: use its .zip as it is.</p>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="../gradient/engine.js?v=202611161134"></script>
-<script src="palette.js?v=202611161134"></script>
-<script src="../shared/jar.js?v=202611161134"></script>
-<script src="../shared/build.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="../gradient/engine.js?v=202611161144"></script>
+<script src="palette.js?v=202611161144"></script>
+<script src="../shared/jar.js?v=202611161144"></script>
+<script src="../shared/build.js?v=202611161144"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);

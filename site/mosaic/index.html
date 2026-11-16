@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   .controls { display: grid; grid-template-columns: auto 1fr; gap: 16px 20px; align-items: end; }
   .controls .view { grid-column: auto; }
@@ -97,13 +97,32 @@
     <p id="jar-text">The preview shows each block's average color. For real textures, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
     <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the image to blocks converter works</h2>
+    <p>Your picture is shrunk so each pixel becomes one block, from 16 to 256 blocks wide, with the height following the image's shape and capped at 256. Each pixel then gets the Minecraft Java block whose average face color is closest in OKLab, with a small penalty for busy textures. Mostly transparent pixels stay empty.</p>
+    <p>Below the preview is the list of blocks you need, most used first, counted in stacks of 64 so you know what to gather. Hover the preview to see which block goes in each column and row. The build command places the whole picture with one command block, split into parts when it is large.</p>
+    <h3>How do I make pixel art in Minecraft with fewer blocks?</h3>
+    <p>Lower the block types slider. The tool starts from the blocks a free match would use and keeps the ones that cut the total color error most, weighted by how many pixels they cover. A small area with a distinct color, like an eye, still gets its own block. Fewer types means less detail but an easier build.</p>
+    <h3>Can I swap a block I do not have?</h3>
+    <p>Yes. Click a block in the list to see the eight closest colors that pass your filters, and pick one. It replaces that block everywhere in the picture, and you can undo the swap later.</p>
+    <h3>Should I build it as a wall or a floor?</h3>
+    <p>Choose wall or floor before you build, because many blocks look different on top and on the side. No gravity blocks is on by default here, so sand and concrete powder will not fall out of a wall.</p>
+    <h3>Can I see real textures?</h3>
+    <p>The textures belong to Mojang, so for legal reasons this site does not include or share them. That is why the preview shows average colors. You can still see the real thing: load your own Minecraft client jar or a resource pack and the preview switches to real textures. The file is read in your browser and never uploaded.</p>
+    <h3>Where do I find my Minecraft .jar file?</h3>
+    <p>Each game version you have played in the official launcher has its own jar in the <code>versions</code> folder, for example <code>versions/26.3/26.3.jar</code>. The <code>versions</code> folder is in:</p>
+    <p>Windows: <code>%appdata%\.minecraft\versions</code> (paste that into the File Explorer address bar).<br>
+    macOS: <code>~/Library/Application Support/minecraft/versions</code> (in Finder, use Go → Go to Folder).<br>
+    Linux: <code>~/.minecraft/versions</code></p>
+    <p>If the version you want is missing, launch it once in the Minecraft launcher and it will appear. Other launchers keep their own copy inside each instance's folder. A resource pack works too: use its .zip as it is.</p>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="../gradient/engine.js?v=202611161134"></script>
-<script src="mosaic.js?v=202611161134"></script>
-<script src="../shared/jar.js?v=202611161134"></script>
-<script src="../shared/build.js?v=202611161134"></script>
-<script src="../shared/swap.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="../gradient/engine.js?v=202611161144"></script>
+<script src="mosaic.js?v=202611161144"></script>
+<script src="../shared/jar.js?v=202611161144"></script>
+<script src="../shared/build.js?v=202611161144"></script>
+<script src="../shared/swap.js?v=202611161144"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);

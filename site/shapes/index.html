@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   .controls { display: grid; gap: 18px; }
   /* Three-way version of the shared pill. */
@@ -83,9 +83,18 @@
       <span>lines every 5 blocks · dashed lines mark the center</span>
     </div>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the circle and sphere generator works</h2>
+    <p>A block is part of the shape when its center sits inside a perfect circle or sphere of the diameter you chose. That gives round outlines with no flat spots or odd bumps, at any size from 1 to 128 blocks. A sphere is shown one horizontal layer at a time, starting in the middle, and a dome is the top half of a sphere, built from its base upward.</p>
+    <p>The grid has a stronger line every 5 blocks and a dashed line through the center, so you can count along a row in Minecraft Java without losing your place. The layer below shows faintly under the current one, so you can see where each ring steps in or out. The block count covers the layer you are on and the whole shape, with stacks of 64 for bigger builds, so you know how much to gather first.</p>
+    <h3>Should I pick an odd or even diameter?</h3>
+    <p>An odd diameter has a single center block, which is handy if you want to start from a beacon, a pillar or a marker block. An even diameter centers on the corner between four blocks, so the middle is a 2 by 2 square. Both are perfectly round; it only changes where you measure from.</p>
+    <h3>What does hollow mean for a sphere or dome?</h3>
+    <p>Hollow keeps only the blocks that touch the outside on a face, so the shell is one block thick and has no diagonal gaps you could see or walk through. Turn hollow off to get the solid shape, for a filled circle floor or a solid dome of stone.</p>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="shapes.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="shapes.js?v=202611161144"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);

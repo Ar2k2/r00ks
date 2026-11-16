@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611161134">
+<link rel="stylesheet" href="../shared/shell.css?v=202611161144">
 <style>
   .designer { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; align-items: start; }
   .preview { position: sticky; top: 24px; display: grid; gap: 12px; justify-items: center; }
@@ -106,11 +106,28 @@
     <p id="jar-text">The preview uses our own drawings of each pattern. For the real ones, load a Minecraft client jar or resource pack. It is read here in your browser and never uploaded.</p>
     <label class="btn" style="cursor:pointer">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
   </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the banner designer works</h2>
+    <p>A banner starts as a plain color, crafted from 6 wool of one color and a stick, and every pattern after that is a layer painted on top in the loom. Pick the base color, then add layers from the bottom up. Each layer is a pattern in one of the 16 dye colors, and you can move a layer earlier or later to change what covers what. All 42 Minecraft Java banner patterns are here, under the names the game uses, like Chief, Bordure and Creeper Charge.</p>
+    <p>The steps list each loom use in order. The list to gather counts one dye per layer plus any banner pattern items, which the loom gives back, so one of each is enough. The banner and shield commands carry the same layers, so a design can go straight onto a shield with /give in a world with cheats on.</p>
+    <h3>How many patterns can a Minecraft banner have?</h3>
+    <p>A loom refuses a banner that already has 6 patterns. The game still draws up to 16 layers on a banner made with a command, so the designer goes up to 16 and warns you when the extra layers only come with the commands.</p>
+    <h3>Which banner patterns need a pattern item?</h3>
+    <p>Ten of them. Field Masoned and Bordure Indented are crafted from paper and bricks or vines. Creeper Charge, Skull Charge, Flower Charge and Thing take paper plus a creeper head, wither skeleton skull, oxeye daisy or enchanted golden apple. Globe is bought from a master cartographer, Snout is found in bastion remnant chests, and Flow and Guster come from the vaults in trial chambers, Flow from the ominous ones.</p>
+    <h3>Can I see real textures?</h3>
+    <p>The textures belong to Mojang, so for legal reasons this site does not include or share them. That is why the preview uses our own drawings of each pattern. You can still see the real thing: load your own Minecraft client jar or a resource pack and the preview switches to the real patterns. The file is read in your browser and never uploaded.</p>
+    <h3>Where do I find my Minecraft .jar file?</h3>
+    <p>Each game version you have played in the official launcher has its own jar in the <code>versions</code> folder, for example <code>versions/26.3/26.3.jar</code>. The <code>versions</code> folder is in:</p>
+    <p>Windows: <code>%appdata%\.minecraft\versions</code> (paste that into the File Explorer address bar).<br>
+    macOS: <code>~/Library/Application Support/minecraft/versions</code> (in Finder, use Go → Go to Folder).<br>
+    Linux: <code>~/.minecraft/versions</code></p>
+    <p>If the version you want is missing, launch it once in the Minecraft launcher and it will appear. Other launchers keep their own copy inside each instance's folder. A resource pack works too: use its .zip as it is.</p>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611161134"></script>
-<script src="../shared/dyes.js?v=202611161134"></script>
-<script src="../shared/jar.js?v=202611161134"></script>
-<script src="banner.js?v=202611161134"></script>
+<script src="../shared/shell.js?v=202611161144"></script>
+<script src="../shared/dyes.js?v=202611161144"></script>
+<script src="../shared/jar.js?v=202611161144"></script>
+<script src="banner.js?v=202611161144"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
