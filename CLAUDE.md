@@ -80,7 +80,7 @@ Also update the colors in `tools/og-image.html` and regenerate `shared/og.png`
 
 **Search:** `site/sitemap.xml` lists every page; add a line for each new tool
 or hub. Also add a plain `<a href>` for each new tool inside `<div data-all-tools>`
-in `index.html` and inside its hub's `<nav class="panel tools">` (crawlable
+in `index.html` and inside its hub's `<nav class="tools cards">` (crawlable
 links; `shell.js` replaces them with the styled list). Each page's `<title>` uses the words people search for ("Minecraft
 Circle & Sphere Generator"), and its head carries a canonical link and
 Open Graph tags matching the title and description.

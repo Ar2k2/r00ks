@@ -77,6 +77,46 @@
     mechanics: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
   };
   const icon = id => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${icons[id]}</svg>`;
+
+  // Tiny sample output per tool (home rows and hub cards), drawn on a 96x48 grid.
+  const sq = (x, y, s, c, r = 2) => `<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="${r}" fill="${c}"/>`;
+  const picture = () => { // hills and a sun, 8px pixels
+    let s = '';
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 12; c++) {
+      const hill = r >= 4 - Math.round(Math.sin(c * .7) * 1.2), sun = Math.hypot(c - 9, r - 1.2) < 1.3;
+      s += sq(c * 8, r * 8, 8, hill ? (r > 4 ? '#5b7a33' : '#76a046') : sun ? '#f2c94c' : '#8fb8e8', 0);
+    }
+    return s;
+  };
+  const ring = () => { // a block circle, radius 5.5 on a 4px grid
+    let s = '';
+    for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++)
+      if (Math.abs(Math.hypot(x, y) - 5.5) < .55) s += sq(48 + x * 3.5 - 1.5, 24 + y * 3.5 - 1.5, 3.2, 'var(--accent)', .6);
+    return s;
+  };
+  const line = 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"';
+  const previews = {
+    gradient: ['#2c2e8f', '#3c44aa', '#4a54b0', '#8932b7', '#a9309f', '#d064a8'].map((c, k) => sq(1 + k * 16, 17, 14, c)).join(''),
+    palette: ['#6b4e2f', '#a2834f', '#c29d62', '#5e7a3d', '#8a8a8a', '#e4e0d8'].map((c, k) => sq(24 + k % 3 * 16, 9 + (k > 2) * 16, 14, c)).join(''),
+    mosaic: picture(),
+    mapart: `<rect x="18" width="60" height="48" rx="3" fill="#c9b48a"/><g transform="translate(22 4) scale(.54 .83)">${picture()}</g>`,
+    banner: `<path d="M34 3h28" ${line}/><path d="M38 4h20v40l-10-6-10 6z" fill="#3c44aa"/><path d="M38 14h20v8H38z" fill="#f9fffe"/><path d="M38 44V32l10-6 10 6v12l-10-6z" fill="#f9801d"/>`,
+    fireworks: ['#b02e26', '#f9801d', '#fed83d', '#80c71f', '#3ab3da', '#c74ebd', '#f9fffe', '#fed83d'].map((c, k) => {
+      const a = k * Math.PI / 4;
+      return [9, 16].map(d => `<circle cx="${48 + Math.cos(a) * d}" cy="${24 + Math.sin(a) * d}" r="${d > 9 ? 2.2 : 1.6}" fill="${c}"/>`).join('');
+    }).join('') + '<circle cx="48" cy="24" r="2.4" fill="currentColor"/>',
+    nether: `<rect x="8" y="4" width="26" height="40" rx="2" fill="#1d1430"/><rect x="12" y="8" width="18" height="32" fill="#8a3ee8"/>`
+      + `<text x="48" y="28" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="currentColor">÷8</text>`
+      + `<rect x="66" y="16" width="16" height="24" rx="2" fill="#1d1430"/><rect x="69" y="19" width="10" height="18" fill="#8a3ee8"/>`,
+    stronghold: `<path d="M10 42L60 10M86 40L60 10" ${line} stroke-dasharray="3 3"/><circle cx="10" cy="42" r="3" fill="#2f8f7a"/><circle cx="86" cy="40" r="3" fill="#2f8f7a"/><circle cx="60" cy="10" r="4.5" fill="var(--accent)"/>`,
+    slime: [0, 1, 2, 3, 4, 5].flatMap(c => [0, 1, 2].map(r =>
+      `<rect x="${3 + c * 15.5}" y="${1 + r * 15.5}" width="14" height="14" rx="2" fill="${[[1, 0], [4, 1], [2, 2], [5, 0]].some(([a, b]) => a === c && b === r) ? '#7ebf6e' : 'color-mix(in srgb, currentColor 10%, transparent)'}"/>`)).join(''),
+    shapes: ring(),
+    anvil: `<path d="M18 36L32 22L46 36M50 36L64 22L78 36M32 22L48 10L64 22" ${line} opacity=".5"/>`
+      + [18, 46, 50, 78].map(x => sq(x - 6, 34, 12, '#7a3fb0')).join('') + sq(26, 16, 12, '#9b5fd0') + sq(58, 16, 12, '#9b5fd0') + sq(42, 4, 12, 'var(--accent)'),
+    commands: `<rect x="4" y="12" width="88" height="24" rx="6" fill="color-mix(in srgb, currentColor 8%, transparent)"/><text x="48" y="28.5" text-anchor="middle" font-family="var(--mono)" font-size="13" fill="currentColor"><tspan fill="var(--accent)">/give</tspan> @p</text>`,
+  };
+  const preview = id => `<svg class="pv" viewBox="0 0 96 48" aria-hidden="true"><g>${previews[id] ?? ''}</g></svg>`;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Copy buttons: <button class="btn copy">Label</button>. The icon morphs into a checkmark.
@@ -184,11 +224,22 @@
     list.querySelectorAll('[data-id]').forEach(a =>
       a === el ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
     hl.style.opacity = el ? 1 : 0;
-    if (el) hl.style.transform = `translateY(${el.offsetTop}px)`;
+    if (el) hl.style.transform = `translate(${el.offsetLeft}px, ${el.offsetTop}px)`;
   });
   place(active);
-  // Back button can restore a page whose highlight had already moved on.
+  // Back button can restore a page whose highlight had already moved on; the rail flips to a bottom bar on phones.
   addEventListener('pageshow', () => place(active));
+  addEventListener('resize', () => place(active));
+
+  // Result rows (.row): when tiles wrap, even out the rows (5 + 4, not 8 + 1).
+  const balance = row => {
+    const n = row.children.length, per = Math.max(1, Math.floor((row.clientWidth + 10) / 98)); // 88px tile + 10px gap
+    row.style.gridTemplateColumns = n > per ? `repeat(${Math.ceil(n / Math.ceil(n / per))}, minmax(0, 1fr))` : '';
+  };
+  document.querySelectorAll('.row').forEach(row => {
+    new ResizeObserver(() => balance(row)).observe(row);
+    new MutationObserver(() => balance(row)).observe(row, { childList: true });
+  });
 
   // Tool lists (home and hub pages): <nav class="panel tools" data-cat="id">. One hover
   // highlight springs from row to row. Home asks for every category with <div data-all-tools>.
@@ -196,10 +247,18 @@
   const all = document.querySelector('[data-all-tools]');
   if (all) all.innerHTML = cats.map((c, i) =>
     `<h2 class="tools-h in" style="--i:${i + 2}">${c.name}</h2><nav class="panel tools in" style="--i:${i + 2}" data-cat="${c.id}" aria-label="${c.name}"></nav>`).join('');
-  document.querySelectorAll('.tools[data-cat]').forEach(list => {
-    list.innerHTML = '<i class="hl"></i>' + tools.filter(t => t.cat === list.dataset.cat).map(t => t.built
-      ? `<a class="trow" href="${root}${t.path}">${icon(t.id)}<b>${t.name}</b><span>${t.desc}</span><small>Open →</small></a>`
-      : `<div class="trow soon">${icon(t.id)}<b>${t.name}</b><span>${t.desc}</span><small>soon</small></div>`).join('');
+  // Hub pages use <nav class="tools cards">: one card per tool with a larger sample on top.
+  document.querySelectorAll('.tools.cards').forEach(list => {
+    list.innerHTML = tools.filter(t => t.cat === list.dataset.cat).map((t, i) => {
+      const inner = `${preview(t.id)}<span class="tcard-t"><i class="ico">${icon(t.id)}</i><b>${t.name}</b>${t.built ? '' : '<small class="tag">soon</small>'}</span><span>${t.desc}</span>`;
+      return t.built ? `<a class="tcard in" style="--i:${i + 1}" href="${root}${t.path}">${inner}</a>` : `<div class="tcard soon in" style="--i:${i + 1}">${inner}</div>`;
+    }).join('');
+  });
+  document.querySelectorAll('.tools[data-cat]:not(.cards)').forEach(list => {
+    list.innerHTML = '<i class="hl"></i>' + tools.filter(t => t.cat === list.dataset.cat).map(t => {
+      const inner = `<i class="ico">${icon(t.id)}</i><b>${t.name}</b><span>${t.desc}</span>${preview(t.id)}`;
+      return t.built ? `<a class="trow" href="${root}${t.path}">${inner}<small>Open →</small></a>` : `<div class="trow soon">${inner}<small>soon</small></div>`;
+    }).join('');
     const hl = list.firstChild;
     list.querySelectorAll('.trow').forEach(r => r.onmouseenter = () => hl.style.transform = `translateY(${r.offsetTop}px)`);
   });
