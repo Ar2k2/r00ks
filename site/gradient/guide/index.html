@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Make a Block Gradient in Minecraft (Java Guide) · R00K’s</title>
+<meta name="description" content="How to make a smooth block gradient in Minecraft Java: which blocks to use, what to avoid, and ready-made gradients with every block listed.">
+<link rel="canonical" href="https://rooks.rookstudio.net/gradient/guide/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="R00K’s">
+<meta property="og:title" content="How to Make a Block Gradient in Minecraft (Java Guide) · R00K’s">
+<meta property="og:description" content="How to make a smooth block gradient in Minecraft Java: which blocks to use, what to avoid, and ready-made gradients with every block listed.">
+<meta property="og:url" content="https://rooks.rookstudio.net/gradient/guide/">
+<meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../shared/shell.css?v=202611161203">
+<style>
+  .grad { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+  .grad li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .grad i { width: 22px; height: 22px; border-radius: 6px; background: var(--hex); box-shadow: inset 0 0 0 1px rgb(0 0 0 / .12); flex: none; }
+  .grad code { color: var(--muted); }
+  .about ol:not(.grad), .about ul { color: var(--muted); padding-left: 20px; }
+  .about li { margin-top: 6px; }
+</style>
+</head>
+<body data-tool="gradient">
+<main>
+  <header class="head">
+    <h1>How to make a block gradient</h1>
+    <p>A guide to smooth color gradients in Minecraft Java 26.3: which blocks blend well, what ruins a gradient, and ready-made gradients with every block listed. Want your own colors? Use the <a href="../">block gradient generator</a>.</p>
+  </header>
+
+  <section class="about" aria-labelledby="steps-h">
+    <h2 id="steps-h">The short version</h2>
+    <ol>
+      <li><b>Pick two end colors</b> and decide whether it is a wall or a floor. Many blocks look different from the top than from the side, so match the face people will see.</li>
+      <li><b>Choose 6 to 10 blocks</b> that step evenly from one color to the other. Equal steps in brightness matter more than an exact hue.</li>
+      <li><b>Stick to calm textures.</b> Concrete, wool, terracotta and stripped logs blend well. Busy blocks like bookshelves, ores and glazed terracotta break the flow.</li>
+      <li><b>Avoid repeats</b> unless the row is long. Two neighbors with nearly the same color look like a flat stripe.</li>
+      <li><b>Blend the seams.</b> Instead of hard bands, scatter a few blocks of each color into its neighbor's band (dithering). It hides the jumps between steps.</li>
+      <li><b>Check it in game</b> from the distance people will see it. Up close every gradient looks noisy; from 20 blocks away it should read as one smooth fade.</li>
+    </ol>
+
+    <h2>Which blocks are best for gradients?</h2>
+    <p>We measured the average color and the texture noise of every full solid block in Java 26.3: 460 faces in all, counting a log's bark and its cut end as separate options.</p>
+    <ul>
+      <li><b>Concrete</b> is the smoothest block in the game. All 16 colors have almost no texture, so they make the cleanest gradients, but they can look flat in large areas.</li>
+      <li><b>Wool and concrete powder</b> add a soft texture in the same 16 colors. Concrete powder falls like sand, so use it in floors, not walls.</li>
+      <li><b>Terracotta</b> gives muted, earthy versions of the 16 colors and fills the gaps between bright concrete shades.</li>
+      <li><b>Stripped logs and planks</b> cover browns, tans and pinks (cherry, pale oak) that the dyed blocks miss.</li>
+      <li><b>Stone types</b> (andesite, diorite, tuff, deepslate, basalt, blackstone) are the go-to for grays.</li>
+      <li><b>Avoid</b> ores, bookshelves, glazed terracotta and anything with a strong pattern. They draw the eye to one block instead of the whole fade.</li>
+    </ul>
+
+    <h2>Ready-made gradients</h2>
+    <p>These were picked by our generator from the side (wall) faces, with survival blocks only and no repeats. Each list runs from the first color to the second.</p>
+    <h3>White to black</h3>
+    <ol class="grad">
+      <li><i style="--hex:#f6eeed"></i>Stripped Pale Oak Log (side) <code>minecraft:stripped_pale_oak_log</code></li>
+      <li><i style="--hex:#cfd5d6"></i>White Concrete <code>minecraft:white_concrete</code></li>
+      <li><i style="--hex:#a9a9a9"></i>Smooth Stone Slab (side) <code>minecraft:smooth_stone_slab</code></li>
+      <li><i style="--hex:#89898a"></i>Andesite <code>minecraft:andesite</code></li>
+      <li><i style="--hex:#636965"></i>Polished Tuff <code>minecraft:polished_tuff</code></li>
+      <li><i style="--hex:#4c4b4f"></i>Basalt (side) <code>minecraft:basalt</code></li>
+      <li><i style="--hex:#332e37"></i>Polished Blackstone Bricks <code>minecraft:polished_blackstone_bricks</code></li>
+      <li><i style="--hex:#16161b"></i>Black Wool <code>minecraft:black_wool</code></li>
+    </ol>
+    <h3>Ocean blue to white</h3>
+    <ol class="grad">
+      <li><i style="--hex:#2d2f8f"></i>Blue Concrete <code>minecraft:blue_concrete</code></li>
+      <li><i style="--hex:#464aa7"></i>Blue Concrete Powder <code>minecraft:blue_concrete_powder</code></li>
+      <li><i style="--hex:#726d8a"></i>Light Blue Terracotta <code>minecraft:light_blue_terracotta</code></li>
+      <li><i style="--hex:#89898a"></i>Andesite <code>minecraft:andesite</code></li>
+      <li><i style="--hex:#a1a7b4"></i>Clay <code>minecraft:clay</code></li>
+      <li><i style="--hex:#c1c1c1"></i>Diorite <code>minecraft:diorite</code></li>
+      <li><i style="--hex:#cfd5d6"></i>White Concrete <code>minecraft:white_concrete</code></li>
+      <li><i style="--hex:#eaeded"></i>White Wool <code>minecraft:white_wool</code></li>
+    </ol>
+    <h3>Sunset: orange to purple</h3>
+    <ol class="grad">
+      <li><i style="--hex:#e06101"></i>Orange Concrete <code>minecraft:orange_concrete</code></li>
+      <li><i style="--hex:#bf6721"></i>Red Sand <code>minecraft:red_sand</code></li>
+      <li><i style="--hex:#af5d3c"></i>Stripped Acacia Log (side) <code>minecraft:stripped_acacia_log</code></li>
+      <li><i style="--hex:#a24e4f"></i>Pink Terracotta <code>minecraft:pink_terracotta</code></li>
+      <li><i style="--hex:#96586d"></i>Magenta Terracotta <code>minecraft:magenta_terracotta</code></li>
+      <li><i style="--hex:#764656"></i>Purple Terracotta <code>minecraft:purple_terracotta</code></li>
+      <li><i style="--hex:#693249"></i>Crimson Planks <code>minecraft:crimson_planks</code></li>
+      <li><i style="--hex:#4a3c5b"></i>Blue Terracotta <code>minecraft:blue_terracotta</code></li>
+    </ol>
+    <h3>Sand to deep red</h3>
+    <ol class="grad">
+      <li><i style="--hex:#dacda1"></i>Suspicious Sand <code>minecraft:suspicious_sand</code></li>
+      <li><i style="--hex:#c5b177"></i>Stripped Birch Log (side) <code>minecraft:stripped_birch_log</code></li>
+      <li><i style="--hex:#b29157"></i>Stripped Oak Log (side) <code>minecraft:stripped_oak_log</code></li>
+      <li><i style="--hex:#a67c53"></i>Stripped Jungle Log (end) <code>minecraft:stripped_jungle_log</code></li>
+      <li><i style="--hex:#8f6b50"></i>Packed Mud <code>minecraft:packed_mud</code></li>
+      <li><i style="--hex:#7e5536"></i>Brown Concrete Powder <code>minecraft:brown_concrete_powder</code></li>
+      <li><i style="--hex:#783730"></i>Stripped Mangrove Log (side) <code>minecraft:stripped_mangrove_log</code></li>
+      <li><i style="--hex:#621d25"></i>Crimson Stem (side) <code>minecraft:crimson_stem</code></li>
+    </ol>
+    <h3>Forest green to yellow</h3>
+    <ol class="grad">
+      <li><i style="--hex:#4c532a"></i>Green Terracotta <code>minecraft:green_terracotta</code></li>
+      <li><i style="--hex:#495b24"></i>Green Concrete <code>minecraft:green_concrete</code></li>
+      <li><i style="--hex:#5b6f2e"></i>Moss Block <code>minecraft:moss_block</code></li>
+      <li><i style="--hex:#687635"></i>Lime Terracotta <code>minecraft:lime_terracotta</code></li>
+      <li><i style="--hex:#82933b"></i>Block of Bamboo (side) <code>minecraft:bamboo_block</code></li>
+      <li><i style="--hex:#adb747"></i>Wet Sponge <code>minecraft:wet_sponge</code></li>
+      <li><i style="--hex:#c5c24b"></i>Sponge <code>minecraft:sponge</code></li>
+      <li><i style="--hex:#e9c739"></i>Yellow Concrete Powder <code>minecraft:yellow_concrete_powder</code></li>
+    </ol>
+    <h3>Pink to purple</h3>
+    <ol class="grad">
+      <li><i style="--hex:#ec9eb7"></i>Pink Glazed Terracotta <code>minecraft:pink_glazed_terracotta</code></li>
+      <li><i style="--hex:#e59bb6"></i>Pink Concrete Powder <code>minecraft:pink_concrete_powder</code></li>
+      <li><i style="--hex:#ad84ad"></i>Purpur Pillar (side) <code>minecraft:purpur_pillar</code></li>
+      <li><i style="--hex:#ab80ab"></i>Purpur Block <code>minecraft:purpur_block</code></li>
+      <li><i style="--hex:#8c68c2"></i>Block of Amethyst <code>minecraft:amethyst_block</code></li>
+      <li><i style="--hex:#8438b2"></i>Purple Concrete Powder <code>minecraft:purple_concrete_powder</code></li>
+      <li><i style="--hex:#64209c"></i>Purple Concrete <code>minecraft:purple_concrete</code></li>
+    </ol>
+    <h3>Stone gray to dirt brown</h3>
+    <ol class="grad">
+      <li><i style="--hex:#7e7e7e"></i>Stone <code>minecraft:stone</code></li>
+      <li><i style="--hex:#6c726a"></i>Pale Moss Block <code>minecraft:pale_moss_block</code></li>
+      <li><i style="--hex:#696258"></i>Acacia Log (side) <code>minecraft:acacia_log</code></li>
+      <li><i style="--hex:#725733"></i>Stripped Spruce Log (end) <code>minecraft:stripped_spruce_log</code></li>
+      <li><i style="--hex:#734829"></i>Brown Wool <code>minecraft:brown_wool</code></li>
+      <li><i style="--hex:#603c20"></i>Brown Concrete <code>minecraft:brown_concrete</code></li>
+    </ol>
+
+    <h2>Why gradients look bumpy</h2>
+    <p>Most bad gradients come from picking each block as the closest match to its target color, one at a time. The closest match can be a little too light, the next a little too dark, and the row zigzags. Our generator scores the whole row at once, so every block also has to fit its neighbors.</p>
+    <p>The other cause is mixing colors in RGB, which makes midpoints look muddy and dark. We blend in OKLab, a color space where equal steps look equal to the eye.</p>
+
+    <h2>Make your own</h2>
+    <p>The <a href="../">Minecraft block gradient generator</a> does all of this for any two colors: pick them, set the number of steps, and get the block list, a dithered build pattern, and a command to place it. It is free and runs in your browser.</p>
+  </section>
+</main>
+<script src="../../shared/shell.js?v=202611161203"></script>
+</body>
+</html>
