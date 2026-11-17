@@ -89,7 +89,7 @@ No per-tool colors. The rainbow section colors were removed; tools are told
 apart by their icons.
 
 **Icons:** original line icons on a 24px grid, stroke 1.7, defined once in
-`shell.js` (`WASD.icon(id)`) and used in the rail, drawer, home list and tool
+`shell.js` (`ROOKS.icon(id)`) and used in the rail, drawer, home list and tool
 page titles. Draw new ones by hand; no icon libraries.
 
 **Type:** IBM Plex Sans (headings and body) and IBM Plex Mono (data:
@@ -132,7 +132,7 @@ text color. No heavy black borders or hard offset shadows.
 - **Sliders are always smooth.** Every `<input type=range>` gets this from
   `shell.js`: the thumb moves freely while dragging and glides onto the
   nearest step on release. Set the step with `data-step` (default 1), not
-  `step`, and read the value with `WASD.val(el)`. Never use a plain snapping
+  `step`, and read the value with `ROOKS.val(el)`. Never use a plain snapping
   slider.
 - Copy buttons morph into a checkmark. No particle bursts or click splashes: the owner removed them as too much.
 - Everything must respect `prefers-reduced-motion`.

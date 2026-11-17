@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611170852">
+<link rel="stylesheet" href="../shared/shell.css?v=202611170908">
 <style>
   /* Controls */
   .controls { display: grid; grid-template-columns: 1fr; gap: 16px 12px; align-items: end; }
@@ -128,12 +128,12 @@
     <p>If the version you want is missing, launch it once in the Minecraft launcher and it will appear. Other launchers keep their own copy inside each instance's folder. A resource pack works too: use its .zip as it is.</p>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611170852"></script>
-<script src="engine.js?v=202611170852"></script>
-<script src="../shared/blocks.js?v=202611170852"></script>
-<script src="../shared/jar.js?v=202611170852"></script>
-<script src="../shared/build.js?v=202611170852"></script>
-<script src="../shared/swap.js?v=202611170852"></script>
+<script src="../shared/shell.js?v=202611170908"></script>
+<script src="engine.js?v=202611170908"></script>
+<script src="../shared/blocks.js?v=202611170908"></script>
+<script src="../shared/jar.js?v=202611170908"></script>
+<script src="../shared/build.js?v=202611170908"></script>
+<script src="../shared/swap.js?v=202611170908"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
@@ -157,7 +157,7 @@
   };
 
   const render = () => {
-    const steps = WASD.val($('steps'));
+    const steps = ROOKS.val($('steps'));
     if (!stops.every(c => HEX.test(c))) return;
     $('steps-out').value = steps;
     $('steps').setAttribute('aria-valuetext', steps);
@@ -181,8 +181,8 @@
     last = row;
 
     // Pattern preview, materials and build command all use the same layout.
-    const bw = WASD.val($('bandw')), ph = WASD.val($('path'));
-    const noise = WASD.val($('noise'));
+    const bw = ROOKS.val($('bandw')), ph = ROOKS.val($('path'));
+    const noise = ROOKS.val($('noise'));
     $('bandw-out').value = bw; $('path-out').value = ph; $('noise-out').value = noise + '%';
     $('noise').setAttribute('aria-valuetext', noise + '%');
     const vert = document.querySelector('[name=dir]:checked').value === 'v';
@@ -239,7 +239,7 @@
   $('steps').oninput = $('bandw').oninput = $('path').oninput = $('noise').oninput = update;
   document.querySelectorAll('.filters input, [name=view], [name=dir]').forEach(el => el.onchange = update);
 
-  $('copy').onclick = () => WASD.copy($('copy'),
+  $('copy').onclick = () => ROOKS.copy($('copy'),
     last.map((b, i) => `${i + 1}. ${b.name}${b.face ? ` (${b.face})` : ''}  minecraft:${b.id}`).join('\n'));
 
   // Click a block: it hops and opens substitutes, with its ID one click away.

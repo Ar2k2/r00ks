@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611170852">
+<link rel="stylesheet" href="../shared/shell.css?v=202611170908">
 <style>
   .controls { display: grid; grid-template-columns: auto 1fr; gap: 16px 20px; align-items: end; }
   .controls .view { grid-column: auto; }
@@ -117,13 +117,13 @@
     <p>If the version you want is missing, launch it once in the Minecraft launcher and it will appear. Other launchers keep their own copy inside each instance's folder. A resource pack works too: use its .zip as it is.</p>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611170852"></script>
-<script src="../gradient/engine.js?v=202611170852"></script>
-<script src="mosaic.js?v=202611170852"></script>
-<script src="../shared/blocks.js?v=202611170852"></script>
-<script src="../shared/jar.js?v=202611170852"></script>
-<script src="../shared/build.js?v=202611170852"></script>
-<script src="../shared/swap.js?v=202611170852"></script>
+<script src="../shared/shell.js?v=202611170908"></script>
+<script src="../gradient/engine.js?v=202611170908"></script>
+<script src="mosaic.js?v=202611170908"></script>
+<script src="../shared/blocks.js?v=202611170908"></script>
+<script src="../shared/jar.js?v=202611170908"></script>
+<script src="../shared/build.js?v=202611170908"></script>
+<script src="../shared/swap.js?v=202611170908"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
@@ -143,7 +143,7 @@
     if (!img) return;
     const view = document.querySelector('[name=view]:checked').value;
     pool = Blocks.pool(blocks, view);
-    w = WASD.val($('width')); h = Math.max(1, Math.round(w * img.height / img.width));
+    w = ROOKS.val($('width')); h = Math.max(1, Math.round(w * img.height / img.width));
     if (h > MAX_H) { h = MAX_H; w = Math.max(1, Math.round(h * img.width / img.height)); }
     $('dims').textContent = `${w} × ${h}`;
 
@@ -152,7 +152,7 @@
     const small = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true });
     small.imageSmoothingQuality = 'high';
     small.drawImage(img, 0, 0, w, h);
-    const kinds = WASD.val($('kinds')), limit = kinds > 40 ? Infinity : kinds; // the top of the slider means no limit
+    const kinds = ROOKS.val($('kinds')), limit = kinds > 40 ? Infinity : kinds; // the top of the slider means no limit
     $('kinds-out').textContent = isFinite(limit) ? limit : 'no limit';
     cells = pool.length ? Mosaic.build(small.getImageData(0, 0, w, h).data, pool, limit) : new Int32Array(w * h).fill(-1);
     // Swaps: a substitute the filters now hide is skipped rather than snuck back in.
@@ -236,7 +236,7 @@
     } });
   };
 
-  $('copy').onclick = () => WASD.copy($('copy'),
+  $('copy').onclick = () => ROOKS.copy($('copy'),
     mats.map(({ block: b, count: c }) => `${c}\t${b.name}${face(b)}\tminecraft:${b.id}`).join('\n'));
 
   Jar.wire($('jar'), $('jar-text'), blocks, textures, update);

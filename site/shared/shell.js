@@ -133,7 +133,7 @@
   };
   // Smooth sliders, on every <input type=range>: the thumb moves freely while dragging, then glides onto
   // the nearest step (data-step, default 1) on release. Arrow keys move one whole step. The page only gets
-  // an input event when the stepped value changes, and reads it with WASD.val(el).
+  // an input event when the stepped value changes, and reads it with ROOKS.val(el).
   const val = el => {
     const s = +(el.dataset.step || 1), lo = +el.min || 0, hi = el.max === '' ? 100 : +el.max;
     return Math.min(hi, Math.max(lo, lo + Math.round((el.value - lo) / s) * s));
@@ -171,7 +171,7 @@
     el.value = val(el);
     el.dispatchEvent(new Event('input', { bubbles: true }));
   }, true);
-  window.WASD = { root, copy, dress, icon, val };
+  window.ROOKS = { root, copy, dress, icon, val };
 
   const active = document.body.dataset.tool;
   // The rail highlights the category of the current tool (or the hub itself).

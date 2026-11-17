@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611170852">
+<link rel="stylesheet" href="../shared/shell.css?v=202611170908">
 <style>
   .controls { display: grid; gap: 18px; }
   /* Three-way version of the shared pill. */
@@ -93,8 +93,8 @@
     <p>Hollow keeps only the blocks that touch the outside on a face, so the shell is one block thick and has no diagonal gaps you could see or walk through. Turn hollow off to get the solid shape, for a filled circle floor or a solid dome of stone.</p>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611170852"></script>
-<script src="shapes.js?v=202611170852"></script>
+<script src="../shared/shell.js?v=202611170908"></script>
+<script src="shapes.js?v=202611170908"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -107,7 +107,7 @@
 
   const draw = () => {
     const d = clampSize($('size').value), k = kind(), filled = !$('hollow').checked;
-    const n = Shapes.layers(d, k), li = Math.min(WASD.val($('layer')), n) - 1;
+    const n = Shapes.layers(d, k), li = Math.min(ROOKS.val($('layer')), n) - 1;
     const g = Shapes.layer(d, k, li, filled);
     const below = li > 0 ? Shapes.layer(d, k, li - 1, filled) : null;
 
@@ -165,8 +165,8 @@
 
   const setLayer = v => { $('layer-out').textContent = `${v} / ${$('layer').max}`; draw(); };
 
-  $('size-range').oninput = () => { $('size').value = WASD.val($('size-range')); reshape(); };
-  $('layer').oninput = () => setLayer(WASD.val($('layer')));
+  $('size-range').oninput = () => { $('size').value = ROOKS.val($('size-range')); reshape(); };
+  $('layer').oninput = () => setLayer(ROOKS.val($('layer')));
   $('size').oninput = () => { if ($('size').value) { $('size-range').value = clampSize($('size').value); reshape(); } };
   $('size').onchange = () => { $('size').value = clampSize($('size').value); reshape(); };
   document.querySelectorAll('[name=kind]').forEach(r => r.onchange = () => { reshape(); pop(); });

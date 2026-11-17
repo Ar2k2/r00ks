@@ -15,7 +15,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611170852">
+<link rel="stylesheet" href="../shared/shell.css?v=202611170908">
 <style>
   .controls { display: grid; grid-template-columns: auto 1fr 1fr; gap: 16px 20px; align-items: end; }
   .controls .view { grid-column: auto; }
@@ -89,13 +89,13 @@
     <div id="build"></div>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611170852"></script>
-<script src="../gradient/engine.js?v=202611170852"></script>
-<script src="../mosaic/mosaic.js?v=202611170852"></script>
-<script src="../shared/build.js?v=202611170852"></script>
-<script src="../shared/blocks.js?v=202611170852"></script>
-<script src="../shared/swap.js?v=202611170852"></script>
-<script src="mapart.js?v=202611170852"></script>
+<script src="../shared/shell.js?v=202611170908"></script>
+<script src="../gradient/engine.js?v=202611170908"></script>
+<script src="../mosaic/mosaic.js?v=202611170908"></script>
+<script src="../shared/build.js?v=202611170908"></script>
+<script src="../shared/blocks.js?v=202611170908"></script>
+<script src="../shared/swap.js?v=202611170908"></script>
+<script src="mapart.js?v=202611170908"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -105,7 +105,7 @@
   const subs = new Map(); // block index -> block index the visitor swapped in, everywhere in the picture
 
   const render = () => {
-    const mw = WASD.val($('mw')), mh = WASD.val($('mh')), stairs = document.querySelector('[name=mode]:checked').value === 's';
+    const mw = ROOKS.val($('mw')), mh = ROOKS.val($('mh')), stairs = document.querySelector('[name=mode]:checked').value === 's';
     $('mw-out').textContent = mw; $('mh-out').textContent = mh;
     if (!img) return;
     w = mw * 128; h = mh * 128; pal = PALS[stairs ? 's' : 'f'];
@@ -191,7 +191,7 @@
     } });
   };
 
-  $('copy').onclick = () => WASD.copy($('copy'), mats.map(({ block: b, count: c }) => `${c}\t${b.name}\tminecraft:${b.id.split('[')[0]}`).join('\n'));
+  $('copy').onclick = () => ROOKS.copy($('copy'), mats.map(({ block: b, count: c }) => `${c}\t${b.name}\tminecraft:${b.id.split('[')[0]}`).join('\n'));
   render();
 })();
 </script>

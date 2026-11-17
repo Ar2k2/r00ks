@@ -92,7 +92,7 @@
     el.innerHTML = `<p class="build-help">Get a command block with <code>/give @p command_block</code> (cheats on) and place it. Put an <b>activator rail</b> on top and a <b>lever</b> on its side. Paste the command, leave it on Impulse and Needs Redstone, and flip the lever on. The build appears ${where}.${parts.length > 1 ? ' Big builds come in parts: flip the lever off, paste the next part, and flip it on again.' : ''}</p>
       <div class="build-parts">${parts.map((_, i) => `<button class="btn copy" data-i="${i}">${parts.length > 1 ? `Copy part ${i + 1} of ${parts.length}` : 'Copy command'}</button>`).join('')}</div>
       <p class="meta">${cmds.length} fill commands · ${parts.reduce((s, p) => s + p.length, 0).toLocaleString('en')} characters</p>`;
-    el.querySelectorAll('.copy').forEach(b => { WASD.dress(b); b.onclick = () => WASD.copy(b, parts[b.dataset.i]); });
+    el.querySelectorAll('.copy').forEach(b => { ROOKS.dress(b); b.onclick = () => ROOKS.copy(b, parts[b.dataset.i]); });
   };
 
   const api = { block, rects, commands, pack, panel, LIMIT };
