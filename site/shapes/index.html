@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611171015">
+<link rel="stylesheet" href="../shared/shell.css?v=202611171137">
 <style>
   .controls { display: grid; gap: 18px; }
   /* Three-way version of the shared pill. */
@@ -101,9 +101,9 @@
     <p>Hollow keeps only the blocks that touch the outside on a face, so the shell is one block thick and has no diagonal gaps you could see or walk through. Turn hollow off to get the solid shape, for a filled circle floor or a solid dome of stone.</p>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611171015"></script>
-<script src="../shared/view3d.js?v=202611171015"></script>
-<script src="shapes.js?v=202611171015"></script>
+<script src="../shared/shell.js?v=202611171137"></script>
+<script src="../shared/view3d.js?v=202611171137"></script>
+<script src="shapes.js?v=202611171137"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -131,6 +131,7 @@
 
     // 3D: the whole shape, the current layer in full color and the rest muted. Hollow and solid look
     // the same from outside, so draw solid: it has no inner faces, which keeps turning quick.
+    // A circle is one layer thick, so its hollow ring is visible and must be drawn as is.
     const flat = document.querySelector('[name=view]:checked').value === 'flat';
     canvas.classList.toggle('turn', !flat);
     $('key-lines').textContent = flat ? 'lines every 5 blocks · dashed lines mark the center' : 'drag to turn it';
@@ -138,7 +139,7 @@
     if (!flat) {
       $('key-below').hidden = k === 'circle';
       const tone = new Uint8Array(d * n * d);
-      for (let i = 0; i < n; i++) Shapes.layer(d, k, i, true).forEach((v, j) => { if (v) tone[i * d * d + j] = i === li ? 1 : 2; });
+      for (let i = 0; i < n; i++) Shapes.layer(d, k, i, k !== 'circle' || filled).forEach((v, j) => { if (v) tone[i * d * d + j] = i === li ? 1 : 2; });
       return view.show({ dims: [d, n, d], tone });
     }
 
