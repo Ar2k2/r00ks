@@ -1,6 +1,6 @@
 // Checks for the roof and arch generator. Run: node tools/test_roofs.js
 const assert = require('assert');
-const { roofLayers, roofLayer, arch, count } = require('../site/roofs/roofs.js');
+const { roofLayers, roofLayer, roofParts, arch, count } = require('../site/roofs/roofs.js');
 const rows = (g, w) => [...Array(g.length / w)].map((_, z) => [...g.slice(z * w, z * w + w)].join(''));
 
 // Layer counts: a 7-wide 45° roof has 4 layers, shallow 2, steep 8; a hip closes over the narrow side.
@@ -18,6 +18,16 @@ assert.deepStrictEqual(rows(roofLayer(5, 1, 'gable', 'steep', 1, false), 5), ['1
 assert.deepStrictEqual(rows(roofLayer(5, 1, 'gable', 'steep', 2, false), 5), ['01010']);
 // Hip, 5x5: a ring, then a ring, then the peak.
 assert.deepStrictEqual(rows(roofLayer(5, 5, 'hip', 'normal', 1, false), 5), ['00000', '01110', '01010', '01110', '00000']);
+// Stairs and slabs (2 stair, 3 slab, 1 block): 45° edges are stairs and a one-wide ridge is a block;
+// steep alternates a covered block and a stair; shallow puts a slab on the edge and a block behind it.
+const kinds = (w, l, type, pitch, i) => rows(roofParts(w, l, type, pitch, i, false).kind, w);
+assert.deepStrictEqual([0, 1, 2, 3].map(i => kinds(7, 1, 'gable', 'normal', i)[0]), ['2000002', '0200020', '0020200', '0001000']);
+assert.deepStrictEqual(kinds(6, 1, 'gable', 'normal', 2), ['002200']);
+assert.deepStrictEqual([0, 1].map(i => kinds(7, 1, 'gable', 'steep', i)[0]), ['1000001', '2000002']);
+assert.deepStrictEqual(kinds(9, 1, 'gable', 'shallow', 0), ['310000013']);
+// Hip corners sit on two sides (corner stairs); stairs on the west edge face west.
+const hp = roofParts(5, 5, 'hip', 'normal', 0, false);
+assert.deepStrictEqual([hp.side[0], hp.side[4], hp.side[2 * 5], hp.side[24]], [5, 6, 1, 10]);
 // Every block of a hollow roof is covered by the filled one, and the layers of a hollow roof don't overlap from above.
 for (const [type, pitch] of [['gable', 'shallow'], ['hip', 'steep'], ['hip', 'normal']]) {
   const n = roofLayers(12, 9, type, pitch), seen = new Uint8Array(12 * 9);

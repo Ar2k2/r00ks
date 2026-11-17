@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611170922">
+<link rel="stylesheet" href="../shared/shell.css?v=202611171015">
 <style>
   .controls { display: grid; gap: 18px; }
   .controls[hidden] { display: none; }
@@ -40,6 +40,9 @@
   .stats b { color: var(--text); font-weight: 600; }
   .stage { margin-top: 16px; display: grid; justify-items: center; }
   .stage canvas { max-width: 100%; border-radius: 10px; }
+  .result-view { margin-bottom: 14px; width: max-content; }
+  .stage canvas.turn { cursor: grab; touch-action: pan-y; }
+  .stage canvas.turn:active { cursor: grabbing; }
   .stage.pop canvas { animation: pop-in .35s var(--spring); }
   @keyframes pop-in { from { transform: scale(.94); opacity: .4; } }
   .key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 14px; color: var(--faint); font: 12px var(--mono); }
@@ -111,9 +114,17 @@
       <input type="range" min="1" max="4" value="1" aria-label="Thickness slider" data-pair="at">
       <input type="number" id="at" min="1" max="4" value="1" aria-label="Arch thickness in blocks">
     </label>
+    <div class="opts">
+      <label class="chip"><input type="checkbox" id="diagonal"><span>Diagonal</span></label>
+    </div>
   </section>
 
   <section class="panel" aria-label="Result">
+    <div class="view result-view" role="radiogroup" aria-label="View">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="view" value="flat"><span id="view-flat">Layers</span></label>
+      <label><input type="radio" name="view" value="3d" checked><span>3D</span></label>
+    </div>
     <div class="result-head">
       <span class="stats" id="stats"></span>
       <span class="stats" id="total"></span>
@@ -121,22 +132,27 @@
     <div class="stage" id="stage"><canvas id="grid" role="img"></canvas></div>
     <div class="key">
       <span><i style="background: var(--accent)"></i><span id="key-main">this layer</span></span>
+      <span id="key-stair"><i style="background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 45%, transparent) 50%, var(--accent) 50%)"></i>stair, facing the faint side</span>
+      <span id="key-slab"><i style="background: color-mix(in srgb, var(--accent) 45%, transparent)"></i>slab</span>
       <span id="key-below"><i style="background: color-mix(in srgb, var(--accent) 22%, transparent)"></i><span id="key-faint">layer below</span></span>
       <span id="key-lines">lines every 5 blocks · dashed lines mark the center</span>
     </div>
   </section>
   <section class="about" aria-labelledby="about-h">
     <h2 id="about-h">How the roof and arch generator works</h2>
-    <p>A roof is shown from above, one layer at a time, starting on top of your walls. Each layer steps in from the edge by the slope you pick: 45° steps in one block per layer, shallow steps in two, and steep rises two layers before stepping in. A gable roof slopes on the two long sides and leaves flat ends for you to fill with wall; a hip roof slopes on all four sides. Width is the side the roof slopes across, and length runs along the ridge.</p>
+    <p>Both open in 3D, which you can drag to turn; switch to Layers or Front for a flat plan to build from. A roof's flat plan is seen from above, one layer at a time, starting on top of your walls; in 3D the layer you are on is highlighted. Each layer steps in from the edge by the slope you pick: 45° steps in one block per layer, shallow steps in two, and steep rises two layers before stepping in. A gable roof slopes on the two long sides and leaves flat ends for you to fill with wall; a hip roof slopes on all four sides. Width is the side the roof slopes across, and length runs along the ridge.</p>
     <p>An arch is shown from the front, from where it starts to curve up to its top. Round arches follow half an ellipse, a perfect half circle when the height is half the width. Pointed arches are two curves that meet in a point, like a church window; they need a height of at least half the width. The faint blocks are the opening you walk through.</p>
+    <h3>How do I build a diagonal arch?</h3>
+    <p>Turn on Diagonal to see the arch running at 45° across the ground, in 3D; drag it to look around. Build it from the front view one column at a time, but move each column one block over and one block back from the last, so the arch follows the faint path on the ground. Diagonal blocks only touch at their edges, so fill in beside them if you want the arch to look solid from every side.</p>
     <h3>Where do stairs and slabs go?</h3>
-    <p>The blocks on the outer edge of each roof layer are where the slope shows, so that is where stairs go on a 45° roof and slabs on a shallow one. Corners of a hip roof take corner stairs, which Minecraft shapes for you when you place two stairs side by side. The count shows full blocks, so swap in stairs or slabs one for one.</p>
+    <p>Stairs are drawn with their tall back half solid and their low step faint, so each one faces out over its faint side, down the slope. A stair on two sides at once is a corner stair on a hip roof; place two stairs next to each other and Minecraft shapes the corner for you. Shallow roofs get a bottom slab on each edge with a full block behind it, and steep roofs alternate a full block and a stair as they climb. The counts list blocks, stairs and slabs separately, so you know what to craft.</p>
     <h3>What does hollow mean for a roof?</h3>
     <p>Hollow keeps only the blocks you see from outside, so the roof is a shell with an attic underneath. Turn it off for a solid roof, which takes many more blocks.</p>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611170922"></script>
-<script src="roofs.js?v=202611170922"></script>
+<script src="../shared/shell.js?v=202611171015"></script>
+<script src="../shared/view3d.js?v=202611171015"></script>
+<script src="roofs.js?v=202611171015"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -158,10 +174,14 @@
 
     const gap = cell >= 8 ? 1 : 0;
     ctx.fillStyle = color('--accent');
-    for (const [grid, alpha] of parts) {
+    // shape(i), when given, returns the part of cell i to fill as [x0, x1, y0, y1] fractions.
+    for (const [grid, alpha, shape] of parts) {
       ctx.globalAlpha = alpha;
-      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
-        if (grid[r * cols + c]) ctx.fillRect(c * cell + gap, r * cell + gap, cell - gap * 2, cell - gap * 2);
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        if (!grid[r * cols + c]) continue;
+        const [x0, x1, y0, y1] = shape ? shape(r * cols + c) : [0, 1, 0, 1];
+        ctx.fillRect((c + x0) * cell + gap, (r + y0) * cell + gap, (x1 - x0) * cell - gap * 2, (y1 - y0) * cell - gap * 2);
+      }
     }
     ctx.globalAlpha = 1;
 
@@ -179,33 +199,79 @@
     ctx.setLineDash([]);
   };
 
+  const view = View3D(canvas, () => Math.min(stage.clientWidth, 720));
+  const in3d = () => pick('view') === '3d';
+  // Key under the drawing: [main label, faint label or null, show stair/slab marks, line note].
+  const key = (main, faint, marks, lines) => {
+    $('key-main').textContent = main;
+    $('key-below').hidden = !faint; if (faint) $('key-faint').textContent = faint;
+    $('key-stair').hidden = $('key-slab').hidden = !marks;
+    $('key-lines').textContent = lines;
+    canvas.classList.toggle('turn', in3d());
+  };
+  const FLAT_LINES = 'lines every 5 blocks · dashed lines mark the center';
+
   const drawRoof = () => {
     const w = num('w'), l = num('l'), type = pick('type'), pitch = pick('pitch'), filled = !$('hollow').checked;
     const n = Roofs.roofLayers(w, l, type, pitch), li = Math.min(ROOKS.val($('layer')), n) - 1;
-    const g = Roofs.roofLayer(w, l, type, pitch, li, filled);
-    const below = li > 0 ? Roofs.roofLayer(w, l, type, pitch, li - 1, filled) : null;
-    let total = 0;
-    for (let i = 0; i < n; i++) total += Roofs.count(Roofs.roofLayer(w, l, type, pitch, i, filled));
-    $('stats').innerHTML = `layer ${li + 1} of ${n} · <b>${fmt(Roofs.count(g))}</b> blocks`;
-    $('total').textContent = `total ${fmt(total)}${stacks(total)}`;
-    $('key-main').textContent = 'this layer'; $('key-faint').textContent = 'layer below';
-    $('key-below').hidden = !below;
-    canvas.setAttribute('aria-label', `${type} roof ${w} by ${l}, layer ${li + 1} of ${n}: ${Roofs.count(g)} blocks`);
-    paint(w, l, below ? [[below.map((v, i) => v && !g[i]), .22], [g, 1]] : [[g, 1]], w / 2, type === 'hip' ? l / 2 : null);
+    const parts = Array.from({ length: n }, (_, i) => Roofs.roofParts(w, l, type, pitch, i, filled));
+    const { kind, side } = parts[li];
+    // Counts by kind, for this layer and the whole roof.
+    const tally = k => [Roofs.BLOCK, Roofs.STAIR, Roofs.SLAB].map(t => k.reduce((s, v) => s + (v === t), 0));
+    const sum = [0, 0, 0];
+    for (const p of parts) tally(p.kind).forEach((c, t) => sum[t] += c);
+    const words = (c, bold) => ['block', 'stair', 'slab'].map((name, t) => c[t] ? `${bold ? `<b>${fmt(c[t])}</b>` : fmt(c[t])} ${name}${c[t] > 1 ? 's' : ''}` : '').filter(Boolean).join(' · ');
+    $('stats').innerHTML = `layer ${li + 1} of ${n} · ${words(tally(kind), true)}`;
+    $('total').textContent = `total ${words(sum)}`;
+    canvas.setAttribute('aria-label', `${type} roof ${w} by ${l}, layer ${li + 1} of ${n}: ${words(tally(kind))}`);
+
+    if (in3d()) {
+      key('this layer', 'other layers', false, 'drag to turn it');
+      const tone = new Uint8Array(w * n * l);
+      parts.forEach((p, y) => p.kind.forEach((k, i) => { if (k) tone[y * w * l + i] = y === li ? 1 : 2; }));
+      // Slabs are the bottom half; stairs add the high back half (or quarter, on a corner).
+      const shape = (x, y, z) => {
+        const k = parts[y].kind[z * w + x], s = parts[y].side[z * w + x];
+        if (k === Roofs.BLOCK) return null;
+        const slab = [0, 1, 0, .5, 0, 1];
+        return k === Roofs.SLAB ? [slab] : [slab, [s & 1 ? .5 : 0, s & 2 ? .5 : 1, .5, 1, s & 4 ? .5 : 0, s & 8 ? .5 : 1]];
+      };
+      return view.show({ dims: [w, n, l], tone, shape });
+    }
+    const below = li > 0 ? parts[li - 1].kind : null;
+    key('block', below && 'layer below', true, FLAT_LINES);
+    // Stairs: the low step faint, the high back half solid, so they face out over the faint side.
+    const high = i => { const s = side[i]; return [s & 1 ? .5 : 0, s & 2 ? .5 : 1, s & 4 ? .5 : 0, s & 8 ? .5 : 1]; };
+    const low = kind.map(v => v === Roofs.STAIR || v === Roofs.SLAB);
+    paint(w, l, [
+      ...(below ? [[below.map((v, i) => v && !kind[i]), .22]] : []),
+      [low, .45], [kind.map(v => v === Roofs.BLOCK), 1], [kind.map(v => v === Roofs.STAIR), 1, high],
+    ], w / 2, type === 'hip' ? l / 2 : null);
   };
 
   const drawArch = () => {
-    const w = num('aw'), style = pick('style'), t = num('at');
+    const w = num('aw'), style = pick('style'), t = num('at'), diag = $('diagonal').checked;
     const a = Roofs.arch(w, num('ah'), style, t), c = Roofs.count(a.arch);
     $('stats').innerHTML = `<b>${fmt(c)}</b> blocks`;
-    $('total').textContent = `${a.cols} wide · ${a.rows} tall`;
-    $('key-main').textContent = 'arch'; $('key-faint').textContent = 'opening';
-    $('key-below').hidden = false;
-    canvas.setAttribute('aria-label', `${style} arch, opening ${w} wide: ${c} blocks`);
-    paint(a.cols, a.rows, [[a.opening, .22], [a.arch, 1]], a.cols / 2, null);
+    $('total').textContent = `${a.cols} ${diag ? 'along the diagonal' : 'wide'} · ${a.rows} tall`;
+    canvas.setAttribute('aria-label', `${diag ? 'diagonal ' : ''}${style} arch, opening ${w} wide: ${c} blocks`);
+    if (!in3d()) {
+      key('arch', 'opening', false, diag ? 'front view · ' + FLAT_LINES : FLAT_LINES);
+      return paint(a.cols, a.rows, [[a.opening, .22], [a.arch, 1]], a.cols / 2, null);
+    }
+    // In 3D, column c of the front view stands at x = c; a diagonal arch also steps back, z = c.
+    key('arch', 'its path on the ground', false, diag ? 'drag to turn it · each column steps one block over and one back' : 'drag to turn it');
+    const Z = diag ? a.cols : 3, zOf = col => diag ? col : 1, tone = new Uint8Array(a.cols * a.rows * Z);
+    for (let r = 0; r < a.rows; r++) for (let col = 0; col < a.cols; col++)
+      if (a.arch[r * a.cols + col]) tone[((a.rows - 1 - r) * Z + zOf(col)) * a.cols + col] = 1;
+    view.show({ dims: [a.cols, a.rows, Z], tone, floor: Array.from({ length: a.cols }, (_, col) => [col, zOf(col)]) });
   };
 
-  const draw = () => pick('mode') === 'roof' ? drawRoof() : drawArch();
+  const draw = () => {
+    const roof = pick('mode') === 'roof';
+    $('view-flat').textContent = roof ? 'Layers' : 'Front';
+    roof ? drawRoof() : drawArch();
+  };
   const pop = () => { stage.classList.remove('pop'); void stage.offsetWidth; stage.classList.add('pop'); };
 
   // Roof size or shape changed: reset the layer slider to the bottom.
@@ -233,6 +299,12 @@
     draw(); pop();
   });
   $('hollow').onchange = draw;
+  $('diagonal').onchange = () => { if ($('diagonal').checked) document.querySelector('[name=view][value="3d"]').checked = true; draw(); pop(); };
+  // Diagonal only shows in 3D, so going to the flat front view turns it off.
+  document.querySelectorAll('[name=view]').forEach(r => r.onchange = () => {
+    if (pick('view') === 'flat') $('diagonal').checked = false;
+    draw(); pop();
+  });
 
   addEventListener('resize', draw);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);

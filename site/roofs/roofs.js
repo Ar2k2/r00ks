@@ -15,16 +15,29 @@
   // Layer i (0 = the bottom, on the walls) seen from above: w across (x), l long (z).
   // A gable slopes on the two long sides only; a hip slopes on all four.
   // Hollow keeps the blocks with nothing on top of them, so the roof is a shell you can stand under.
-  const roofLayer = (w, l, type, pitch, i, filled) => {
+  // kind: 0 empty, 1 full block, 2 stair, 3 slab. side: which edges a stair or slab sits on
+  // (1 west, 2 east, 4 north, 8 south); a stair faces out over them, so two sides make a corner stair.
+  const BLOCK = 1, STAIR = 2, SLAB = 3;
+  const roofParts = (w, l, type, pitch, i, filled) => {
     const n = roofLayers(w, l, type, pitch);
     const inside = (k, x, z) => k < n && x >= inset(pitch, k) && x < w - inset(pitch, k) &&
       (type !== 'hip' || (z >= inset(pitch, k) && z < l - inset(pitch, k)));
-    const k = inset(pitch, i), rim = (x, z) => x === k || x === w - 1 - k || (type === 'hip' && (z === k || z === l - 1 - k));
-    const out = new Uint8Array(w * l);
-    for (let z = 0; z < l; z++) for (let x = 0; x < w; x++)
-      out[z * w + x] = inside(i, x, z) && (filled || rim(x, z) || !inside(i + 1, x, z)) ? 1 : 0;
-    return out;
+    const k = inset(pitch, i), spanX = w - 2 * k > 1, spanZ = type === 'hip' && l - 2 * k > 1;
+    const kind = new Uint8Array(w * l), side = new Uint8Array(w * l);
+    for (let z = 0; z < l; z++) for (let x = 0; x < w; x++) {
+      if (!inside(i, x, z)) continue;
+      // Edges on a sloped side; a one-block-wide ridge has no slope across it.
+      const s = (spanX && x === k ? 1 : 0) | (spanX && x === w - 1 - k ? 2 : 0) | (spanZ && z === k ? 4 : 0) | (spanZ && z === l - 1 - k ? 8 : 0);
+      const open = !inside(i + 1, x, z); // nothing on top
+      const rim = x === k || x === w - 1 - k || (type === 'hip' && (z === k || z === l - 1 - k));
+      if (!filled && !rim && !open) continue;
+      // Steep roofs rise two layers per step: the lower one is covered, so it stays a full block.
+      kind[z * w + x] = s && open ? (pitch === 'shallow' ? SLAB : STAIR) : BLOCK;
+      side[z * w + x] = kind[z * w + x] === BLOCK ? 0 : s;
+    }
+    return { kind, side };
   };
+  const roofLayer = (...a) => roofParts(...a).kind.map(v => v ? 1 : 0);
 
   // An arch seen from the front: the opening is w wide and h tall above the springline.
   // Round is half an ellipse (a true semicircle when h is half of w). Pointed is two arcs that meet
@@ -57,7 +70,7 @@
 
   const count = g => g.reduce((s, v) => s + v, 0);
 
-  const api = { roofLayers, roofLayer, arch, count };
+  const api = { roofLayers, roofLayer, roofParts, arch, count, BLOCK, STAIR, SLAB };
   if (typeof module !== 'undefined') module.exports = api;
   else window.Roofs = api;
 })();

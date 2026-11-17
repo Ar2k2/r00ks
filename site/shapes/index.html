@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611170922">
+<link rel="stylesheet" href="../shared/shell.css?v=202611171015">
 <style>
   .controls { display: grid; gap: 18px; }
   /* Three-way version of the shared pill. */
@@ -38,6 +38,9 @@
   .stats b { color: var(--text); font-weight: 600; }
   .stage { margin-top: 16px; display: grid; justify-items: center; }
   .stage canvas { max-width: 100%; border-radius: 10px; }
+  .stage canvas.turn { cursor: grab; touch-action: pan-y; }
+  .stage canvas.turn:active { cursor: grabbing; }
+  .result-view { margin-bottom: 14px; width: max-content; }
   .stage.pop canvas { animation: pop-in .35s var(--spring); }
   @keyframes pop-in { from { transform: scale(.94); opacity: .4; } }
   .key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 14px; color: var(--faint); font: 12px var(--mono); }
@@ -72,6 +75,11 @@
   </section>
 
   <section class="panel" aria-label="Result">
+    <div class="view result-view" role="radiogroup" aria-label="View">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="view" value="flat"><span>Layers</span></label>
+      <label><input type="radio" name="view" value="3d" checked><span>3D</span></label>
+    </div>
     <div class="result-head">
       <span class="stats" id="stats"></span>
       <span class="stats" id="total"></span>
@@ -79,8 +87,8 @@
     <div class="stage" id="stage"><canvas id="grid" role="img"></canvas></div>
     <div class="key" id="key">
       <span><i style="background: var(--accent)"></i>this layer</span>
-      <span id="key-below"><i style="background: color-mix(in srgb, var(--accent) 22%, transparent)"></i>layer below</span>
-      <span>lines every 5 blocks · dashed lines mark the center</span>
+      <span id="key-below"><i style="background: color-mix(in srgb, var(--accent) 22%, transparent)"></i><span id="key-below-t">layer below</span></span>
+      <span id="key-lines">lines every 5 blocks · dashed lines mark the center</span>
     </div>
   </section>
   <section class="about" aria-labelledby="about-h">
@@ -93,12 +101,14 @@
     <p>Hollow keeps only the blocks that touch the outside on a face, so the shell is one block thick and has no diagonal gaps you could see or walk through. Turn hollow off to get the solid shape, for a filled circle floor or a solid dome of stone.</p>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611170922"></script>
-<script src="shapes.js?v=202611170922"></script>
+<script src="../shared/shell.js?v=202611171015"></script>
+<script src="../shared/view3d.js?v=202611171015"></script>
+<script src="shapes.js?v=202611171015"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
   const canvas = $('grid'), ctx = canvas.getContext('2d'), stage = $('stage');
+  const view = View3D(canvas, () => Math.min(stage.clientWidth, 720));
   const kind = () => document.querySelector('[name=kind]:checked').value;
   const fmt = n => n.toLocaleString('en');
   const stacks = n => n < 64 ? '' : ` (${Math.floor(n / 64)} stacks${n % 64 ? ` + ${n % 64}` : ''})`;
@@ -118,6 +128,19 @@
     $('total').textContent = k === 'circle' ? stacks(total).trim() : `total ${fmt(total)}${stacks(total)}`;
     $('key-below').hidden = !below;
     canvas.setAttribute('aria-label', `${k} ${d} blocks wide, layer ${li + 1} of ${n}: ${Shapes.count(g)} blocks`);
+
+    // 3D: the whole shape, the current layer in full color and the rest muted. Hollow and solid look
+    // the same from outside, so draw solid: it has no inner faces, which keeps turning quick.
+    const flat = document.querySelector('[name=view]:checked').value === 'flat';
+    canvas.classList.toggle('turn', !flat);
+    $('key-lines').textContent = flat ? 'lines every 5 blocks · dashed lines mark the center' : 'drag to turn it';
+    $('key-below-t').textContent = flat ? 'layer below' : 'other layers';
+    if (!flat) {
+      $('key-below').hidden = k === 'circle';
+      const tone = new Uint8Array(d * n * d);
+      for (let i = 0; i < n; i++) Shapes.layer(d, k, i, true).forEach((v, j) => { if (v) tone[i * d * d + j] = i === li ? 1 : 2; });
+      return view.show({ dims: [d, n, d], tone });
+    }
 
     // Fit the grid to the panel, sharp on high-DPI screens.
     // Tokens are relative oklch colors, so let the browser resolve them through the canvas's own color.
@@ -171,6 +194,7 @@
   $('size').onchange = () => { $('size').value = clampSize($('size').value); reshape(); };
   document.querySelectorAll('[name=kind]').forEach(r => r.onchange = () => { reshape(); pop(); });
   $('hollow').onchange = draw;
+  document.querySelectorAll('[name=view]').forEach(r => r.onchange = () => { draw(); pop(); });
 
   addEventListener('resize', draw);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
