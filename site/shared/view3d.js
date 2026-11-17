@@ -11,11 +11,11 @@
     [[0, 1, 0], [[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]]], [[0, -1, 0], [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]]],
     [[0, 0, 1], [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]]], [[0, 0, -1], [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]]],
   ];
-  const PITCH = .6, cp = Math.cos(PITCH), sp = Math.sin(PITCH);
+  const PITCH = [.1, 1.45]; // how far the view can tilt: nearly side-on to nearly straight down
 
   window.View3D = (canvas, fitWidth) => {
     const ctx = canvas.getContext('2d');
-    let yaw = .4, scene = null, faces = [], frame = 0;
+    let yaw = .4, pitch = .6, scene = null, faces = [], frame = 0;
 
     // Exposed faces only, worked out once per shape so turning stays quick.
     const show = s => {
@@ -39,7 +39,7 @@
       if (!scene) return;
       const color = v => { canvas.style.color = v; return getComputedStyle(canvas).color; };
       const [X, Y, Z] = scene.dims, mx = X / 2, my = Y / 2, mz = Z / 2;
-      let cs, sn;
+      let cs, sn, cp, sp;
       // Camera space: right, up, distance from the eye. Right is -x when looking toward +z, as in the game.
       const D = 2.5 * Math.max(X, Y, Z);
       const cam = (x, y, z, o = 1) => {
@@ -50,13 +50,17 @@
         const [r, u, w] = cam(x, y, z), f = D / w;
         return [r * f, -u * f, w];
       };
-      // Fit to the outline over a whole turn, so the canvas keeps its size while it spins.
+      // Fit to the outline over every turn and tilt, so the canvas keeps its size while it moves.
       const pts = [];
-      for (let k = 0; k < 32; k++) {
-        cs = Math.cos(k * Math.PI / 16); sn = Math.sin(k * Math.PI / 16);
-        for (const x of [0, X]) for (const z of [0, Z]) pts.push(proj(x, 0, z), proj(x, Y, z));
+      for (let t = 0; t <= 4; t++) {
+        const pt = PITCH[0] + (PITCH[1] - PITCH[0]) * t / 4;
+        cp = Math.cos(pt); sp = Math.sin(pt);
+        for (let k = 0; k < 32; k++) {
+          cs = Math.cos(k * Math.PI / 16); sn = Math.sin(k * Math.PI / 16);
+          for (const x of [0, X]) for (const z of [0, Z]) pts.push(proj(x, 0, z), proj(x, Y, z));
+        }
       }
-      cs = Math.cos(yaw); sn = Math.sin(yaw);
+      cs = Math.cos(yaw); sn = Math.sin(yaw); cp = Math.cos(pitch); sp = Math.sin(pitch);
       const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
       const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
       const pw = fitWidth(), s = Math.min((pw - 24) / (x1 - x0), 460 / (y1 - y0), 40);
@@ -99,12 +103,13 @@
       }
     };
 
-    // Drag sideways to turn: the near side follows the pointer. Vertical drags still scroll the page.
-    let dragX = null;
-    canvas.addEventListener('pointerdown', e => { if (scene && canvas.classList.contains('turn')) { dragX = e.clientX; canvas.setPointerCapture(e.pointerId); } });
+    // Drag sideways to turn and up or down to tilt: the near side follows the pointer.
+    let dragX = null, dragY = 0;
+    canvas.addEventListener('pointerdown', e => { if (scene && canvas.classList.contains('turn')) { dragX = e.clientX; dragY = e.clientY; canvas.setPointerCapture(e.pointerId); } });
     canvas.addEventListener('pointermove', e => {
       if (dragX === null) return;
       yaw -= (e.clientX - dragX) * .012; dragX = e.clientX;
+      pitch = Math.min(PITCH[1], Math.max(PITCH[0], pitch + (e.clientY - dragY) * .012)); dragY = e.clientY;
       cancelAnimationFrame(frame); frame = requestAnimationFrame(draw);
     });
     const end = () => { dragX = null; };
