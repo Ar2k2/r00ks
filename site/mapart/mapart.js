@@ -61,6 +61,7 @@
       if (!l) cache.set(key, l = G.keyToLab(key));
       lab.set(l, p * 3);
     }
+    const src = lab.slice();
     const near = (L, a, b) => {
       let best = 0, low = Infinity;
       for (let k = 0; k < pal.length; k++) {
@@ -74,12 +75,20 @@
       const j = (y * w + x) * 3;
       for (let c = 0; c < 3; c++) lab[j + c] += e[c] * f;
     };
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const p = y * w + x, j = p * 3, k = near(lab[j], lab[j + 1], lab[j + 2]);
+    // Serpentine rows, and each pixel's carried error is capped: colors the palette can't reach (flat art
+    // has nothing brighter than 220) otherwise pile up error that smears across the picture.
+    const CAP = 0.1;
+    for (let y = 0; y < h; y++) for (let i = 0; i < w; i++) {
+      const d = y % 2 ? -1 : 1, x = d > 0 ? i : w - 1 - i, p = y * w + x, j = p * 3;
+      if (dither) {
+        const e = [lab[j] - src[j], lab[j + 1] - src[j + 1], lab[j + 2] - src[j + 2]], m = Math.hypot(...e);
+        if (m > CAP) for (let c = 0; c < 3; c++) lab[j + c] = src[j + c] + e[c] * CAP / m;
+      }
+      const k = near(lab[j], lab[j + 1], lab[j + 2]);
       out[p] = k;
       if (!dither) continue;
       const c = pal[k].lab, e = [lab[j] - c[0], lab[j + 1] - c[1], lab[j + 2] - c[2]];
-      spread(x + 1, y, 7 / 16, e); spread(x - 1, y + 1, 3 / 16, e); spread(x, y + 1, 5 / 16, e); spread(x + 1, y + 1, 1 / 16, e);
+      spread(x + d, y, 7 / 16, e); spread(x - d, y + 1, 3 / 16, e); spread(x, y + 1, 5 / 16, e); spread(x + d, y + 1, 1 / 16, e);
     }
     return out;
   }

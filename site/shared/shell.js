@@ -237,7 +237,7 @@
     const n = row.children.length, per = Math.max(1, Math.floor((row.clientWidth + 10) / 98)); // 88px tile + 10px gap
     row.style.gridTemplateColumns = n > per ? `repeat(${Math.ceil(n / Math.ceil(n / per))}, minmax(0, 1fr))` : '';
   };
-  document.querySelectorAll('.row').forEach(row => {
+  document.querySelectorAll('.row:not(.mats)').forEach(row => { // block lists use wide rows of their own
     new ResizeObserver(() => balance(row)).observe(row);
     new MutationObserver(() => balance(row)).observe(row, { childList: true });
   });

@@ -15,7 +15,7 @@
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611171140">
+<link rel="stylesheet" href="../shared/shell.css?v=202611171153">
 <style>
   .controls { display: grid; grid-template-columns: auto 1fr 1fr; gap: 16px 20px; align-items: end; }
   .controls .view { grid-column: auto; }
@@ -26,7 +26,9 @@
   .help { margin: 0; align-self: center; color: var(--faint); font-size: 13px; grid-column: span 2; }
 
   .stage { margin-top: 16px; display: grid; place-items: center; padding: 12px; border-radius: 12px; background: var(--raised); }
-  #art { display: block; max-width: 100%; max-height: 70vh; image-rendering: pixelated; cursor: crosshair;
+  .frame { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: end; gap: 16px 20px; }
+  .frame .size { flex: 1; min-width: 200px; }
+  #art { display: block; max-width: 100%; max-height: 70vh; image-rendering: pixelated; cursor: grab; touch-action: none;
     animation: drop .5s var(--spring) both; }
   .spot { min-height: 1.5em; }
   .warn { margin: 12px 0 0; color: var(--warn); font-size: 14px; }
@@ -71,7 +73,12 @@
 
   <section class="panel" aria-label="Result">
     <div class="result-head"><span class="label spot" id="spot">Choose an image to start.</span></div>
-    <div class="stage" id="stage" hidden><canvas id="art" aria-label="Map art preview"></canvas></div>
+    <div class="stage" id="stage" hidden><canvas id="art" aria-label="Map art preview. Drag to move the picture."></canvas></div>
+    <div class="frame" id="frame" hidden>
+      <label class="size"><span class="label">Zoom: <output id="zoom-out">100</output>%</span>
+        <input type="range" id="zoom" min="50" max="400" value="100" data-step="5"></label>
+      <button class="btn" id="recenter">Recenter</button>
+    </div>
     <p class="warn" id="warn" hidden></p>
   </section>
 
@@ -89,13 +96,13 @@
     <div id="build"></div>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611171140"></script>
-<script src="../gradient/engine.js?v=202611171140"></script>
-<script src="../mosaic/mosaic.js?v=202611171140"></script>
-<script src="../shared/build.js?v=202611171140"></script>
-<script src="../shared/blocks.js?v=202611171140"></script>
-<script src="../shared/swap.js?v=202611171140"></script>
-<script src="mapart.js?v=202611171140"></script>
+<script src="../shared/shell.js?v=202611171153"></script>
+<script src="../gradient/engine.js?v=202611171153"></script>
+<script src="../mosaic/mosaic.js?v=202611171153"></script>
+<script src="../shared/build.js?v=202611171153"></script>
+<script src="../shared/blocks.js?v=202611171153"></script>
+<script src="../shared/swap.js?v=202611171153"></script>
+<script src="mapart.js?v=202611171153"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -104,18 +111,22 @@
   let img = null, cells = null, ys = null, pal = null, w = 0, h = 0, mats = [];
   const subs = new Map(); // block index -> block index the visitor swapped in, everywhere in the picture
 
-  const render = () => {
-    const mw = ROOKS.val($('mw')), mh = ROOKS.val($('mh')), stairs = document.querySelector('[name=mode]:checked').value === 's';
-    $('mw-out').textContent = mw; $('mh-out').textContent = mh;
+  let panX = 0, panY = 0; // picture center's offset from the maps' center, as a fraction of their width / height
+
+  // quick: while dragging, redraw only the preview.
+  const render = quick => {
+    const mw = ROOKS.val($('mw')), mh = ROOKS.val($('mh')), zoom = ROOKS.val($('zoom'));
+    const stairs = document.querySelector('[name=mode]:checked').value === 's';
+    $('mw-out').textContent = mw; $('mh-out').textContent = mh; $('zoom-out').textContent = zoom;
     if (!img) return;
     w = mw * 128; h = mh * 128; pal = PALS[stairs ? 's' : 'f'];
 
-    // Fill the maps, cropping the picture's overflow evenly; transparent parts read as white.
+    // Fill the maps (zoom 100% just covers them), moved by the visitor's drag; uncovered and transparent parts read as white.
     const ctx = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true });
-    const s = Math.max(w / img.width, h / img.height);
+    const s = Math.max(w / img.width, h / img.height) * zoom / 100;
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(img, (w - img.width * s) / 2, (h - img.height * s) / 2, img.width * s, img.height * s);
+    ctx.drawImage(img, (w - img.width * s) / 2 + panX * w, (h - img.height * s) / 2 + panY * h, img.width * s, img.height * s);
     cells = MapArt.convert(ctx.getImageData(0, 0, w, h).data, w, h, pal, $('dither').checked);
     cells = MapArt.swap(cells, pal, subs);
     ys = stairs ? MapArt.heights(cells, w, h, pal) : null;
@@ -126,9 +137,9 @@
     art.width = w; art.height = h;
     art.style.width = `min(100%, ${Math.max(w * 3, 384)}px)`;
     art.getContext('2d').putImageData(out, 0, 0);
-    $('stage').hidden = false;
-    art.style.animation = 'none'; void art.offsetWidth; art.style.animation = '';
-    $('spot').textContent = `${mw} × ${mh} map${mw * mh > 1 ? 's' : ''} · ${w} × ${h} blocks · hover the preview to see each block`;
+    if (quick) return;
+    $('stage').hidden = $('frame').hidden = false;
+    $('spot').textContent = `${mw} × ${mh} map${mw * mh > 1 ? 's' : ''} · ${w} × ${h} blocks · drag the preview to move the picture, hover to see each block`;
 
     const top = ys ? Math.max(...ys) : 0;
     $('warn').hidden = top < 200;
@@ -148,24 +159,47 @@
     Build.panel($('build'), () => ({ grid: Array.from(byBlock, k => BASES[k].id), w, h: h + 1, view: 't', ys }));
   };
 
-  let queued;
-  const update = () => queued ||= requestAnimationFrame(() => { queued = 0; render(); });
+  let queued, quick;
+  const update = q => { quick = q === true; queued ||= requestAnimationFrame(() => { queued = 0; render(quick); }); };
 
   $('file').onchange = e => {
     const f = e.target.files[0];
     if (!f) return;
     const i = new Image();
-    i.onload = () => { URL.revokeObjectURL(i.src); img = i; subs.clear(); update(); };
+    i.onload = () => { URL.revokeObjectURL(i.src); img = i; subs.clear(); recenter();
+      const art = $('art'); art.style.animation = 'none'; void art.offsetWidth; art.style.animation = ''; }; // drop in only for a new image
     i.onerror = () => { $('spot').textContent = `Could not read ${f.name} as an image.`; };
     i.src = URL.createObjectURL(f);
     e.target.value = '';
   };
-  $('mw').oninput = $('mh').oninput = update;
+  $('mw').oninput = $('mh').oninput = $('zoom').oninput = update;
+  const recenter = () => { panX = panY = 0; $('zoom').value = 100; update(); };
+  $('recenter').onclick = recenter;
+
+  // Drag the preview to move the picture inside the maps.
+  let drag = null;
+  $('art').onpointerdown = e => {
+    if (!cells) return;
+    drag = { x: e.clientX, y: e.clientY, r: e.currentTarget.getBoundingClientRect() };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    e.currentTarget.style.cursor = 'grabbing';
+  };
+  $('art').onpointermove = e => {
+    if (!drag) return;
+    panX += (e.clientX - drag.x) / drag.r.width; panY += (e.clientY - drag.y) / drag.r.height;
+    drag.x = e.clientX; drag.y = e.clientY;
+    update(true);
+  };
+  $('art').onpointerup = $('art').onpointercancel = e => {
+    if (!drag) return;
+    drag = null; e.currentTarget.style.cursor = '';
+    update();
+  };
   document.querySelectorAll('[name=mode], #dither').forEach(el => el.onchange = update);
 
   // Hover: which block sits where, counted from the north-west corner of the art.
   $('art').onmousemove = e => {
-    if (!cells) return;
+    if (!cells || drag) return;
     const r = e.currentTarget.getBoundingClientRect();
     const x = Math.floor((e.clientX - r.left) / r.width * w), y = Math.floor((e.clientY - r.top) / r.height * h);
     const c = pal[cells[y * w + x]];

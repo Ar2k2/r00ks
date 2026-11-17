@@ -22,6 +22,16 @@ for (const d of [false, true]) assert.strictEqual(convert(px(stairs[red].rgb), 1
 // Pure white on a flat map: the brightest level color is white concrete at x220.
 assert.strictEqual(BASES[flat[convert(px([255, 255, 255]), 1, 1, flat, false)[0]].block].id, 'white_concrete');
 
+// Dither doesn't smear: white the flat palette can't reach, above sky blue, leaves the blue rows blue on average.
+{
+  const G = require('../site/gradient/engine.js'), W = 64, H = 64, sky = [135, 181, 232];
+  const img = px(...Array.from({ length: W * H }, (_, p) => p < W * H / 2 ? [255, 255, 255] : sky));
+  const out = convert(img, W, H, flat, true), want = G.hexToLab('#87b5e8'), avg = [0, 0, 0];
+  // the 16 rows right under the edge (uncapped error diffusion lands ~0.13 off here)
+  for (let p = W * H / 2; p < W * H * 3 / 4; p++) flat[out[p]].lab.forEach((v, c) => avg[c] += v / (W * H / 4));
+  assert(Math.hypot(...avg.map((v, c) => v - want[c])) < 0.06, 'dither smeared: ' + avg);
+}
+
 // Heights: one column, shades higher, higher, level, lower, lower, lower -> 0 (north line), 1, 2, 2, 1, 0, -1, lifted by 1.
 const pal = [0, 1, 2].map(shade => ({ shade }));
 assert.deepStrictEqual([...heights([2, 2, 1, 0, 0, 0], 1, 6, pal)], [1, 2, 3, 3, 2, 1, 0]);
