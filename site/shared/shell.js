@@ -42,6 +42,8 @@
       desc: 'Circles, spheres and domes, block by block.' },
     { id: 'roofs', name: 'Roofs & arches', path: 'roofs/', cat: 'build', built: true,
       desc: 'Gable and hip roofs, round and pointed arches.' },
+    { id: 'house', name: 'House designer', path: 'house/', cat: 'build', built: true,
+      desc: 'Design a house in 3D, with real textures from your game.' },
     { id: 'beacon', name: 'Beacon pyramid', path: 'beacon/', cat: 'build', built: true,
       desc: 'Blocks per pyramid level, range and powers.' },
     { id: 'anvil', name: 'Anvil optimizer', path: 'anvil/', cat: 'mechanics', built: true,
@@ -74,6 +76,7 @@
     slime: '<rect x="4" y="5" width="16" height="14" rx="4"/><path d="M9.5 10v2M14.5 10v2M10 15.5h4"/>',
     shapes: '<circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="8" ry="3"/>',
     roofs: '<path d="M4 20v-9a8 8 0 0 1 16 0v9"/><path d="M8.5 20v-9a3.5 3.5 0 0 1 7 0v9"/>',
+    house: '<path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10.5 20v-5h3v5"/><path d="M7.5 12.5h2M14.5 12.5h2"/>',
     beacon: '<path d="M12 2.5V7"/><rect x="10" y="7" width="4" height="4" rx=".5"/><path d="M7 15v-4h10v4M3.5 20v-5h17v5z"/>',
     anvil: '<path d="M3 6.5h14.5a3 3 0 0 0 3.5 3h-6l-1.5 4.5H16v3.5H8V14h2.5L9 10.5C5.5 10.5 3 9 3 6.5z"/>',
     commands: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15h4.5"/>',
@@ -116,6 +119,10 @@
       `<rect x="${3 + c * 15.5}" y="${1 + r * 15.5}" width="14" height="14" rx="2" fill="${[[1, 0], [4, 1], [2, 2], [5, 0]].some(([a, b]) => a === c && b === r) ? '#7ebf6e' : 'color-mix(in srgb, currentColor 10%, transparent)'}"/>`)).join(''),
     shapes: ring(),
     roofs: Array.from({ length: 8 }, (_, i) => sq(3 + i * 6, 42 - i * 6, 5.4, 'var(--accent)', .8) + (i < 7 ? sq(3 + (14 - i) * 6, 42 - i * 6, 5.4, 'var(--accent)', .8) : '')).join(''),
+    // A little block house: stepped roof, walls, a door and two windows.
+    house: [[24, 9], [30, 7], [36, 5], [42, 3]].map(([x, k], r) => Array.from({ length: k }, (_, i) => sq(x + 6 * i, 24 - 6 * r, 5.4, 'var(--accent)', .8)).join('')).join('')
+      + [30, 36, 42].map(y => [30, 36, 42, 48, 54, 60].map(x => sq(x, y, 5.4,
+        x === 48 && y > 30 ? 'color-mix(in srgb, var(--accent) 45%, currentColor)' : (x === 36 || x === 60) && y === 36 ? '#9ccfe6' : 'color-mix(in srgb, currentColor 22%, transparent)', .8)).join('')).join(''),
     beacon: `<path d="M48 2v14" ${line} stroke="var(--accent)" opacity=".6"/>` + sq(45, 18, 5.4, 'color-mix(in srgb, var(--accent) 35%, transparent)', .8)
       + [0, 1, 2, 3].map(i => Array.from({ length: 9 - 2 * i }, (_, k) => sq(21 + 6 * (i + k), 42 - 6 * i, 5.4, 'var(--accent)', .8)).join('')).join(''),
     anvil: `<path d="M18 36L32 22L46 36M50 36L64 22L78 36M32 22L48 10L64 22" ${line} opacity=".5"/>`

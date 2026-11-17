@@ -1,6 +1,6 @@
 // Checks for the roof and arch generator. Run: node tools/test_roofs.js
 const assert = require('assert');
-const { roofLayers, roofLayer, roofParts, arch, count } = require('../site/roofs/roofs.js');
+const { inset, roofLayers, roofLayer, roofParts, design, arch, count, boxes, STAIR_BLOCKS, PROFILES, STAIR, SLAB, BLOCK, LIP } = require('../site/roofs/roofs.js');
 const rows = (g, w) => [...Array(g.length / w)].map((_, z) => [...g.slice(z * w, z * w + w)].join(''));
 
 // Layer counts: a 7-wide 45° roof has 4 layers, shallow 2, steep 8; a hip closes over the narrow side.
@@ -37,6 +37,47 @@ for (const [type, pitch] of [['gable', 'shallow'], ['hip', 'steep'], ['hip', 'no
     h.forEach((v, k) => { if (v) { assert.ok(!seen[k] || pitch === 'steep'); seen[k] = 1; } });
   }
   assert.ok(seen.every(Boolean)); // the shell covers the whole footprint
+}
+
+// Design: overhang grows the footprint and drops the roof below the wall top (45° by 1 per block,
+// steep by 2, shallow by 0 or 1); trim is the outer ring; the lip is upside-down stairs under the eaves only.
+const d = design(7, 9, 'gable', 'normal', false, 2, false);
+assert.deepStrictEqual([d.W, d.L, d.hang], [11, 13, 2]);
+assert.deepStrictEqual([0, 1, 2].map(o => design(7, 9, 'gable', 'steep', false, o, false).hang), [0, 2, 4]);
+assert.deepStrictEqual([0, 1, 2].map(o => design(7, 9, 'gable', 'shallow', false, o, false).hang), [0, 0, 1]);
+assert.deepStrictEqual(rows(d.layers[2].trim, 11)[0], '00100000100'); // the gable end rake
+assert.deepStrictEqual(rows(d.layers[2].trim, 11)[5], '00000000000');
+const g = design(5, 3, 'gable', 'normal', false, 0, true), h = design(5, 5, 'hip', 'normal', false, 1, true);
+assert.strictEqual(g.layers.length, roofLayers(5, 3, 'gable', 'normal') + 1);
+assert.deepStrictEqual(rows(g.layers[0].kind, 5), ['40004', '40004', '40004']);
+assert.deepStrictEqual([h.layers[0].side[0], h.layers[0].side[3], h.layers[0].kind[8]], [5, 4, 0]);
+assert.ok(h.layers[0].kind.every((k, i) => !k || (k === LIP && h.layers[0].trim[i])));
+
+// Shapes: a full block is a cube, a slab the bottom half, a west-edge stair's high half is on the east.
+assert.deepStrictEqual([boxes(BLOCK, 0), boxes(SLAB, 1)], [null, [[0, 1, 0, .5, 0, 1]]]);
+assert.deepStrictEqual(boxes(STAIR, 1)[1], [.5, 1, .5, 1, 0, 1]);
+assert.ok(STAIR_BLOCKS.every(([n, id]) => n && /^[a-z_]+$/.test(id)));
+
+// Profiles: the named slopes as profiles build exactly the same roofs.
+for (const name of ['normal', 'shallow', 'steep']) for (const [w, l, type] of [[7, 9, 'gable'], [12, 9, 'hip'], [6, 6, 'hip']]) {
+  assert.strictEqual(roofLayers(w, l, type, PROFILES[name]), roofLayers(w, l, type, name), name);
+  for (let i = 0; i < roofLayers(w, l, type, name); i++) for (const f of [false, true]) {
+    const a = roofParts(w, l, type, name, i, f), b = roofParts(w, l, type, PROFILES[name], i, f);
+    assert.deepStrictEqual([[...a.kind], [...a.side]], [[...b.kind], [...b.side]], `${name} ${w}x${l} ${type} layer ${i}`);
+  }
+}
+// Past its end a profile repeats its last step; a short profile [0, 3] steps in 3 per layer, so slabs.
+assert.deepStrictEqual([0, 1, 2, 3].map(i => inset({ ins: [0, 3] }, i)), [0, 3, 6, 9]);
+assert.deepStrictEqual(kinds(13, 1, 'gable', { ins: [0, 3] }, 0), ['3110000000113']);
+// A cap stops the roof with a flat top of full blocks; a flat roof is one solid layer.
+const mans = { ins: [0, 0, 1, 1], cap: 3 };
+assert.strictEqual(roofLayers(9, 9, 'gable', mans), 3);
+assert.deepStrictEqual(kinds(9, 1, 'gable', mans, 2), ['011111110']);
+assert.deepStrictEqual(kinds(5, 2, 'gable', PROFILES.flat, 0), ['11111', '11111']);
+// Every preset's insets never go down, and the house sits on them without errors.
+for (const p of Object.values(PROFILES)) {
+  for (let i = 1; i < 40; i++) assert.ok(inset(p, i) >= inset(p, i - 1));
+  assert.ok(design(9, 13, 'gable', p, false, 1, true).layers.length > 0);
 }
 
 // Round arch, 5 wide and 3 tall (a semicircle-ish), 1 thick: opening is symmetric, arch hugs it.

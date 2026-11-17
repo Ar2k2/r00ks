@@ -3,6 +3,7 @@
 //   const view = View3D(canvas, fitWidth);
 //   view.show({ dims: [X, Y, Z], tone, shape, floor });
 // tone: Uint8Array X*Y*Z indexed (y * Z + z) * X + x; 0 empty, 1 accent, 2 muted.
+// colors: optional CSS colors for tones 1, 2, 3... in place of accent and muted.
 // shape(x, y, z): optional, returns boxes [x0, x1, y0, y1, z0, z1] in 0..1 for a cell that isn't a
 // full cube (stairs, slabs). floor: optional [[x, z], ...] cells tinted on the ground.
 (() => {
@@ -83,7 +84,7 @@
       for (let i = 0; i <= Z; i++) if (dense || !(i % 5) || i === Z) { ctx.strokeStyle = i % 5 && i !== Z ? thin : strong; line([0, 0, i], [X, 0, i]); }
 
       // Blocks: faces turned toward the viewer, far ones first. Tops are lightest, sides shaded by angle.
-      const fills = [null, accent, color('color-mix(in srgb, var(--accent) 30%, var(--panel))')];
+      const fills = scene.colors ? [null, ...scene.colors.map(color)] : [null, accent, color('color-mix(in srgb, var(--accent) 30%, var(--panel))')];
       const list = [];
       for (const f of faces) {
         const n = cam(...f.n, 0), q = cam(...f.p[0]);
