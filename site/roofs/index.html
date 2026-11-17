@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft Roof &amp; Arch Generator · R00K’s</title>
+<meta name="description" content="Gable and hip roofs layer by layer, and round or pointed arches, block by block for Minecraft Java.">
+<link rel="canonical" href="https://rooks.rookstudio.net/roofs/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="R00K’s">
+<meta property="og:title" content="Minecraft Roof &amp; Arch Generator · R00K’s">
+<meta property="og:description" content="Gable and hip roofs layer by layer, and round or pointed arches, block by block for Minecraft Java.">
+<meta property="og:url" content="https://rooks.rookstudio.net/roofs/">
+<meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../shared/shell.css?v=202611170922">
+<style>
+  .controls { display: grid; gap: 18px; }
+  .controls[hidden] { display: none; }
+  .pills { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
+  @media (max-width: 560px) { .pills { grid-template-columns: 1fr; } }
+  /* Three-way version of the shared pill. */
+  .view.three { grid-template-columns: repeat(3, 1fr); }
+  .three .view-hl { width: calc((100% - 8px) / 3); }
+  .view.three:has([value=normal]:checked) .view-hl { transform: translateX(100%); }
+  .view.three:has([value=steep]:checked) .view-hl { transform: translateX(200%); }
+
+  .slider { display: grid; grid-template-columns: 9ch 1fr auto; gap: 14px; align-items: center; }
+  .slider input[type=number] {
+    width: 7ch; height: 36px; padding: 0 8px; border-radius: 10px; text-align: right;
+    background: var(--control); border: 1px solid var(--control-border); color: var(--text); font: 500 14px var(--mono);
+  }
+  .slider input[type=number]:focus { border-color: var(--c); outline: none; }
+  .slider output { font: 500 14px var(--mono); min-width: 7ch; text-align: right; }
+  .opts { display: flex; gap: 8px; }
+
+  .result-head { justify-content: space-between; }
+  .stats { font: 500 13px var(--mono); color: var(--muted); }
+  .stats b { color: var(--text); font-weight: 600; }
+  .stage { margin-top: 16px; display: grid; justify-items: center; }
+  .stage canvas { max-width: 100%; border-radius: 10px; }
+  .stage.pop canvas { animation: pop-in .35s var(--spring); }
+  @keyframes pop-in { from { transform: scale(.94); opacity: .4; } }
+  .key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 14px; color: var(--faint); font: 12px var(--mono); }
+  .key i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .key [hidden] { display: none; }
+</style>
+</head>
+<body data-tool="roofs">
+<main>
+  <header class="head">
+    <h1>Roofs &amp; arches</h1>
+    <p>Gable and hip roofs from above, layer by layer, and round or pointed arches from the front.</p>
+  </header>
+
+  <section class="panel controls" aria-label="What to build">
+    <div class="view" role="radiogroup" aria-label="Build">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="mode" value="roof" checked><span>Roof</span></label>
+      <label><input type="radio" name="mode" value="arch"><span>Arch</span></label>
+    </div>
+  </section>
+
+  <section class="panel controls" id="roof-controls" aria-label="Roof settings">
+    <div class="pills">
+      <div class="view" role="radiogroup" aria-label="Roof type">
+        <i class="view-hl"></i>
+        <label><input type="radio" name="type" value="gable" checked><span>Gable</span></label>
+        <label><input type="radio" name="type" value="hip"><span>Hip</span></label>
+      </div>
+      <div class="view three" role="radiogroup" aria-label="Slope">
+        <i class="view-hl"></i>
+        <label><input type="radio" name="pitch" value="shallow"><span>Shallow</span></label>
+        <label><input type="radio" name="pitch" value="normal" checked><span>45°</span></label>
+        <label><input type="radio" name="pitch" value="steep"><span>Steep</span></label>
+      </div>
+    </div>
+    <label class="slider"><span class="label">width</span>
+      <input type="range" min="1" max="64" value="9" aria-label="Width slider" data-pair="w">
+      <input type="number" id="w" min="1" max="64" value="9" aria-label="Width in blocks, across the slope">
+    </label>
+    <label class="slider"><span class="label">length</span>
+      <input type="range" min="1" max="64" value="13" aria-label="Length slider" data-pair="l">
+      <input type="number" id="l" min="1" max="64" value="13" aria-label="Length in blocks, along the ridge">
+    </label>
+    <label class="slider"><span class="label">layer</span>
+      <input type="range" id="layer" min="1" value="1" aria-label="Layer, from the bottom">
+      <output id="layer-out">1 / 1</output>
+    </label>
+    <div class="opts">
+      <label class="chip"><input type="checkbox" id="hollow" checked><span>Hollow</span></label>
+    </div>
+  </section>
+
+  <section class="panel controls" id="arch-controls" aria-label="Arch settings" hidden>
+    <div class="view" role="radiogroup" aria-label="Arch style">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="style" value="round" checked><span>Round</span></label>
+      <label><input type="radio" name="style" value="pointed"><span>Pointed</span></label>
+    </div>
+    <label class="slider"><span class="label">width</span>
+      <input type="range" min="1" max="64" value="9" aria-label="Opening width slider" data-pair="aw">
+      <input type="number" id="aw" min="1" max="64" value="9" aria-label="Opening width in blocks">
+    </label>
+    <label class="slider"><span class="label">height</span>
+      <input type="range" min="1" max="64" value="5" aria-label="Arch height slider" data-pair="ah">
+      <input type="number" id="ah" min="1" max="64" value="5" aria-label="Arch height in blocks, above where it starts to curve">
+    </label>
+    <label class="slider"><span class="label">thickness</span>
+      <input type="range" min="1" max="4" value="1" aria-label="Thickness slider" data-pair="at">
+      <input type="number" id="at" min="1" max="4" value="1" aria-label="Arch thickness in blocks">
+    </label>
+  </section>
+
+  <section class="panel" aria-label="Result">
+    <div class="result-head">
+      <span class="stats" id="stats"></span>
+      <span class="stats" id="total"></span>
+    </div>
+    <div class="stage" id="stage"><canvas id="grid" role="img"></canvas></div>
+    <div class="key">
+      <span><i style="background: var(--accent)"></i><span id="key-main">this layer</span></span>
+      <span id="key-below"><i style="background: color-mix(in srgb, var(--accent) 22%, transparent)"></i><span id="key-faint">layer below</span></span>
+      <span id="key-lines">lines every 5 blocks · dashed lines mark the center</span>
+    </div>
+  </section>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the roof and arch generator works</h2>
+    <p>A roof is shown from above, one layer at a time, starting on top of your walls. Each layer steps in from the edge by the slope you pick: 45° steps in one block per layer, shallow steps in two, and steep rises two layers before stepping in. A gable roof slopes on the two long sides and leaves flat ends for you to fill with wall; a hip roof slopes on all four sides. Width is the side the roof slopes across, and length runs along the ridge.</p>
+    <p>An arch is shown from the front, from where it starts to curve up to its top. Round arches follow half an ellipse, a perfect half circle when the height is half the width. Pointed arches are two curves that meet in a point, like a church window; they need a height of at least half the width. The faint blocks are the opening you walk through.</p>
+    <h3>Where do stairs and slabs go?</h3>
+    <p>The blocks on the outer edge of each roof layer are where the slope shows, so that is where stairs go on a 45° roof and slabs on a shallow one. Corners of a hip roof take corner stairs, which Minecraft shapes for you when you place two stairs side by side. The count shows full blocks, so swap in stairs or slabs one for one.</p>
+    <h3>What does hollow mean for a roof?</h3>
+    <p>Hollow keeps only the blocks you see from outside, so the roof is a shell with an attic underneath. Turn it off for a solid roof, which takes many more blocks.</p>
+  </section>
+</main>
+<script src="../shared/shell.js?v=202611170922"></script>
+<script src="roofs.js?v=202611170922"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const canvas = $('grid'), ctx = canvas.getContext('2d'), stage = $('stage');
+  const pick = name => document.querySelector(`[name=${name}]:checked`).value;
+  const fmt = n => n.toLocaleString('en');
+  const stacks = n => n < 64 ? '' : ` (${Math.floor(n / 64)} stacks${n % 64 ? ` + ${n % 64}` : ''})`;
+  const num = id => { const el = $(id); return Math.min(+el.max, Math.max(+el.min, Math.round(+el.value) || +el.min)); };
+
+  // Draw a cols x rows grid of blocks: each part is [grid, alpha]. Center lines are dashed.
+  const paint = (cols, rows, parts, centerX, centerY) => {
+    const color = v => { canvas.style.color = `var(${v})`; return getComputedStyle(canvas).color; };
+    const cell = Math.max(3, Math.min(32, Math.floor(Math.min(stage.clientWidth, 720) / Math.max(cols, rows))));
+    const pw = cell * cols, ph = cell * rows, dpr = devicePixelRatio || 1;
+    canvas.width = pw * dpr; canvas.height = ph * dpr;
+    canvas.style.width = pw + 'px'; canvas.style.height = ph + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, pw, ph);
+
+    const gap = cell >= 8 ? 1 : 0;
+    ctx.fillStyle = color('--accent');
+    for (const [grid, alpha] of parts) {
+      ctx.globalAlpha = alpha;
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+        if (grid[r * cols + c]) ctx.fillRect(c * cell + gap, r * cell + gap, cell - gap * 2, cell - gap * 2);
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.lineWidth = 1;
+    const v = (i, style) => { const p = Math.round(i * cell) + .5; ctx.strokeStyle = style; ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, ph); ctx.stroke(); };
+    const h = (i, style) => { const p = Math.round(i * cell) + .5; ctx.strokeStyle = style; ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(pw, p); ctx.stroke(); };
+    const faint = color('--panel-border'), strong = color('--faint');
+    if (cell >= 6) { for (let i = 0; i <= cols; i++) if (i % 5) v(i, faint); for (let i = 0; i <= rows; i++) if (i % 5) h(i, faint); }
+    for (let i = 0; i <= cols; i += 5) v(i, strong);
+    for (let i = 0; i <= rows; i += 5) h(i, strong);
+    v(cols, strong); h(rows, strong);
+    ctx.setLineDash([4, 4]);
+    if (centerX !== null) v(centerX, color('--text'));
+    if (centerY !== null) h(centerY, color('--text'));
+    ctx.setLineDash([]);
+  };
+
+  const drawRoof = () => {
+    const w = num('w'), l = num('l'), type = pick('type'), pitch = pick('pitch'), filled = !$('hollow').checked;
+    const n = Roofs.roofLayers(w, l, type, pitch), li = Math.min(ROOKS.val($('layer')), n) - 1;
+    const g = Roofs.roofLayer(w, l, type, pitch, li, filled);
+    const below = li > 0 ? Roofs.roofLayer(w, l, type, pitch, li - 1, filled) : null;
+    let total = 0;
+    for (let i = 0; i < n; i++) total += Roofs.count(Roofs.roofLayer(w, l, type, pitch, i, filled));
+    $('stats').innerHTML = `layer ${li + 1} of ${n} · <b>${fmt(Roofs.count(g))}</b> blocks`;
+    $('total').textContent = `total ${fmt(total)}${stacks(total)}`;
+    $('key-main').textContent = 'this layer'; $('key-faint').textContent = 'layer below';
+    $('key-below').hidden = !below;
+    canvas.setAttribute('aria-label', `${type} roof ${w} by ${l}, layer ${li + 1} of ${n}: ${Roofs.count(g)} blocks`);
+    paint(w, l, below ? [[below.map((v, i) => v && !g[i]), .22], [g, 1]] : [[g, 1]], w / 2, type === 'hip' ? l / 2 : null);
+  };
+
+  const drawArch = () => {
+    const w = num('aw'), style = pick('style'), t = num('at');
+    const a = Roofs.arch(w, num('ah'), style, t), c = Roofs.count(a.arch);
+    $('stats').innerHTML = `<b>${fmt(c)}</b> blocks`;
+    $('total').textContent = `${a.cols} wide · ${a.rows} tall`;
+    $('key-main').textContent = 'arch'; $('key-faint').textContent = 'opening';
+    $('key-below').hidden = false;
+    canvas.setAttribute('aria-label', `${style} arch, opening ${w} wide: ${c} blocks`);
+    paint(a.cols, a.rows, [[a.opening, .22], [a.arch, 1]], a.cols / 2, null);
+  };
+
+  const draw = () => pick('mode') === 'roof' ? drawRoof() : drawArch();
+  const pop = () => { stage.classList.remove('pop'); void stage.offsetWidth; stage.classList.add('pop'); };
+
+  // Roof size or shape changed: reset the layer slider to the bottom.
+  const reshape = () => {
+    $('layer').max = Roofs.roofLayers(num('w'), num('l'), pick('type'), pick('pitch'));
+    $('layer').value = 1;
+    setLayer(1);
+  };
+  const setLayer = v => { $('layer-out').textContent = `${v} / ${$('layer').max}`; draw(); };
+  const changed = id => id === 'w' || id === 'l' ? reshape() : draw();
+
+  // Each range slider drives the number box beside it, and the other way round.
+  document.querySelectorAll('[data-pair]').forEach(range => {
+    const box = $(range.dataset.pair);
+    range.oninput = () => { box.value = ROOKS.val(range); changed(box.id); };
+    box.oninput = () => { if (box.value) { range.value = num(box.id); changed(box.id); } };
+    box.onchange = () => { box.value = num(box.id); range.value = box.value; changed(box.id); };
+  });
+  $('layer').oninput = () => setLayer(ROOKS.val($('layer')));
+  document.querySelectorAll('[name=type], [name=pitch]').forEach(r => r.onchange = () => { reshape(); pop(); });
+  document.querySelectorAll('[name=style]').forEach(r => r.onchange = () => { draw(); pop(); });
+  document.querySelectorAll('[name=mode]').forEach(r => r.onchange = () => {
+    const roof = pick('mode') === 'roof';
+    $('roof-controls').hidden = !roof; $('arch-controls').hidden = roof;
+    draw(); pop();
+  });
+  $('hollow').onchange = draw;
+
+  addEventListener('resize', draw);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+  reshape();
+})();
+</script>
+</body>
+</html>

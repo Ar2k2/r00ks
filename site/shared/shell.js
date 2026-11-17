@@ -40,6 +40,8 @@
       desc: 'Slime chunks around you from a world seed.' },
     { id: 'shapes', name: 'Circles & spheres', path: 'shapes/', cat: 'build', built: true,
       desc: 'Circles, spheres and domes, block by block.' },
+    { id: 'roofs', name: 'Roofs & arches', path: 'roofs/', cat: 'build', built: true,
+      desc: 'Gable and hip roofs, round and pointed arches.' },
     { id: 'anvil', name: 'Anvil optimizer', path: 'anvil/', cat: 'mechanics', built: true,
       desc: 'The cheapest order to combine enchanted books.' },
     { id: 'commands', name: 'Command builder', path: 'commands/', cat: 'mechanics', built: true,
@@ -69,6 +71,7 @@
     stronghold: '<path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.6"/>',
     slime: '<rect x="4" y="5" width="16" height="14" rx="4"/><path d="M9.5 10v2M14.5 10v2M10 15.5h4"/>',
     shapes: '<circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="8" ry="3"/>',
+    roofs: '<path d="M4 20v-9a8 8 0 0 1 16 0v9"/><path d="M8.5 20v-9a3.5 3.5 0 0 1 7 0v9"/>',
     anvil: '<path d="M3 6.5h14.5a3 3 0 0 0 3.5 3h-6l-1.5 4.5H16v3.5H8V14h2.5L9 10.5C5.5 10.5 3 9 3 6.5z"/>',
     commands: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15h4.5"/>',
     color: '<path d="M12 3.5c3.5 4 6 7 6 10.5a6 6 0 0 1-12 0c0-3.5 2.5-6.5 6-10.5z"/><path d="M9 14.5a3 3 0 0 0 3 3"/>',
@@ -109,6 +112,7 @@
     slime: [0, 1, 2, 3, 4, 5].flatMap(c => [0, 1, 2].map(r =>
       `<rect x="${3 + c * 15.5}" y="${1 + r * 15.5}" width="14" height="14" rx="2" fill="${[[1, 0], [4, 1], [2, 2], [5, 0]].some(([a, b]) => a === c && b === r) ? '#7ebf6e' : 'color-mix(in srgb, currentColor 10%, transparent)'}"/>`)).join(''),
     shapes: ring(),
+    roofs: Array.from({ length: 8 }, (_, i) => sq(3 + i * 6, 42 - i * 6, 5.4, 'var(--accent)', .8) + (i < 7 ? sq(3 + (14 - i) * 6, 42 - i * 6, 5.4, 'var(--accent)', .8) : '')).join(''),
     anvil: `<path d="M18 36L32 22L46 36M50 36L64 22L78 36M32 22L48 10L64 22" ${line} opacity=".5"/>`
       + [18, 46, 50, 78].map(x => sq(x - 6, 34, 12, '#7a3fb0')).join('') + sq(26, 16, 12, '#9b5fd0') + sq(58, 16, 12, '#9b5fd0') + sq(42, 4, 12, 'var(--accent)'),
     commands: `<rect x="4" y="12" width="88" height="24" rx="6" fill="color-mix(in srgb, currentColor 8%, transparent)"/><text x="48" y="28.5" text-anchor="middle" font-family="var(--mono)" font-size="13" fill="currentColor"><tspan fill="var(--accent)">/give</tspan> @p</text>`,
