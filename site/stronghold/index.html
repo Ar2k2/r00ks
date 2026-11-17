@@ -17,6 +17,10 @@
 <link rel="stylesheet" href="../shared/shell.css?v=202611170852">
 <style>
   .throws { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .steps { margin: 0 0 14px; padding-left: 22px; display: grid; gap: 8px; font-size: 14px; }
+  .steps li::marker { font: 500 13px var(--mono); color: var(--muted); }
+  .steps b, .how b { font-weight: 600; color: var(--text); }
+  .steps .hint { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; }
   .how { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
   .how b { font-weight: 600; color: var(--text); }
 
@@ -39,11 +43,18 @@
 <main>
   <header class="head">
     <h1>Stronghold finder</h1>
-    <p>Throw an Eye of Ender, stand where you threw it and line your crosshair up with its path. Note your position and facing, walk a good way to the side, and throw again. Two throws cross at the stronghold.</p>
+    <p>Throw two Eyes of Ender from two different spots. Each one flies toward the stronghold, and the finder works out where their paths cross.</p>
   </header>
 
   <section class="panel" aria-label="Throws">
-    <p class="how">Fill in <b>X</b>, <b>Z</b> and the facing <b>angle</b> from F3 (the first number after "Facing"), or press <b>F3 + C</b> in game and paste here.</p>
+    <ol class="steps">
+      <li>Throw an Eye of Ender and <b>don't move</b>. While it hangs in the air, turn until your crosshair sits right on it.</li>
+      <li>Press <b>F3 + C</b>, click any box under Throw 1 below and paste. That fills in X, Z and the angle.
+        <span class="hint">Or type them in from the F3 screen: X and Z from the "XYZ" line, and the angle is the first number in brackets on the "Facing" line (the −45.3 in <code>(-45.3 / 12.0)</code>).</span></li>
+      <li>Walk about <b>300 blocks sideways</b>, at a right angle to where the eye flew. Don't walk toward it.</li>
+      <li>Throw again, aim the same way, and fill in Throw 2. The stronghold's coordinates show up below.</li>
+    </ol>
+    <p class="how">Playing with a friend? One of you throws first. The other stands about 300 blocks off to the side of that eye's path and throws too. Send your X, Z and angle in chat to whoever has this page open, and they fill in both throws.</p>
     <div class="throws" id="throws"></div>
   </section>
 
