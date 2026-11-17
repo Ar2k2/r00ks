@@ -26,8 +26,8 @@ libraries, and ask before adding any dependency.
   browser opted in by visiting any page with `?flags=id` (comma-separated,
   saved in localStorage; `?flags=` clears). Keep a flagged tool out of
   `sitemap.xml`, the home featured card and hub text, and give its page
-  `<meta name="robots" content="noindex">`. Map art (`mapart`) is flagged
-  as of Nov 2026. To release, remove all of that.
+  `<meta name="robots" content="noindex">`. No tool is flagged right now
+  (map art was released Nov 2026). To release, remove all of that.
 
 ## Repo layout
 

@@ -26,7 +26,7 @@
       desc: 'Build block palettes that sit well together.' },
     { id: 'mosaic', name: 'Image mosaic', path: 'mosaic/', cat: 'color', built: true,
       desc: 'Turn a picture into a wall or floor of blocks.' },
-    { id: 'mapart', name: 'Map art', path: 'mapart/', cat: 'color', built: true, flag: 'mapart',
+    { id: 'mapart', name: 'Map art', path: 'mapart/', cat: 'color', built: true,
       desc: 'Turn an image into a map art block layout.' },
     { id: 'banner', name: 'Banner designer', path: 'banner/', cat: 'color', built: true,
       desc: 'Banners layer by layer, with loom steps and commands.' },
