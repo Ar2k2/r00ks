@@ -80,14 +80,10 @@
 
   // Tiny sample output per tool (home rows and hub cards), drawn on a 96x48 grid.
   const sq = (x, y, s, c, r = 2) => `<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="${r}" fill="${c}"/>`;
-  const picture = () => { // hills and a sun, 8px pixels
-    let s = '';
-    for (let r = 0; r < 6; r++) for (let c = 0; c < 12; c++) {
-      const hill = r >= 4 - Math.round(Math.sin(c * .7) * 1.2), sun = Math.hypot(c - 9, r - 1.2) < 1.3;
-      s += sq(c * 8, r * 8, 8, hill ? (r > 4 ? '#5b7a33' : '#76a046') : sun ? '#f2c94c' : '#8fb8e8', 0);
-    }
-    return s;
-  };
+  // Hand-placed pixel scene (hills and a sun): s sky, l low sky, y sun, g grass, d dark grass.
+  const scene = { s: '#86b6ea', l: '#a8cdf3', y: '#f4cd57', g: '#7aa84a', d: '#5a7d34' };
+  const pixels = (rows, x0, y0, pitch, size, r) =>
+    rows.flatMap((row, y) => [...row].map((k, x) => sq(x0 + x * pitch, y0 + y * pitch, size, scene[k], r))).join('');
   const ring = () => { // a block circle, radius 5.5 on a 4px grid
     let s = '';
     for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++)
@@ -98,8 +94,9 @@
   const previews = {
     gradient: ['#2c2e8f', '#3c44aa', '#4a54b0', '#8932b7', '#a9309f', '#d064a8'].map((c, k) => sq(1 + k * 16, 17, 14, c)).join(''),
     palette: ['#6b4e2f', '#a2834f', '#c29d62', '#5e7a3d', '#8a8a8a', '#e4e0d8'].map((c, k) => sq(24 + k % 3 * 16, 9 + (k > 2) * 16, 14, c)).join(''),
-    mosaic: picture(),
-    mapart: `<rect x="18" width="60" height="48" rx="3" fill="#c9b48a"/><g transform="translate(22 4) scale(.54 .83)">${picture()}</g>`,
+    mosaic: pixels(['ssssys', 'lgglll', 'gggggg'], 3, 1, 15.5, 14, 2),
+    mapart: '<rect x="24" width="48" height="48" rx="5" fill="#dcc79c"/><rect x="27.5" y="3.5" width="41" height="41" rx="1.5" fill="none" stroke="#b99d68"/>'
+      + pixels(['ssssssss', 'sssssyys', 'sssssyys', 'llllllll', 'lgggllll', 'ggggggll', 'gggggggg', 'dddddddd'], 28, 4, 5, 5.3, 0),
     banner: `<path d="M34 3h28" ${line}/><path d="M38 4h20v40l-10-6-10 6z" fill="#3c44aa"/><path d="M38 14h20v8H38z" fill="#f9fffe"/><path d="M38 44V32l10-6 10 6v12l-10-6z" fill="#f9801d"/>`,
     fireworks: ['#b02e26', '#f9801d', '#fed83d', '#80c71f', '#3ab3da', '#c74ebd', '#f9fffe', '#fed83d'].map((c, k) => {
       const a = k * Math.PI / 4;
