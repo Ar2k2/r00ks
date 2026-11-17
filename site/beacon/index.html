@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft Beacon Pyramid Calculator · R00K’s</title>
+<meta name="description" content="How many blocks a Minecraft Java beacon pyramid needs at each level, its range, and which powers it unlocks.">
+<link rel="canonical" href="https://rooks.rookstudio.net/beacon/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="R00K’s">
+<meta property="og:title" content="Minecraft Beacon Pyramid Calculator · R00K’s">
+<meta property="og:description" content="How many blocks a Minecraft Java beacon pyramid needs at each level, its range, and which powers it unlocks.">
+<meta property="og:url" content="https://rooks.rookstudio.net/beacon/">
+<meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../shared/shell.css?v=202611171158">
+<style>
+  .controls { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 14px; }
+  @media (max-width: 560px) { .controls { grid-template-columns: 1fr; } }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* Four-way version of the shared pill. */
+  .view.four { grid-template-columns: repeat(4, 1fr); grid-column: auto; }
+  .four .view-hl { width: calc((100% - 8px) / 4); }
+  .view.four:has([value="2"]:checked) .view-hl { transform: translateX(100%); }
+  .view.four:has([value="3"]:checked) .view-hl { transform: translateX(200%); }
+  .view.four:has([value="4"]:checked) .view-hl { transform: translateX(300%); }
+
+  .result-head { justify-content: space-between; }
+  .stats { font: 500 13px var(--mono); color: var(--muted); }
+  .stats b { color: var(--text); font-weight: 600; }
+  .stage { margin-top: 16px; display: grid; justify-items: center; }
+  .stage canvas { max-width: 100%; border-radius: 10px; cursor: grab; touch-action: none; }
+  .stage canvas:active { cursor: grabbing; }
+  .stage.pop canvas { animation: pop-in .35s var(--spring); }
+  @keyframes pop-in { from { transform: scale(.94); opacity: .4; } }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 16px; }
+  .facts ul { list-style: none; margin: 8px 0 0; padding: 0; font: 13px var(--mono); }
+  .facts li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-top: 1px solid var(--panel-border); }
+  .facts li span:last-child { color: var(--muted); }
+  .facts li.off { color: var(--faint); }
+  .facts li.off span:last-child { color: var(--faint); }
+</style>
+</head>
+<body data-tool="beacon">
+<main>
+  <header class="head">
+    <h1>Beacon pyramid</h1>
+    <p>How many blocks each pyramid level takes, how far the beacon reaches, and which powers it unlocks.</p>
+  </header>
+
+  <section class="panel controls" aria-label="Pyramid level">
+    <span class="label">pyramid level</span>
+    <div class="view four" role="radiogroup" aria-label="Pyramid level">
+      <i class="view-hl"></i>
+      <label><input type="radio" name="level" value="1"><span>1</span></label>
+      <label><input type="radio" name="level" value="2"><span>2</span></label>
+      <label><input type="radio" name="level" value="3"><span>3</span></label>
+      <label><input type="radio" name="level" value="4" checked><span>4</span></label>
+    </div>
+    <span class="label">base blocks</span>
+    <div class="opts" role="radiogroup" aria-label="Base blocks">
+      <label class="chip"><input type="radio" name="mat" value="iron" checked><span>Iron</span></label>
+      <label class="chip"><input type="radio" name="mat" value="gold"><span>Gold</span></label>
+      <label class="chip"><input type="radio" name="mat" value="emerald"><span>Emerald</span></label>
+      <label class="chip"><input type="radio" name="mat" value="diamond"><span>Diamond</span></label>
+      <label class="chip"><input type="radio" name="mat" value="netherite"><span>Netherite</span></label>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Result">
+    <div class="result-head">
+      <span class="stats" id="stats"></span>
+      <span class="stats" id="range"></span>
+    </div>
+    <div class="stage" id="stage"><canvas id="view" class="turn" role="img"></canvas></div>
+    <p class="meta">drag to turn it · the pale block on top is the beacon</p>
+    <div class="facts">
+      <div><span class="label">layers, top to bottom</span><ul id="layers"></ul></div>
+      <div><span class="label">powers</span><ul id="powers"></ul></div>
+    </div>
+  </section>
+
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the beacon calculator works</h2>
+    <p>A beacon sits on a stepped pyramid of iron, gold, emerald, diamond or netherite blocks, and you can mix them freely. Each level adds a bigger layer underneath: 3×3, then 5×5, 7×7 and 9×9. A full level 4 pyramid takes 164 blocks. Every block in each square must be there, so the pyramid can't be hollow.</p>
+    <h3>Which blocks should I use?</h3>
+    <p>Any of the five work, and the block type doesn't change the range or the powers, so pick the cheapest one you have. Iron is the usual choice, since an iron farm makes it easy to get. Each block takes 9 ingots or gems. Gold, emerald and diamond only change how the pyramid looks, and netherite costs far more for the same result.</p>
+    <h3>How far does a beacon reach?</h3>
+    <p>The range is 20 blocks at level 1 and grows by 10 per level, up to 50 at level 4. It reaches that far to each side and that far below the beacon, and all the way up to the top of the world. Effects last a few seconds after you leave the range: 11 at level 1, up to 17 at level 4.</p>
+    <h3>How do I turn a beacon on?</h3>
+    <p>Craft it from 5 glass, 3 obsidian and a nether star, place it on top of the pyramid, and make sure it can see the sky. Glass and other see-through blocks above it are fine, and stained glass tints the beam. Then open it and pay one iron ingot, gold ingot, emerald, diamond or netherite ingot to pick a power.</p>
+    <h3>What does level 4 add?</h3>
+    <p>Level 4 unlocks a secondary power: Regeneration, or level II of the primary power you picked. Level II Speed, Haste, Resistance, Jump Boost or Strength is often the better choice.</p>
+  </section>
+</main>
+<script src="../shared/shell.js?v=202611171158"></script>
+<script src="../shared/view3d.js?v=202611171158"></script>
+<script src="beacon.js?v=202611171158"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const fmt = n => n.toLocaleString('en');
+  const stacks = n => n < 64 ? '' : ` (${Math.floor(n / 64)} stacks${n % 64 ? ` + ${n % 64}` : ''})`;
+  const stage = $('stage'), canvas = $('view');
+  const view = View3D(canvas, () => Math.min(stage.clientWidth, 720));
+
+  const draw = () => {
+    const L = +document.querySelector('[name=level]:checked').value;
+    const n = Beacon.total(L), r = Beacon.range(L), S = Beacon.side(L);
+    const mat = document.querySelector('[name=mat]:checked').value, block = `${mat} block`;
+    const item = { iron: 'iron ingots', gold: 'gold ingots', emerald: 'emeralds', diamond: 'diamonds', netherite: 'netherite ingots' }[mat];
+    // A netherite ingot is 4 netherite scrap (one per ancient debris) and 4 gold ingots.
+    const extra = mat === 'netherite' ? ` = ${fmt(n * 36)} ancient debris + ${fmt(n * 36)} gold ingots` : '';
+    $('stats').innerHTML = `<b>${fmt(n)}</b> ${block}s${stacks(n)} · ${fmt(n * 9)} ${item}${extra}`;
+    $('range').textContent = `range ${r} · ${2 * r + 1}×${2 * r + 1} area · ${Beacon.seconds(L)}s effects`;
+    canvas.setAttribute('aria-label', `Level ${L} beacon pyramid: ${n} blocks, range ${r} blocks`);
+
+    $('layers').innerHTML = Beacon.layers(L).map((c, i) =>
+      `<li><span>${Beacon.side(i + 1)}×${Beacon.side(i + 1)}</span><span>${c} ${block}s</span></li>`).join('');
+    $('powers').innerHTML = Beacon.POWERS.map(([name, need]) =>
+      `<li class="${need > L ? 'off' : ''}"><span>${need === 4 ? 'Regeneration or level II' : name}</span><span>level ${need}</span></li>`).join('');
+
+    // Layer y (0 at the bottom) steps in L - y blocks from the middle; the beacon stands on top.
+    const Y = L + 1, tone = new Uint8Array(S * Y * S);
+    for (let y = 0; y < L; y++) {
+      const k = L - y;
+      for (let z = L - k; z <= L + k; z++) for (let x = L - k; x <= L + k; x++) tone[(y * S + z) * S + x] = 1;
+    }
+    tone[(L * S + L) * S + L] = 2;
+    view.show({ dims: [S, Y, S], tone });
+  };
+
+  document.querySelectorAll('[name=mat]').forEach(r => r.onchange = draw);
+  document.querySelectorAll('[name=level]').forEach(r => r.onchange = () => {
+    draw(); stage.classList.remove('pop'); void stage.offsetWidth; stage.classList.add('pop');
+  });
+  addEventListener('resize', view.draw);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', view.draw);
+  draw();
+})();
+</script>
+</body>
+</html>
