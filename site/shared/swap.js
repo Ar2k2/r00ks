@@ -1,6 +1,6 @@
 // Substitute picker: a popover of the blocks closest in color to the one clicked.
 // Swap.open(anchor, block, pool, textures, { onPick(block), actions: [{ label, run }] }). Needs blocks.js.
-// Also a block search: pass { list, title, focus: false } with block = null; reopening on the same anchor updates in place.
+// Swap.search(box, blocks, textures, onPick(block or null when cleared)): call on each input in a block name box.
 (() => {
   const SHOW = 8;
   let open = null;
@@ -58,5 +58,20 @@
   addEventListener('keydown', e => e.key === 'Escape' && close());
   addEventListener('resize', () => open?.anchor !== document.activeElement && close()); // a phone keyboard opening resizes too
 
-  window.Swap = { open: show, close };
+  // Typing a block name pops up matching blocks with their colors; Enter takes the top one, Down moves into the list.
+  const search = (box, blocks, textures, onPick) => {
+    const q = box.value.trim().toLowerCase();
+    if (!q) { close(); onPick(null); return; }
+    const seen = new Set(), list = blocks.filter(b => b.name.toLowerCase().includes(q) && !seen.has(b.name) && seen.add(b.name))
+      .sort((a, b) => b.name.toLowerCase().startsWith(q) - a.name.toLowerCase().startsWith(q)).slice(0, SHOW);
+    show(box, null, null, textures, { list, title: list.length ? 'pick a block' : '', focus: false, onPick: b => { box.value = b.name; onPick(b); } });
+    box.onkeydown = e => {
+      const first = open?.anchor === box && open.el.querySelector('.swap-list button');
+      if (!first) return;
+      if (e.key === 'Enter') { e.preventDefault(); first.click(); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); first.focus(); }
+    };
+  };
+
+  window.Swap = { open: show, close, search };
 })();

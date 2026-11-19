@@ -290,6 +290,8 @@ a.tcard:hover .pv > g { transform: scale(1.06); }
   background: var(--control); border: 1px solid var(--control-border); color: var(--text); font: 14px var(--body); }
 .color { display: grid; gap: 8px; }
 .color div { display: flex; gap: 8px; }
+/* The color swatch hops when a block is picked for it. */
+.color.got input[type=color] { animation: hop .5s var(--spring); }
 .color input[type=color] {
   width: 44px; height: 44px; padding: 0; border: 1px solid var(--control-border); border-radius: 10px;
   background: none; cursor: pointer; transition: transform .2s var(--spring);
