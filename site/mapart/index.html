@@ -11,11 +11,11 @@
 <meta property="og:title" content="Minecraft Map Art Generator (Flat & Staircase) · R00K’s">
 <meta property="og:description" content="Turn any image into Minecraft Java map art, flat or staircased, with a block list and a one-command build. The image never leaves your browser.">
 <meta property="og:url" content="https://rooks.rookstudio.net/mapart/">
-<meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
+<meta property="og:image" content="https://rooks.rookstudio.net/mapart/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebApplication", "name": "Minecraft Map Art Generator (Flat & Staircase)", "url": "https://rooks.rookstudio.net/mapart/", "description": "Turn any image into Minecraft Java map art, flat or staircased, with a block list and a one-command build. The image never leaves your browser.", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Any", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "R00K’s", "item": "https://rooks.rookstudio.net/"}, {"@type": "ListItem", "position": 2, "name": "Color & art", "item": "https://rooks.rookstudio.net/color/"}, {"@type": "ListItem", "position": 3, "name": "Map art", "item": "https://rooks.rookstudio.net/mapart/"}]}]}</script>
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611171422">
+<link rel="stylesheet" href="../shared/shell.css?v=202611191126">
 <style>
   .controls { display: grid; grid-template-columns: auto 1fr 1fr; gap: 16px 20px; align-items: end; }
   .controls .view { grid-column: auto; }
@@ -95,14 +95,18 @@
     <p class="place">The build starts with a line of cobblestone just north of the art, which the top row's shade is measured against, so the art itself begins 3 blocks south of the command block. To line it up with a map, put the command block on the map's west edge and 3 blocks north of its north edge. Map edges fall every 128 blocks at X and Z of −64, 64, 192 and so on, so for the map around 0, 0 that is X −64, Z −67.</p>
     <div id="build"></div>
   </section>
+  <section class="about related" aria-labelledby="related-h">
+    <h2 id="related-h">Related tools</h2>
+    <nav class="tools cards" data-related="mosaic gradient commands" aria-label="Related tools"><a href="../mosaic/">Image mosaic: Turn a picture into a wall or floor of blocks.</a><a href="../gradient/">Gradient: Smooth block gradients between any two colors.</a><a href="../commands/">Command builder: Build give, summon and component commands.</a></nav>
+  </section>
 </main>
-<script src="../shared/shell.js?v=202611171422"></script>
-<script src="../gradient/engine.js?v=202611171422"></script>
-<script src="../mosaic/mosaic.js?v=202611171422"></script>
-<script src="../shared/build.js?v=202611171422"></script>
-<script src="../shared/blocks.js?v=202611171422"></script>
-<script src="../shared/swap.js?v=202611171422"></script>
-<script src="mapart.js?v=202611171422"></script>
+<script src="../shared/shell.js?v=202611191126"></script>
+<script src="../gradient/engine.js?v=202611191126"></script>
+<script src="../mosaic/mosaic.js?v=202611191126"></script>
+<script src="../shared/build.js?v=202611191126"></script>
+<script src="../shared/blocks.js?v=202611191126"></script>
+<script src="../shared/swap.js?v=202611191126"></script>
+<script src="mapart.js?v=202611191126"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);

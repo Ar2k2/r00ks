@@ -3,6 +3,7 @@
 Pages get breadcrumbs (Home > category > tool) plus WebSite (home), CollectionPage (hubs) or WebApplication
 (tools), built from each page's own title/description and the tool list in shared/shell.js. lastmod is the
 last commit that changed the page's folder beyond ?v= restamps (today if it has such uncommitted changes).
+Tool pages also get a "Related tools" section (plain links, from RELATED below) before </main>.
 Idempotent. Run before publishing, after version.py:
 
     python3 tools/seo.py
@@ -17,7 +18,15 @@ STAMP = r'\?v=[0-9]{12}'
 shell = open(os.path.join(SITE, 'shared/shell.js')).read()
 cats = {m[1]: (m[2], m[3]) for m in re.finditer(r"\{ id: '(\w+)', name: '([^']+)', path: '([^']+)' \}", shell)}
 tools = {m[2]: (m[1], m[3]) for m in re.finditer(r"name: '([^']+)', path: '([^']+)', cat: '(\w+)'", shell)}
-assert cats and tools, 'tool list in shell.js not found'
+descs = {m[1]: m[2] for m in re.finditer(r"path: '([^']+)', cat: [^\n]*\n\s*desc: '([^']+)'", shell)}
+RELATED = {  # each tool's closest neighbours, by tool folder
+    'gradient': 'palette mosaic mapart', 'palette': 'gradient house mosaic', 'mosaic': 'mapart gradient palette',
+    'mapart': 'mosaic gradient commands', 'banner': 'fireworks commands palette', 'fireworks': 'banner commands',
+    'nether': 'stronghold slime', 'stronghold': 'nether slime', 'slime': 'nether stronghold',
+    'shapes': 'roofs house beacon', 'roofs': 'house shapes', 'house': 'roofs palette shapes',
+    'beacon': 'shapes commands', 'anvil': 'commands beacon', 'commands': 'anvil banner fireworks',
+}
+assert cats and tools and len(descs) == len(tools), 'tool list in shell.js not found'
 
 def git(*a):
     return subprocess.run(['git', *a], cwd=ROOT, capture_output=True, text=True)
@@ -75,6 +84,14 @@ for path in paths:
     block = f'<script type="application/ld+json">{ld(path, s)}</script>\n'
     t = re.sub(r'<script type="application/ld\+json">.*?</script>\n', '', s, flags=re.S)
     t = t.replace('<link rel="icon"', block + '<link rel="icon"', 1)
+    t = re.sub(r'  <section class="about[^"]*" aria-labelledby="related-h">.*?</section>\n', '', t, flags=re.S)
+    if path in tools:
+        ids = RELATED[path[:-1]]  # shell.js turns these plain links into tool cards
+        links = ''.join(f'<a href="../{r}/">{tools[r + "/"][0]}: {descs[r + "/"]}</a>' for r in ids.split())
+        rel = (f'  <section class="about related" aria-labelledby="related-h">\n    <h2 id="related-h">Related tools</h2>\n'
+               f'    <nav class="tools cards" data-related="{ids}" aria-label="Related tools">{links}</nav>\n  </section>\n')
+        t = t.replace('</main>', rel + '</main>', 1)
+        assert rel in t, f'no </main> in {f}'
     assert block in t, f'no icon link to anchor JSON-LD in {f}'
     if t != s:
         open(f, 'w').write(t)

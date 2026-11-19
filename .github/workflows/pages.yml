@@ -14,9 +14,20 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - run: for t in tools/test_*.js; do node "$t" || exit 1; done
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
       - id: deployment
         uses: actions/deploy-pages@v4
+      # IndexNow: tell Bing and friends which pages changed (their sitemap lines changed). Never fails the deploy.
+      - continue-on-error: true
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          urls=$(git diff "$BEFORE" HEAD -- site/sitemap.xml | grep -o '^+.*<loc>[^<]*' | sed 's/.*<loc>//' | jq -Rnc '[inputs]')
+          [ "$urls" = "[]" ] || [ -z "$urls" ] && exit 0
+          curl -sS -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json; charset=utf-8' \
+            -d "{\"host\":\"rooks.rookstudio.net\",\"key\":\"96fedafbbcbf19496efada59b863abf2\",\"urlList\":$urls}" -w '%{http_code}\n'

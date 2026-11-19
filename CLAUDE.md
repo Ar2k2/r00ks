@@ -24,8 +24,13 @@ libraries, and ask before adding any dependency.
 - **Search extras:** before every publish, after `version.py`, run
   `python3 tools/seo.py`. It writes JSON-LD (breadcrumbs plus
   WebApplication/CollectionPage/WebSite) into every page in `sitemap.xml` and
-  sets each sitemap `<lastmod>` from git, ignoring `?v=` restamps. A new
-  tool only needs its sitemap line and its entry in `shell.js`.
+  sets each sitemap `<lastmod>` from git, ignoring `?v=` restamps. It also
+  writes each tool's "Related tools" section from its `RELATED` map (add new
+  tools there). A new tool also needs its sitemap line, its entry in
+  `shell.js`, and a run of `python3 tools/og.py` for its link preview image.
+- **IndexNow:** after deploying, `pages.yml` pings IndexNow (Bing, DuckDuckGo,
+  Yandex) with the pages whose sitemap lines changed. The key file is
+  `site/96fedafbbcbf19496efada59b863abf2.txt`; keep it.
 - **Feature flags** for tools not ready for release: give the tool
   `flag: 'id'` in `shell.js`. It then shows as "soon" everywhere unless the
   browser opted in by visiting any page with `?flags=id` (comma-separated,
@@ -80,8 +85,8 @@ faint tint on the backgrounds) derives from `--seed` in `shell.css` via
 for the Wilderness Bound release (26.3). Switch back to blue ice `#75a8fd` when 26.4 drops. To change it, set `--seed` and the
 matching fixed values in its `@supports not` fallback block, update the same fixed colors in `shared/favicon.svg`
 (a static copy of the logo), and end the home card's `strip` in the same color.
-Also update the colors in `tools/og-image.html` and regenerate `shared/og.png`
-(the link preview image; the command is in that file).
+Also update the colors in `tools/og-image.html` and regenerate the link preview images
+(`shared/og.png` and each tool's `og.png`) with `python3 tools/og.py`.
 
 **Search:** `site/sitemap.xml` lists every page; add a line for each new tool
 or hub. Also add a plain `<a href>` for each new tool inside `<div data-all-tools>`

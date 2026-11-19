@@ -1,6 +1,7 @@
 <!doctype html>
-<!-- Source for site/shared/og.png, the link preview image. Colors match the seed; regenerate when it changes:
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --hide-scrollbars --window-size=1200,630 --virtual-time-budget=3000 --screenshot=site/shared/og.png tools/og-image.html -->
+<!-- Source for the link preview images: site/shared/og.png (no query) and site/<tool>/og.png
+(?name=&desc=&icon=, filled in by tools/og.py). Colors match the seed; regenerate when it changes:
+python3 tools/og.py -->
 <meta charset="utf-8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@600;700&family=IBM+Plex+Mono:wght@400&display=swap">
 <style>
@@ -11,8 +12,14 @@
   p { margin: 18px 0 0; font: 38px 'IBM Plex Mono', monospace; color: #ab4500; }
   .strip { position: absolute; left: 0; right: 0; bottom: 0; height: 28px;
     background: linear-gradient(in oklab 90deg, #e08e2b, #a42e26, #c75b17); }
+  /* tool mode: small logo + site name top left, big tool icon and name */
+  .brand { position: absolute; top: 56px; left: 96px; display: flex; align-items: center; gap: 18px; font-size: 40px; font-weight: 700; letter-spacing: -.02em; }
+  .brand svg { width: 72px; }
+  .tool { width: 220px; color: #ab4500; }
+  .tool-mode h1 { font-size: 96px; }
+  .tool-mode p { font-size: 34px; max-width: 680px; line-height: 1.3; }
 </style>
-<svg viewBox="18 0 234 226">
+<svg class="logo" viewBox="18 0 234 226">
   <g fill="#1b1b1f"><path d="M30 40H58V58H70V40H100V58H112V40H140V86H30Z"/><path d="M44 92H126L132 192H38Z"/><rect x="24" y="198" width="122" height="22"/></g>
   <g stroke="#ab4500" fill="none" stroke-linecap="square">
     <path d="M126 40V12" stroke-width="6"/><path d="M104 12H246M126 30H246" stroke-width="5"/>
@@ -27,3 +34,16 @@
   <p>minecraft java tools</p>
 </div>
 <div class="strip"></div>
+<script>
+  const q = new URLSearchParams(location.search);
+  if (q.get('name')) {
+    document.body.classList.add('tool-mode');
+    const logo = document.querySelector('.logo'), brand = document.createElement('div');
+    brand.className = 'brand';
+    brand.append(logo, 'R00K’s');
+    document.querySelector('h1').textContent = q.get('name');
+    document.querySelector('p').textContent = q.get('desc');
+    document.body.insertAdjacentHTML('afterbegin', `<svg class="tool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${q.get('icon')}</svg>`);
+    document.body.prepend(brand);
+  }
+</script>

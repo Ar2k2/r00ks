@@ -261,8 +261,10 @@
   if (all) all.innerHTML = cats.map((c, i) =>
     `<h2 class="tools-h in" style="--i:${i + 2}">${c.name}</h2><nav class="panel tools in" style="--i:${i + 2}" data-cat="${c.id}" aria-label="${c.name}"></nav>`).join('');
   // Hub pages use <nav class="tools cards">: one card per tool with a larger sample on top.
+  // Tool pages list related tools the same way with data-related="id id".
   document.querySelectorAll('.tools.cards').forEach(list => {
-    list.innerHTML = tools.filter(t => t.cat === list.dataset.cat).map((t, i) => {
+    const picked = list.dataset.related ? list.dataset.related.split(' ').map(id => tools.find(t => t.id === id)) : tools.filter(t => t.cat === list.dataset.cat);
+    list.innerHTML = picked.map((t, i) => {
       const inner = `${preview(t.id)}<span class="tcard-t"><i class="ico">${icon(t.id)}</i><b>${t.name}</b>${t.built ? '' : '<small class="tag">soon</small>'}</span><span>${t.desc}</span>`;
       return t.built ? `<a class="tcard in" style="--i:${i + 1}" href="${root}${t.path}">${inner}</a>` : `<div class="tcard soon in" style="--i:${i + 1}">${inner}</div>`;
     }).join('');
