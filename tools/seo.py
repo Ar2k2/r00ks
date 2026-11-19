@@ -21,10 +21,10 @@ cats = {m[1]: (m[2], m[3]) for m in re.finditer(r"\{ id: '(\w+)', name: '([^']+)
 tools = {m[2]: (m[1], m[3]) for m in re.finditer(r"name: '([^']+)', path: '([^']+)', cat: '(\w+)'", shell)}
 descs = {m[1]: m[2] for m in re.finditer(r"path: '([^']+)', cat: [^\n]*\n\s*desc: '([^']+)'", shell)}
 RELATED = {  # each tool's closest neighbours, by tool folder
-    'gradient': 'palette mosaic mapart', 'palette': 'gradient house mosaic', 'mosaic': 'mapart gradient palette',
+    'gradient': 'palette mosaic mapart', 'palette': 'gradient design mosaic', 'mosaic': 'mapart gradient palette',
     'mapart': 'mosaic gradient commands', 'banner': 'fireworks commands palette', 'fireworks': 'banner commands',
     'nether': 'stronghold slime', 'stronghold': 'nether slime', 'slime': 'nether stronghold',
-    'shapes': 'roofs house beacon', 'roofs': 'house shapes', 'house': 'roofs palette shapes',
+    'shapes': 'design roofs beacon', 'roofs': 'design shapes', 'design': 'roofs shapes palette',
     'beacon': 'shapes commands', 'anvil': 'commands beacon', 'commands': 'anvil banner fireworks',
 }
 assert cats and tools and len(descs) == len(tools), 'tool list in shell.js not found'

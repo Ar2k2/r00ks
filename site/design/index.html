@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft 3D Build Designer: Houses, Domes &amp; Arches · R00K’s</title>
+<meta name="description" content="Design a Minecraft Java house, dome or arch in 3D and reshape it by dragging the model, with real textures from your own game.">
+<link rel="canonical" href="https://rooks.rookstudio.net/design/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="R00K’s">
+<meta property="og:title" content="Minecraft 3D Build Designer: Houses, Domes &amp; Arches · R00K’s">
+<meta property="og:description" content="Design a Minecraft Java house, dome or arch in 3D and reshape it by dragging the model, with real textures from your own game.">
+<meta property="og:url" content="https://rooks.rookstudio.net/design/">
+<meta property="og:image" content="https://rooks.rookstudio.net/design/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebApplication", "name": "Minecraft 3D Build Designer: Houses, Domes & Arches", "url": "https://rooks.rookstudio.net/design/", "description": "Design a Minecraft Java house, dome or arch in 3D and reshape it by dragging the model, with real textures from your own game.", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Any", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "R00K’s", "item": "https://rooks.rookstudio.net/"}, {"@type": "ListItem", "position": 2, "name": "Build", "item": "https://rooks.rookstudio.net/build/"}, {"@type": "ListItem", "position": 3, "name": "3D designer", "item": "https://rooks.rookstudio.net/design/"}]}]}</script>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../shared/shell.css?v=202611191318">
+<style>
+  main.wide { max-width: 1440px; }
+  .controls { display: grid; gap: 18px; }
+  .pills { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
+  @media (max-width: 560px) { .pills { grid-template-columns: 1fr; } }
+  /* Three-way version of the shared pill. */
+  .view.three { grid-template-columns: repeat(3, 1fr); }
+  .three .view-hl { width: calc((100% - 8px) / 3); }
+  .view.three:has([value=dome]:checked) .view-hl { transform: translateX(100%); }
+  .view.three:has([value=arch]:checked) .view-hl { transform: translateX(200%); }
+
+  .slider { display: grid; grid-template-columns: 11ch 1fr auto; gap: 14px; align-items: center; }
+  .slider input[type=number] {
+    width: 7ch; height: 36px; padding: 0 8px; border-radius: 10px; text-align: right;
+    background: var(--control); border: 1px solid var(--control-border); color: var(--text); font: 500 14px var(--mono);
+  }
+  .slider input[type=number]:focus { border-color: var(--c); outline: none; }
+  .slider output { font: 500 14px var(--mono); min-width: 7ch; text-align: right; }
+  .opts { display: flex; gap: 8px; }
+  .mats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .mats label { display: grid; grid-template-columns: 7ch 1fr; gap: 10px; align-items: center; }
+  .mats select {
+    min-width: 0; height: 36px; padding: 0 8px; border-radius: 10px;
+    background: var(--control); border: 1px solid var(--control-border); color: var(--text); font: 500 14px var(--mono);
+  }
+
+  .stats { font: 500 13px var(--mono); color: var(--muted); }
+  .stats b { color: var(--text); font-weight: 600; }
+  @keyframes pop-in { from { transform: scale(.94); opacity: .4; } }
+
+  /* The designer: controls on the side, the house big and textured. */
+  .designer {
+    display: grid; grid-template-columns: 370px 1fr; height: clamp(560px, calc(100dvh - 190px), 940px);
+    padding: 0; overflow: hidden;
+  }
+  .d-group { display: grid; gap: 14px; }
+  .d-group > h2 { margin: 0; }
+  .d-side {
+    overflow-y: auto; padding: 20px; display: grid; align-content: start; gap: 18px;
+    background: var(--panel); border-right: 1px solid var(--panel-border);
+  }
+  .d-head { display: flex; justify-content: space-between; align-items: center; }
+  .d-head h2 { margin: 0; font: 600 20px var(--head); }
+  .d-side .controls.panel { margin: 0; padding: 0; border: 0; box-shadow: none; background: none; }
+  .d-side .mats { grid-template-columns: 1fr; }
+  .d-jar { display: grid; gap: 12px; padding: 16px; border-radius: 16px; background: var(--raised); border: 1px solid var(--panel-border); }
+  .d-jar h3 { margin: 0; font: 600 15px var(--head); }
+  .d-jar p, .d-steps, .d-jar details { margin: 0; font-size: 13px; color: var(--muted); }
+  .d-steps { padding-left: 18px; display: grid; gap: 6px; }
+  .d-jar code { font: 12px var(--mono); background: var(--control); padding: 1px 5px; border-radius: 6px; overflow-wrap: anywhere; }
+  .d-jar summary { cursor: pointer; }
+  .d-jar input { display: none; }
+  .d-jar .btn { cursor: pointer; }
+  .d-jar.loaded h3, .d-jar.loaded .d-steps, .d-jar.loaded details { display: none; }
+  .d-jar.loaded .btn { background: var(--panel); color: var(--text); border-color: var(--control-border); }
+  .d-counts { display: grid; gap: 6px; }
+  .d-house { display: grid; gap: 18px; }
+  [data-kind][hidden] { display: none; }
+  .d-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .d-chips .btn { height: 34px; padding: 0 12px; font-size: 13px; }
+  .d-chips .btn[aria-pressed=true] { background: var(--text); color: var(--bg); border-color: transparent; }
+  .d-prof { display: grid; gap: 10px; }
+  .d-tip { margin: 0; font-size: 12px; color: var(--faint); }
+  .d-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .d-actions .btn { height: 38px; font-size: 13px; }
+  .d-stage { position: relative; min-height: 0; background: radial-gradient(ellipse at 50% 40%, var(--panel), var(--bg) 75%); }
+  .d-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+  .d-stage canvas:active { cursor: grabbing; }
+  .d-hint { position: absolute; left: 0; right: 0; bottom: 16px; margin: 0; text-align: center; font: 12px var(--mono); color: var(--faint); pointer-events: none; }
+  @media (max-width: 860px) {
+    .designer { grid-template-columns: 1fr; height: auto; }
+    .d-stage { order: -1; height: 56dvh; }
+    .d-side { overflow: visible; border-right: 0; border-top: 1px solid var(--panel-border); }
+  }
+</style>
+</head>
+<body data-tool="design">
+<main class="wide">
+  <header class="head">
+    <h1>3D designer</h1>
+    <p>Design a house, a dome or an arch in 3D, and reshape it by dragging the model itself. Load your game to see real textures.</p>
+  </header>
+
+  <section class="panel designer" aria-label="3D designer">
+    <aside class="d-side">
+      <section class="d-jar" id="d-jar" aria-label="Textures">
+        <h3>See it with real textures</h3>
+        <p id="jar-text">Load your own Minecraft jar and the build shows real blocks. It is read here in your browser and never uploaded.</p>
+        <ol class="d-steps">
+          <li>Open your <code>versions</code> folder: <span id="d-path"></span></li>
+          <li>Open the folder for your version, like <code>26.3</code>, and pick <code>26.3.jar</code>. A resource pack .zip works too.</li>
+        </ol>
+        <details><summary>On another computer?</summary><p id="d-paths"></p></details>
+        <label class="btn primary">Load jar or pack<input type="file" id="jar" accept=".jar,.zip"></label>
+      </section>
+      <div class="view three" role="radiogroup" aria-label="What to design">
+        <i class="view-hl"></i>
+        <label><input type="radio" name="kind" value="house" checked><span>House</span></label>
+        <label><input type="radio" name="kind" value="dome"><span>Dome</span></label>
+        <label><input type="radio" name="kind" value="arch"><span>Arch</span></label>
+      </div>
+      <div><span class="label">start from</span><div class="d-chips" id="d-presets" aria-label="Presets"></div></div>
+      <div class="d-prof">
+        <span class="label">shape</span>
+        <div class="d-chips" id="d-profiles" aria-label="Shapes"></div>
+        <p class="d-tip" id="d-tip"></p>
+      </div>
+      <div data-kind="house" class="d-house">
+      <section class="controls d-group" aria-labelledby="roof-h">
+        <h2 class="label" id="roof-h">roof</h2>
+    <div class="pills">
+      <div class="view" role="radiogroup" aria-label="Roof type">
+        <i class="view-hl"></i>
+        <label><input type="radio" name="type" value="gable" checked><span>Gable</span></label>
+        <label><input type="radio" name="type" value="hip"><span>Hip</span></label>
+      </div>
+    </div>
+    <label class="slider"><span class="label">height</span>
+      <input type="range" min="1" max="24" value="6" aria-label="Roof height slider" data-pair="rh">
+      <input type="number" id="rh" min="1" max="24" value="6" aria-label="Roof height in layers; the shape stretches or squashes to fit">
+    </label>
+    <label class="slider"><span class="label">width</span>
+      <input type="range" min="1" max="64" value="9" aria-label="Width slider" data-pair="w">
+      <input type="number" id="w" min="1" max="64" value="9" aria-label="Width in blocks, across the slope">
+    </label>
+    <label class="slider"><span class="label">length</span>
+      <input type="range" min="1" max="64" value="13" aria-label="Length slider" data-pair="l">
+      <input type="number" id="l" min="1" max="64" value="13" aria-label="Length in blocks, along the ridge">
+    </label>
+    <label class="slider"><span class="label">layer</span>
+      <input type="range" id="layer" min="1" value="1" aria-label="Layer, from the bottom">
+      <output id="layer-out">1 / 1</output>
+    </label>
+    <label class="slider"><span class="label">overhang</span>
+      <input type="range" min="0" max="3" value="1" aria-label="Overhang slider" data-pair="o">
+      <input type="number" id="o" min="0" max="3" value="1" aria-label="Overhang in blocks past the walls">
+    </label>
+    <div class="mats">
+      <label><span class="label">roof</span><select id="mat-roof" aria-label="Roof material"></select></label>
+      <label><span class="label">trim</span><select id="mat-trim" aria-label="Trim material, for the eaves and gable edges"></select></label>
+      <label><span class="label">walls</span><select id="mat-wall" aria-label="Wall block, for the preview"></select></label>
+    </div>
+        <div class="opts">
+          <label class="chip"><input type="checkbox" id="hollow" checked><span>Hollow</span></label>
+          <label class="chip"><input type="checkbox" id="lip"><span>Eave lip</span></label>
+        </div>
+      </section>
+      <section class="controls d-group" aria-labelledby="walls-h">
+        <h2 class="label" id="walls-h">walls</h2>
+        <label class="slider"><span class="label">height</span>
+          <input type="range" min="1" max="16" value="4" aria-label="Wall height slider" data-pair="wh">
+          <input type="number" id="wh" min="1" max="16" value="4" aria-label="Wall height in blocks">
+        </label>
+        <div class="mats">
+          <label><span class="label">base</span><select id="mat-base" aria-label="Base row of the walls"></select></label>
+          <label><span class="label">corners</span><select id="mat-corner" aria-label="Corner pillars"></select></label>
+        </div>
+        <div class="opts">
+          <label class="chip"><input type="checkbox" id="win" checked><span>Windows</span></label>
+          <label class="chip"><input type="checkbox" id="door" checked><span>Door</span></label>
+        </div>
+      </section>
+      </div>
+      <section class="controls d-group" data-kind="dome" aria-labelledby="dome-h" hidden>
+        <h2 class="label" id="dome-h">dome</h2>
+        <label class="slider"><span class="label">across</span>
+          <input type="range" min="3" max="64" value="11" aria-label="Diameter slider" data-pair="dd">
+          <input type="number" id="dd" min="3" max="64" value="11" aria-label="Diameter in blocks">
+        </label>
+        <label class="slider"><span class="label">height</span>
+          <input type="range" min="1" max="64" value="6" aria-label="Dome height slider" data-pair="dh">
+          <input type="number" id="dh" min="1" max="64" value="6" aria-label="Dome height in layers; the shape stretches or squashes to fit">
+        </label>
+        <label class="slider"><span class="label">walls</span>
+          <input type="range" min="0" max="24" value="4" aria-label="Wall height slider" data-pair="dw">
+          <input type="number" id="dw" min="0" max="24" value="4" aria-label="Height of the round wall under the dome, in blocks">
+        </label>
+        <div class="mats">
+          <label><span class="label">dome</span><select id="mat-dome" aria-label="Dome material"></select></label>
+          <label><span class="label">walls</span><select id="mat-dwall" aria-label="Wall material"></select></label>
+          <label><span class="label">base</span><select id="mat-dbase" aria-label="Base row of the walls"></select></label>
+        </div>
+        <div class="opts"><label class="chip"><input type="checkbox" id="dhollow" checked><span>Hollow</span></label></div>
+      </section>
+      <section class="controls d-group" data-kind="arch" aria-labelledby="arch-h" hidden>
+        <h2 class="label" id="arch-h">arch</h2>
+        <label class="slider"><span class="label">width</span>
+          <input type="range" min="1" max="32" value="5" aria-label="Opening width slider" data-pair="aw">
+          <input type="number" id="aw" min="1" max="32" value="5" aria-label="Width of the opening in blocks">
+        </label>
+        <label class="slider"><span class="label">rise</span>
+          <input type="range" min="1" max="32" value="3" aria-label="Rise slider" data-pair="ar">
+          <input type="number" id="ar" min="1" max="32" value="3" aria-label="Height of the curved top in blocks">
+        </label>
+        <label class="slider"><span class="label">legs</span>
+          <input type="range" min="0" max="24" value="4" aria-label="Legs slider" data-pair="al">
+          <input type="number" id="al" min="0" max="24" value="4" aria-label="Height of the straight sides under the curve">
+        </label>
+        <label class="slider"><span class="label">thickness</span>
+          <input type="range" min="1" max="4" value="1" aria-label="Thickness slider" data-pair="at">
+          <input type="number" id="at" min="1" max="4" value="1" aria-label="Thickness of the arch in blocks">
+        </label>
+        <label class="slider"><span class="label">depth</span>
+          <input type="range" min="1" max="16" value="1" aria-label="Depth slider" data-pair="ad">
+          <input type="number" id="ad" min="1" max="16" value="1" aria-label="Depth of the arch in blocks, front to back">
+        </label>
+        <div class="mats"><label><span class="label">block</span><select id="mat-arch" aria-label="Arch material"></select></label></div>
+      </section>
+      <div class="d-counts"><span class="stats" id="d-total"></span><span class="stats" id="d-house"></span></div>
+      <div class="d-actions">
+        <button class="btn copy" id="d-share" type="button">Copy link</button>
+        <button class="btn" id="d-save" type="button">Save image</button>
+        <label class="chip"><input type="checkbox" id="spin"><span>Spin</span></label>
+      </div>
+    </aside>
+    <div class="d-stage">
+      <canvas id="d-canvas" role="img"></canvas>
+      <p class="d-hint">drag the build to reshape · around it to turn</p>
+    </div>
+  </section>
+
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">How the 3D designer works</h2>
+    <p>Pick what to build at the top: a house, a dome or an arch. Start from a preset, then shape it by dragging the model itself. Hover over the build and the part a drag would change lights up. Drag it sideways to move an edge in or out, or up and down to change a height. Drag the empty space around the build to turn it, and scroll or pinch to zoom. The sliders do the same things when you want an exact number. When something changes, only the new blocks pop in; everything else stays put.</p>
+    <h3>How do I shape a roof?</h3>
+    <p>The roof works like the <a href="../roofs/">roof generator</a>: gable or hip, with an overhang past the walls and separate blocks for the roof and its trim. Pick a shape to start from: 45°, shallow or steep, a gambrel (steep, then shallow, like a barn), a mansard (steep sides and a flat top), a bell (flared eaves and a steep crown) or flat. Then grab a layer of the roof and drag it in or out to set where that layer's edge sits. The layers above follow, so pulling an edge in lowers the roof. A layer that steps in one block from the one below gets stairs, two or more gets slabs, and one that rises straight up gets full blocks. Drag the roof up or down to change its height: the shape stretches to fit. Drag a wall outward to make the house wider or longer, or up to make it taller.</p>
+    <h3>How do domes work?</h3>
+    <p>A dome sits on a round wall, which can be zero blocks tall for a dome on the ground. Round is half a sphere, matching the <a href="../shapes/">circle and sphere generator</a>. Shallow is lower, pointed rises to a tip, and onion swells out past its base before drawing in to a point. Grab any layer of the dome and drag it in or out: the curve bends smoothly around it, so you can pinch a waist or flare the bottom. Drag the dome up or down for its height, and the wall outward to make it wider.</p>
+    <h3>How do arches work?</h3>
+    <p>An arch has straight legs and a curved top: round, pointed, shallow (a flat curve, like a bridge) or flat (a plain doorway). Drag the inside of the curve to reshape it, the top up or down for the rise, the legs for their height, the outside to make it thicker and the front to make it deeper.</p>
+    <h3>Where do the windows and door go?</h3>
+    <p>Windows go every third block along each wall, starting two blocks in from a corner, one block above the floor (or above the base row). Walls five or more blocks high get windows two blocks tall. The door sits in the middle of the front wall. Turn either off with the switches under the walls.</p>
+    <h3>How do I see real Minecraft textures?</h3>
+    <p>Load your own Minecraft jar or a resource pack. The textures belong to Mojang, so this site doesn't include them; your file is read in your browser and never uploaded. Without one, each block shows its average color. Each version you have played has a jar in the launcher's <code>versions</code> folder, for example <code>versions/26.3/26.3.jar</code>.</p>
+    <h3>Can I share a design?</h3>
+    <p>Copy link saves the whole design in a link you can send to a friend. Save image downloads a picture of it, and Spin turns it slowly like a turntable. The counts under the controls list every block, so you know what to gather.</p>
+  </section>
+  <section class="about related" aria-labelledby="related-h">
+    <h2 id="related-h">Related tools</h2>
+    <nav class="tools cards" data-related="roofs shapes palette" aria-label="Related tools"><a href="../roofs/">Roofs & arches: Gable and hip roofs, round and pointed arches.</a><a href="../shapes/">Circles & spheres: Circles, spheres and domes, block by block.</a><a href="../palette/">Palette: Build block palettes that sit well together.</a></nav>
+  </section>
+</main>
+<script src="../shared/shell.js?v=202611191318"></script>
+<script src="../shared/jar.js?v=202611191318"></script>
+<script src="../roofs/roofs.js?v=202611191318"></script>
+<script src="kinds.js?v=202611191318"></script>
+<script src="design.js?v=202611191318"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const pick = name => document.querySelector(`[name=${name}]:checked`).value;
+  const fmt = n => n.toLocaleString('en');
+  const num = id => { const el = $(id); return Math.min(+el.max, Math.max(+el.min, Math.round(+el.value) || +el.min)); };
+
+  // Blocks: stairs-and-slabs blocks for the roof, trim and walls, plus logs for corner pillars.
+  const MATS = Roofs.STAIR_BLOCKS.map(([name, id]) => ({ name, id, full: id.replace(/_/g, ' '), hex: '' }));
+  const LOGS = ['oak', 'spruce', 'birch', 'jungle', 'acacia', 'dark_oak', 'mangrove', 'cherry', 'pale_oak', 'poplar']
+    .flatMap(t => [`${t}_log`, `stripped_${t}_log`]).concat('crimson_stem', 'warped_stem', 'stripped_crimson_stem', 'stripped_warped_stem')
+    .map(id => ({ name: id.replace(/_/g, ' '), id, full: id.replace(/_/g, ' '), hex: '' }));
+  const BLK = Object.fromEntries([...MATS, ...LOGS].map(m => [m.id, m]));
+  const options = (list, none) => (none ? `<option value="">${none}</option>` : '') + list.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  for (const [id, v] of [['mat-roof', 'dark_oak_planks'], ['mat-trim', 'spruce_planks'], ['mat-wall', 'stone_bricks']]) { $(id).innerHTML = options(MATS); $(id).value = v; }
+  $('mat-base').innerHTML = options(MATS, 'none'); $('mat-base').value = 'cobblestone';
+  $('mat-corner').innerHTML = options([...LOGS, ...MATS], 'none'); $('mat-corner').value = 'spruce_log';
+  for (const [id, v] of [['mat-dome', 'deepslate_tiles'], ['mat-dwall', 'stone_bricks'], ['mat-arch', 'stone_bricks']]) { $(id).innerHTML = options(MATS); $(id).value = v; }
+  $('mat-dbase').innerHTML = options(MATS, 'none'); $('mat-dbase').value = 'cobbled_deepslate';
+  const kind = () => pick('kind');
+  const mat = part => BLK[$('mat-' + part).value];
+  // Average colors and texture names from the gradient tool's data. A log's rings ("end") go on top
+  // and bottom and its bark ("side") around it, like the game; other blocks use their top and side views.
+  const textures = new Map(), imgs = new Map();
+  fetch('../gradient/blocks.json').then(r => r.json()).then(d => {
+    for (const m of Object.values(BLK)) {
+      const faces = d.blocks.filter(b => b.id === m.id);
+      if (!faces.length) continue;
+      m.hex = faces[0].hex; m.full = faces[0].name.toLowerCase();
+      m.top = (faces.find(b => b.face === 'end' || b.face === 'top') || faces.find(b => b.views.includes('t')) || faces[0]).tex;
+      m.side = (faces.find(b => b.face === 'side') || faces.find(b => b.views.includes('s')) || faces[0]).tex;
+    }
+    Jar.wire($('jar'), $('jar-text'), [...d.blocks.filter(b => BLK[b.id]), { tex: 'block/glass' }, ...DOOR_WOODS.flatMap(t => [{ tex: `block/${t}_door_top` }, { tex: `block/${t}_door_bottom` }])], textures, async () => {
+      for (const [tex, url] of textures) { const img = new Image(); img.src = url; await img.decode().catch(() => {}); imgs.set(tex, img); }
+      $('d-jar').classList.toggle('loaded', imgs.size > 0);
+      draw(); // same blocks, new textures: nothing drops
+    });
+    draw();
+  }).catch(() => {}); // no colors: everything stays the accent
+
+  // The house: the roof built up to the chosen layer, nothing faded, over walls with the gable ends
+  // filled in, a base row, corner pillars, windows and a door.
+  // Each block's key is its place measured from the nearer wall on each side (negative from the far one)
+  // and from the top of the walls. Changing the length, width, overhang or wall height then keeps every
+  // block that is still there, even if it moved: a longer house stretches and only the new middle slice
+  // pops in, taller walls only add a row.
+  const dview = DesignView($('d-canvas'));
+  const GLASS = 'rgba(200, 230, 245, .35)';
+  // Windows (1 x 1, or 1 x 2 on tall walls) and the door (1 x 2), set into a wall: side, position along
+  // it measured from the middle of the house (doubled, so it stays a whole number), and y from the ground.
+  const ITEMS = { win: { w: 1, h: 1 }, tall: { w: 1, h: 2 }, door: { w: 1, h: 2 } };
+  const DOOR_WOODS = ['oak', 'spruce', 'birch', 'jungle', 'acacia', 'dark_oak', 'mangrove', 'cherry', 'pale_oak', 'bamboo', 'crimson', 'warped'];
+  const doorWood = () => { const t = $('mat-trim').value.replace('_planks', ''); return DOOR_WOODS.includes(t) ? t : 'oak'; };
+
+  const cellKey = (x, y, z) => `${x},${y},${z}`;
+  const cellsOf = (it, H) => {
+    const { w, h } = ITEMS[it.k], alongZ = it.side === 'w' || it.side === 'e', dim = alongZ ? H.L : H.W;
+    const c = Math.round((it.a + dim - 1) / 2), fixed = { w: H.o, e: H.W - 1 - H.o, n: H.o, s: H.front }[it.side], out = [];
+    for (let i = 0; i < w; i++) for (let j = 0; j < h; j++)
+      out.push(alongZ ? { x: fixed, y: it.y + j, z: c + i } : { x: c + i, y: it.y + j, z: fixed });
+    return out;
+  };
+  // Every cell must be a plain wall block on that side, not the base row, and not taken by another piece.
+  const fits = (it, H) => it.y >= H.yb && cellsOf(it, H).every(c => { const k = cellKey(c.x, c.y, c.z); return H.wallAt.get(k) === it.side && !H.used.has(k); });
+  // The pattern: a door in the middle of the front, windows every third block, not by a corner.
+  const pieces = () => {
+    const w = num('w'), l = num('l'), W = w + 2 * num('o'), WALL = num('wh'), yb = $('mat-base').value ? 1 : 0, out = [];
+    const doorA = 2 * Math.floor(W / 2) - (W - 1), door = $('door').checked;
+    if (door && WALL >= yb + 2) out.push({ k: 'door', side: 's', a: doorA, y: yb });
+    const k = WALL - yb >= 5 ? 'tall' : 'win';
+    if ($('win').checked && WALL - yb >= 3) for (const [side, len] of [['w', l], ['e', l], ['n', w], ['s', w]])
+      for (let p = 2; p <= len - 3; p += 3) { const a = 2 * p - len + 1; if (!(door && side === 's' && Math.abs(a - doorA) <= 2)) out.push({ k, side, a, y: yb + 1 }); }
+    return out;
+  };
+
+  const showDesign = (W, L, layers, li, below, o, type, pitch, words) => {
+    const WALL = num('wh'), top = WALL + below, lipN = layers.length - Roofs.roofLayers(W, L, type, pitch), front = L - 1 - o;
+    const look = m => { const c = m.hex || 'var(--accent)'; return { top: imgs.get(m.top) || c, side: imgs.get(m.side) || c }; };
+    const base = BLK[$('mat-base').value], corner = BLK[$('mat-corner').value];
+    const M = { roof: look(mat('roof')), trim: look(mat('trim')), wall: look(mat('wall')), base: base && look(base), corner: corner && look(corner) };
+    const g = imgs.get('block/glass'), glass = { top: g || GLASS, side: g || GLASS, clear: true };
+    const yb = base ? 1 : 0, cells = new Map(), wallAt = new Map(), used = new Map();
+    const put = (x, y, z, boxes, mat, name, part, item) =>
+      cells.set(cellKey(x, y, z), { x, y, z, boxes, mat, name, part, item, key: `${x * 2 <= W - 1 ? x - o : o - W + x},${y - top},${z * 2 <= L - 1 ? z - o : o - L + z}` });
+    layers.forEach((p, y) => { if (y <= li) p.kind.forEach((k, i) => {
+      if (!k) return;
+      put(i % W, y + WALL, Math.floor(i / W), Roofs.boxes(k, p.side[i]), p.trim[i] ? M.trim : M.roof, null, 'roof');
+      cells.get(cellKey(i % W, y + WALL, Math.floor(i / W))).r = y;
+    }); });
+    // Walls: the base row at the bottom and pillars at the corners. wallAt marks the plain wall blocks
+    // (by which side they face) where windows and the door can go.
+    const wall = (x, y, z, side) => { put(x, y, z, null, y === 0 && base ? M.base : M.wall, y === 0 && base ? base.full : mat('wall').full, 'wall'); wallAt.set(cellKey(x, y, z), side); };
+    for (let y = 0; y < top; y++) for (let z = o; z < L - o; z++) for (let x = o; x < W - o; x++) {
+      const sideX = x === o || x === W - 1 - o, sideZ = z === o || z === front;
+      if (!(sideX || sideZ) || cells.has(cellKey(x, y, z))) continue;
+      if (sideX && sideZ) put(x, y, z, null, corner ? M.corner : M.wall, corner ? corner.full : mat('wall').full, 'wall');
+      else wall(x, y, z, sideX ? (x === o ? 'w' : 'e') : (z === o ? 'n' : 's'));
+    }
+    // Gable ends: wall under the slope, wherever a solid roof would be and the shell isn't.
+    if (type === 'gable') for (let r = below - lipN; r + lipN <= li && r + lipN < layers.length; r++) {
+      const solid = Roofs.roofParts(W, L, type, pitch, r, true).kind, shell = layers[r + lipN].kind;
+      for (const z of [o, front]) for (let x = o; x < W - o; x++)
+        if (solid[z * W + x] && !shell[z * W + x] && !cells.has(cellKey(x, r + lipN + WALL, z))) wall(x, r + lipN + WALL, z, z === o ? 'n' : 's');
+    }
+    // Windows and the door; one that doesn't fit (on a short or narrow wall) is left out.
+    const house = { W, L, o, top, yb, front, wallAt, used };
+    const wood = doorWood(), trimHex = mat('trim').hex || 'var(--accent)';
+    pieces().forEach(it => {
+      if (!fits(it, house)) return;
+      const cs = cellsOf(it, house);
+      cs.forEach(c => used.set(cellKey(c.x, c.y, c.z), 1));
+      if (it.k === 'door') {
+        const box = { w: [0, .1875, 0, 1, 0, 1], e: [.8125, 1, 0, 1, 0, 1], n: [0, 1, 0, 1, 0, .1875], s: [0, 1, 0, 1, .8125, 1] }[it.side];
+        cs.forEach((c, j) => {
+          const img = imgs.get(`block/${wood}_door_${j ? 'top' : 'bottom'}`) || trimHex;
+          put(c.x, c.y, c.z, [box], { top: img, side: img, clear: true }, j ? null : `${wood.replace(/_/g, ' ')} door`, 'wall');
+        });
+      } else cs.forEach(c => put(c.x, c.y, c.z, null, glass, 'glass', 'wall'));
+    });
+    const count = new Map(), blocks = [...cells.values()];
+    for (const b of blocks) if (b.part !== 'roof' && b.name) count.set(b.name, (count.get(b.name) || 0) + 1);
+    $('d-house').textContent = `walls ${words(count)}`;
+    dview.show({ dims: [W, WALL + layers.length, L], blocks });
+    lipNow = lipN;
+  };
+  let lipNow = 0; // layers under the roof's profile (the eave lip), so a dragged roof layer finds its profile row
+
+  // The roof's shape: a profile (how far each layer steps in), from a preset or drawn in the editor.
+  const SHAPES = { normal: '45°', shallow: 'Shallow', steep: 'Steep', gambrel: 'Gambrel', mansard: 'Mansard', bell: 'Bell', flat: 'Flat' };
+  let shape = 'normal', profile = { ins: [...Roofs.PROFILES.normal.ins], cap: 0 };
+  // The height slider follows the shape: picking a shape or drawing one sets it to that shape's own height.
+  const setHeight = v => { $('rh').value = v; document.querySelector('[data-pair=rh]').value = v; };
+  const dims = () => [num('w') + 2 * num('o'), num('l') + 2 * num('o'), pick('type')];
+  const ownHeight = () => Roofs.roofLayers(...dims(), profile);
+  const useShape = name => {
+    shape = name; profile = { ins: [...Roofs.PROFILES[name].ins], cap: Roofs.PROFILES[name].cap || 0 };
+    setHeight(ownHeight());
+  };
+  // Dome and arch shapes: a profile from Kinds, and the height it looks right at.
+  let dshape = 'round', dprof = Kinds.sample(Kinds.DOMES.round.f), ashape = 'round', aprof = Kinds.sample(Kinds.ARCHES.round.f);
+  const useDome = name => { dshape = name; dprof = Kinds.sample(Kinds.DOMES[name].f); setNum('dh', Math.max(1, Math.round(Kinds.DOMES[name].h * num('dd')))); };
+  const useArch = name => { ashape = name; aprof = Kinds.sample(Kinds.ARCHES[name].f); setNum('ar', Math.max(1, Math.round(Kinds.ARCHES[name].h * num('aw')))); };
+  // A number box and its slider together, without redrawing.
+  const setNum = (id, v) => { $(id).value = v; $(id).value = num(id); document.querySelector(`[data-pair=${id}]`).value = $(id).value; };
+  const TIPS = {
+    house: 'Drag the model: a roof layer in or out to reshape it, the roof or walls up or down for height, a wall outward for size.',
+    dome: 'Drag the model: a layer of the dome in or out to reshape it, the dome or walls up or down for height, the walls outward to widen.',
+    arch: 'Drag the model: the inside of the curve to reshape it, the top or legs up or down, the outside to thicken, the front to deepen.',
+  };
+  // The shape chips, presets and tip follow the kind.
+  const chips = () => {
+    const k = kind(), list = k === 'house' ? SHAPES : Object.fromEntries(Object.entries(k === 'dome' ? Kinds.DOMES : Kinds.ARCHES).map(([id, v]) => [id, v.name]));
+    $('d-profiles').innerHTML = Object.entries(list).map(([id, v]) => `<button class="btn" type="button" data-k="${id}">${v}</button>`).join('');
+    $('d-presets').innerHTML = Object.keys(PRESETS[k]).map(name => `<button class="btn" type="button">${name}</button>`).join('');
+    $('d-tip').textContent = TIPS[k];
+  };
+  $('d-profiles').onclick = e => {
+    const b = e.target.closest('button'), k = kind();
+    if (!b) return;
+    if (k === 'house') { useShape(b.dataset.k); reshape(); }
+    else { (k === 'dome' ? useDome : useArch)(b.dataset.k); draw(); }
+  };
+  // The shape stretched (or squashed) to the chosen height: layer i takes the step of the shape's own
+  // layer at the same fraction of the way up, so a taller roof gets steeper and a lower one shallower.
+  // A flat-topped shape keeps its flat top at the new height.
+  const pitchNow = () => {
+    const n0 = ownHeight(), h = num('rh');
+    if (!n0 || h === n0) return profile;
+    const ins = Array.from({ length: h }, (_, i) => Roofs.inset(profile, Math.floor(i * n0 / h))), end = Roofs.inset(profile, n0);
+    ins.push(end, end + 1);
+    return { ins, cap: profile.cap ? h : 0 };
+  };
+
+  // A dragged roof layer's edge (its distance in from the nearer side). The layers above move with it,
+  // keeping their steps, so pulling an edge in lowers the roof and pushing it out raises it; layers
+  // already dragged in this stroke stay put. Layers below can't sit inside it, so the roof stays a roof.
+  let touched = new Set();
+  const setEdge = (row, v) => {
+    const now = pitchNow(), ins = Array.from({ length: 64 }, (_, j) => Roofs.inset(now, j));
+    touched.add(row);
+    if (ins[row] === v) return;
+    const shift = v - ins[row];
+    ins[row] = v;
+    for (let j = row + 1; j < ins.length; j++) ins[j] = Math.max(touched.has(j) ? ins[j] : ins[j] + shift, ins[j - 1]);
+    for (let j = 0; j < row; j++) ins[j] = Math.min(ins[j], v);
+    profile = { ins, cap: now.cap }; shape = '';
+    setHeight(ownHeight());
+    reshape();
+  };
+
+  const look = m => { const c = m.hex || 'var(--accent)'; return { top: imgs.get(m.top) || c, side: imgs.get(m.side) || c }; };
+  const tally = blocks => { const c = new Map(); for (const b of blocks) c.set(b.name, (c.get(b.name) || 0) + 1); return c; };
+  let domeNow = null, archNow = null; // the shown shape's numbers, for dragging
+
+  // A dome on a round wall. Keys are measured from the center (and the dome's from the top of the wall),
+  // so a wider or taller build only pops in what is new.
+  const drawDome = () => {
+    const d = num('dd'), h = num('dh'), wh = num('dw'), D = Kinds.dome(d, h, dprof, $('dhollow').checked), S = D.size, half = Math.floor(S / 2);
+    const md = BLK[$('mat-dome').value], mw = BLK[$('mat-dwall').value], mb = BLK[$('mat-dbase').value];
+    const blocks = [], ring = Kinds.ring(d, S);
+    for (let y = 0; y < wh; y++) for (let i = 0; i < S * S; i++) if (ring[i]) {
+      const m = y === 0 && mb ? mb : mw, x = i % S, z = Math.floor(i / S);
+      blocks.push({ x, y, z, boxes: null, mat: look(m), name: m.full, part: 'drum', key: `${x - half},${y},${z - half}` });
+    }
+    D.layers.forEach((l, r) => l.forEach((v, i) => { if (v) {
+      const x = i % S, z = Math.floor(i / S);
+      blocks.push({ x, y: wh + r, z, boxes: null, mat: look(md), name: md.full, part: 'dome', r, key: `${x - half},d${r},${z - half}` });
+    } }));
+    $('d-total').textContent = `dome ${words(tally(blocks.filter(b => b.part === 'dome')))}`;
+    $('d-house').textContent = wh ? `walls ${words(tally(blocks.filter(b => b.part === 'drum')))}` : '';
+    $('d-canvas').setAttribute('aria-label', `${dshape || 'custom'} dome, ${d} blocks across and ${h} high, on walls ${wh} high`);
+    domeNow = { d, h, wh, mid: S / 2 };
+    if (dview) dview.show({ dims: [S, wh + h, S], blocks });
+  };
+
+  // An arch facing you, `depth` blocks deep. Keys are measured from the middle of the opening.
+  const drawArch = () => {
+    const w = num('aw'), rise = num('ar'), legs = num('al'), t = num('at'), depth = num('ad'), A = Kinds.arch(w, rise, legs, t, aprof), m = BLK[$('mat-arch').value];
+    const blocks = [], half = Math.floor(A.cols / 2);
+    for (let r = 0; r < A.rows; r++) for (let c = 0; c < A.cols; c++) if (A.arch[r * A.cols + c])
+      for (let z = 0; z < depth; z++) blocks.push({ x: c, y: r, z, boxes: null, mat: look(m), name: m.full, part: 'arch', r, key: `${c - half},${r},${z}` });
+    $('d-total').textContent = `arch ${words(tally(blocks))}`;
+    $('d-house').textContent = '';
+    $('d-canvas').setAttribute('aria-label', `${ashape || 'custom'} arch, ${w} wide with a ${rise} block rise on ${legs} block legs`);
+    archNow = { w, rise, legs, t, depth, A };
+    if (dview) dview.show({ dims: [A.cols, A.rows, depth], blocks });
+  };
+
+  // Dragging the model. Each handle offers a sideways and an up-down axis; the drag's direction picks one.
+  // Values are read at the start of the drag and moved by whole blocks from there. Things that grow on
+  // both sides (width, length, diameter) move by twice the drag, so the dragged face follows the pointer.
+  const UP = [0, 1, 0];
+  const nudge = (id, v) => { const before = num(id); setNum(id, v); if (num(id) !== before) changed(id); };
+  const grabHouse = ({ b, n }) => {
+    if (b.part === 'roof') {
+      const W = num('w') + 2 * num('o'), L = num('l') + 2 * num('o'), hip = pick('type') === 'hip', row = Math.max(0, b.r - lipNow);
+      // Outward: the face's own direction, or the nearer slope for a top face.
+      let out = n[1] ? null : n;
+      if (!out) {
+        const dx = Math.min(b.x, W - 1 - b.x), dz = Math.min(b.z, L - 1 - b.z);
+        out = hip && dz < dx ? [0, 0, b.z * 2 < L - 1 ? -1 : 1] : [b.x * 2 < W - 1 ? -1 : 1, 0, 0];
+      }
+      const rh0 = num('rh'), l0 = num('l'), ins0 = Roofs.inset(pitchNow(), row), layer = x => x.part === 'roof' && x.r === b.r;
+      touched = new Set();
+      const side = out[2] && !hip
+        ? { dir: out, move: d => nudge('l', l0 + Math.round(2 * d)), glow: x => x.part === 'roof' } // a gable's end: longer
+        : { dir: out, move: d => setEdge(row, Math.max(0, Math.min(Math.floor((W - 1) / 2), ins0 - Math.round(d)))), glow: layer };
+      return { glow: layer, axes: [side, { dir: UP, move: d => nudge('rh', rh0 + Math.round(d)), glow: x => x.part === 'roof' }] };
+    }
+    if (b.part === 'wall') {
+      const wh0 = num('wh'), axes = [{ dir: UP, move: d => nudge('wh', wh0 + Math.round(d)), glow: x => x.part === 'wall' }];
+      // Both sideways directions, whichever wall you grab: across the house for width, along it for length.
+      // Each points away from the middle on the grabbed block's side, so dragging outward always grows it.
+      const W = num('w') + 2 * num('o'), L = num('l') + 2 * num('o'), w0 = num('w'), l0 = num('l');
+      const sx = n[0] || (b.x * 2 < W - 1 ? -1 : 1), sz = n[2] || (b.z * 2 < L - 1 ? -1 : 1);
+      const east = x => x.part === 'wall' && x.x === (sx < 0 ? num('o') : W - 1 - num('o'));
+      const south = x => x.part === 'wall' && x.z === (sz < 0 ? num('o') : L - 1 - num('o'));
+      axes.unshift({ dir: [sx, 0, 0], move: d => nudge('w', w0 + Math.round(2 * d)), glow: east },
+        { dir: [0, 0, sz], move: d => nudge('l', l0 + Math.round(2 * d)), glow: south });
+      const face = n[0] ? east : n[2] ? south : x => x.part === 'wall';
+      return { glow: face, axes };
+    }
+    return null;
+  };
+  const grabDome = ({ b, n }) => {
+    const { d: d0, h, wh, mid } = domeNow, rx = b.x + .5 - mid, rz = b.z + .5 - mid, l = Math.hypot(rx, rz);
+    const out = n[1] ? (l > .1 ? [rx / l, 0, rz / l] : null) : n;
+    if (b.part === 'drum') {
+      const axes = [{ dir: UP, move: d => nudge('dw', wh + Math.round(d)) }];
+      if (out) axes.unshift({ dir: out, move: d => nudge('dd', d0 + Math.round(2 * d)) });
+      return { glow: x => x.part === 'drum', axes };
+    }
+    const prof0 = dprof, odd = d0 % 2, hc = Math.max(.5, h - (odd ? .5 : 0)), t = (b.r + (odd ? 0 : .5)) / hc, layer = x => x.part === 'dome' && x.r === b.r;
+    const axes = [{ dir: UP, move: d => nudge('dh', h + Math.round(d)), glow: x => x.part === 'dome' }];
+    if (out) axes.unshift({ dir: out, move: d => { dprof = Kinds.bend(prof0, t, d / (d0 / 2), 1.2 / hc); dshape = ''; draw(); }, glow: layer });
+    return { glow: layer, axes };
+  };
+  const grabArch = ({ b, n }) => {
+    const { w, rise, legs, t, depth, A } = archNow, inLegs = b.r < legs, all = () => true;
+    const up = inLegs ? { dir: UP, move: d => nudge('al', legs + Math.round(d)), glow: x => x.r < legs } : { dir: UP, move: d => nudge('ar', rise + Math.round(d)), glow: x => x.r >= legs };
+    if (n[2]) return { glow: all, axes: [{ dir: n, move: d => nudge('ad', depth + Math.round(d)) }, up] };
+    if (n[0]) {
+      const c = b.x + n[0], row = x => x.r === b.r;
+      if (c >= 0 && c < A.cols && A.open[b.r * A.cols + c]) { // the inside of the opening
+        if (inLegs) return { glow: x => x.r < legs, axes: [{ dir: n, move: d => nudge('aw', w - Math.round(2 * d)) }, up] };
+        const prof0 = aprof, tt = (b.r + .5 - legs) / rise;
+        return { glow: row, axes: [{ dir: n, move: d => { aprof = Kinds.bend(prof0, tt, -d / (w / 2), 1.2 / rise); ashape = ''; draw(); } }, up] };
+      }
+      return { glow: all, axes: [{ dir: n, move: d => nudge('at', t + Math.round(d)) }, up] }; // the outside: thicker
+    }
+    return { glow: up.glow, axes: [up] }; // top or underside
+  };
+  if (dview) dview.grab = hit => ({ house: grabHouse, dome: grabDome, arch: grabArch })[kind()](hit);
+
+  const words = c => [...c].sort((a, b) => b[1] - a[1]).map(([name, v]) => `${fmt(v)} ${name}${v > 1 && !/s$/.test(name) ? 's' : ''}`).join(' · ');
+  const draw = () => {
+    const k = kind();
+    document.querySelectorAll('[data-kind]').forEach(el => el.hidden = el.dataset.kind !== k);
+    document.querySelectorAll('#d-profiles button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === (k === 'house' ? shape : k === 'dome' ? dshape : ashape)));
+    if (k === 'dome') return drawDome();
+    if (k === 'arch') return drawArch();
+    const w = num('w'), l = num('l'), type = pick('type'), pitch = pitchNow(), filled = !$('hollow').checked;
+    const o = num('o'), lip = $('lip').checked, { W, L, layers, hang } = Roofs.design(w, l, type, pitch, filled, o, lip);
+    const n = layers.length, li = Math.min(ROOKS.val($('layer')), n) - 1, below = (lip ? 1 : 0) + hang;
+    // Roof counts by item: "dark oak stairs", "spruce planks"...
+    const item = (k, t) => { const m = mat(t ? 'trim' : 'roof'); return k === Roofs.BLOCK ? m.full : `${m.name} ${k === Roofs.SLAB ? 'slab' : 'stair'}`; };
+    const sum = new Map();
+    layers.forEach(p => p.kind.forEach((k, i) => { if (k) { const name = item(k, p.trim[i]); sum.set(name, (sum.get(name) || 0) + 1); } }));
+    $('d-total').textContent = `roof ${words(sum)}`;
+    $('d-canvas').setAttribute('aria-label', `${type} roof house, walls ${w} by ${l}, ${num('wh')} high`);
+    if (dview) showDesign(W, L, layers, li, below, o, type, pitch, words);
+  };
+
+  // Roof size or shape changed: the layer slider shows the whole roof again.
+  const reshape = () => {
+    $('layer').max = Roofs.design(num('w'), num('l'), pick('type'), pitchNow(), true, num('o'), $('lip').checked).layers.length;
+    $('layer').value = $('layer').max;
+    setLayer(+$('layer').max);
+  };
+  const setLayer = v => { $('layer-out').textContent = `${v} / ${$('layer').max}`; draw(); };
+  const changed = id => ['w', 'l', 'o', 'rh'].includes(id) ? reshape() : draw();
+  // Each range slider drives the number box beside it, and the other way round.
+  document.querySelectorAll('[data-pair]').forEach(range => {
+    const box = $(range.dataset.pair);
+    range.oninput = () => { box.value = ROOKS.val(range); changed(box.id); };
+    box.oninput = () => { if (box.value) { range.value = num(box.id); changed(box.id); } };
+    box.onchange = () => { box.value = num(box.id); range.value = box.value; changed(box.id); };
+  });
+  $('layer').oninput = () => setLayer(ROOKS.val($('layer')));
+  document.querySelectorAll('[name=type]').forEach(r => r.onchange = reshape);
+  document.querySelectorAll('[name=kind]').forEach(r => r.onchange = () => { chips(); dview?.reset(); draw(); });
+  $('hollow').onchange = draw;
+  $('lip').onchange = reshape;
+  for (const id of ['mat-roof', 'mat-trim', 'mat-wall', 'mat-base', 'mat-corner', 'win', 'door', 'mat-dome', 'mat-dwall', 'mat-dbase', 'dhollow', 'mat-arch']) $(id).onchange = draw;
+
+  const PATHS = { win: ['Windows', '<code>%appdata%\\.minecraft\\versions</code> (paste it into the File Explorer address bar)'],
+    mac: ['macOS', '<code>~/Library/Application Support/minecraft/versions</code> (in Finder, Go → Go to Folder)'],
+    linux: ['Linux', '<code>~/.minecraft/versions</code>'] };
+  const os = /Win/.test(navigator.userAgent) ? 'win' : /Mac/.test(navigator.userAgent) ? 'mac' : 'linux';
+  $('d-path').innerHTML = PATHS[os][1];
+  $('d-paths').innerHTML = Object.entries(PATHS).filter(([k]) => k !== os).map(([, [name, path]]) => `${name}: ${path}`).join('<br>');
+
+  // Every setting, as URL parameters: for the share link, the presets and links from the roofs page.
+  // Each kind keeps its own; kind=house is the default, so old house links still work.
+  const FIELDS = {
+    house: { nums: ['w', 'l', 'o', 'wh', 'rh'], radios: ['type'], checks: ['hollow', 'lip', 'win', 'door'], selects: ['roof', 'trim', 'wall', 'base', 'corner'] },
+    dome: { nums: ['dd', 'dh', 'dw'], radios: [], checks: ['dhollow'], selects: ['dome', 'dwall', 'dbase'] },
+    arch: { nums: ['aw', 'ar', 'al', 'at', 'ad'], radios: [], checks: [], selects: ['arch'] },
+  };
+  const getState = () => {
+    const k = kind(), F = FIELDS[k], p = new URLSearchParams({ kind: k });
+    F.nums.forEach(n => p.set(n, num(n))); F.radios.forEach(r => p.set(r, pick(r)));
+    F.checks.forEach(c => p.set(c, $(c).checked ? 1 : 0)); F.selects.forEach(m => p.set(m, $('mat-' + m).value));
+    // A preset shape by name; a drawn one as its numbers.
+    if (k === 'house') {
+      p.set('shape', shape || '~' + Array.from({ length: ownHeight() + 2 }, (_, i) => Roofs.inset(profile, i)).join('.'));
+      if (!shape && profile.cap) p.set('flat', profile.cap);
+    } else p.set('shape', (k === 'dome' ? dshape : ashape) || '~' + Kinds.pack(k === 'dome' ? dprof : aprof));
+    return p;
+  };
+  const setState = p => {
+    const k = FIELDS[p.get('kind')] ? p.get('kind') : 'house', F = FIELDS[k];
+    document.querySelector(`[name=kind][value=${k}]`).checked = true;
+    for (const n of F.nums) if (p.has(n)) setNum(n, p.get(n));
+    for (const r of F.radios) { const el = [...document.querySelectorAll(`[name=${r}]`)].find(e => e.value === p.get(r)); if (el) el.checked = true; }
+    for (const c of F.checks) if (p.has(c)) $(c).checked = p.get(c) === '1';
+    for (const m of F.selects) if (p.has(m) && [...$('mat-' + m).options].some(op => op.value === p.get(m))) $('mat-' + m).value = p.get(m);
+    chips(); dview?.reset();
+    const sh = p.get('shape') ?? p.get('pitch') ?? '';
+    if (k !== 'house') {
+      // A shape name or a drawn profile (checked by Kinds.unpack). A height in the link wins over the shape's own.
+      const S = k === 'dome' ? Kinds.DOMES : Kinds.ARCHES, hid = k === 'dome' ? 'dh' : 'ar', height = num(hid), drawn = Kinds.unpack(sh.slice(1));
+      if (S[sh]) (k === 'dome' ? useDome : useArch)(sh);
+      else if (sh[0] === '~' && drawn) { if (k === 'dome') { dshape = ''; dprof = drawn; } else { ashape = ''; aprof = drawn; } }
+      else (k === 'dome' ? useDome : useArch)('round');
+      if (p.has(hid)) setNum(hid, height);
+      return draw();
+    }
+    // The roof: a preset name, drawn insets (checked: whole numbers, at most 80 of them, never going
+    // down; flat is where a drawn shape's flat top is), or the roofs page's slope. A height in the link
+    // wins over the shape's own.
+    const height = num('rh');
+    if (SHAPES[sh]) useShape(sh);
+    else if (/^~\d{1,3}(\.\d{1,3}){0,79}$/.test(sh)) {
+      const ins = sh.slice(1).split('.').map(Number);
+      for (let i = 1; i < ins.length; i++) ins[i] = Math.max(ins[i], ins[i - 1]);
+      shape = ''; profile = { ins, cap: /^\d{1,2}$/.test(p.get('flat') || '') ? +p.get('flat') : 0 };
+      setHeight(ownHeight());
+    } else useShape('normal');
+    if (p.has('rh')) setHeight(height);
+    reshape();
+  };
+  const PRESETS = {
+    house: {
+      Cottage: { w: 9, l: 13, o: 1, wh: 4, type: 'gable', shape: 'normal', lip: 1, roof: 'dark_oak_planks', trim: 'spruce_planks', wall: 'oak_planks', base: 'cobblestone', corner: 'spruce_log' },
+      Barn: { w: 11, l: 15, o: 1, wh: 5, type: 'gable', shape: 'gambrel', lip: 0, roof: 'dark_oak_planks', trim: 'birch_planks', wall: 'mangrove_planks', base: 'stone_bricks', corner: 'stripped_birch_log' },
+      'Stone hall': { w: 13, l: 17, o: 1, wh: 6, type: 'hip', shape: 'normal', lip: 1, roof: 'deepslate_tiles', trim: 'polished_blackstone_bricks', wall: 'stone_bricks', base: 'cobbled_deepslate', corner: 'polished_blackstone_bricks' },
+      Desert: { w: 9, l: 9, o: 1, wh: 4, type: 'hip', shape: 'shallow', lip: 0, roof: 'red_sandstone', trim: 'sandstone', wall: 'sandstone', base: 'red_sandstone', corner: '' },
+      Cherry: { w: 9, l: 11, o: 2, wh: 4, type: 'gable', shape: 'bell', lip: 1, roof: 'cherry_planks', trim: 'dark_oak_planks', wall: 'pale_oak_planks', base: 'stone_bricks', corner: 'dark_oak_log' },
+      Manor: { w: 11, l: 15, o: 1, wh: 5, type: 'hip', shape: 'mansard', lip: 1, roof: 'deepslate_tiles', trim: 'dark_oak_planks', wall: 'bricks', base: 'stone_bricks', corner: 'stripped_dark_oak_log' },
+      Nether: { w: 9, l: 9, o: 1, wh: 5, type: 'hip', shape: 'steep', lip: 1, roof: 'nether_bricks', trim: 'red_nether_bricks', wall: 'blackstone', base: '', corner: 'crimson_stem' },
+    },
+    dome: {
+      Observatory: { dd: 13, dw: 5, shape: 'round', dome: 'quartz_block', dwall: 'stone_bricks', dbase: 'cobbled_deepslate' },
+      'Onion tower': { dd: 9, dw: 10, shape: 'onion', dome: 'cut_copper', dwall: 'bricks', dbase: 'stone_bricks' },
+      Chapel: { dd: 11, dw: 6, shape: 'pointed', dome: 'deepslate_tiles', dwall: 'sandstone', dbase: '' },
+      Pavilion: { dd: 15, dw: 0, shape: 'shallow', dome: 'prismarine_bricks', dwall: 'quartz_block', dbase: '' },
+    },
+    arch: {
+      Gate: { aw: 5, al: 4, at: 1, ad: 1, shape: 'round', arch: 'stone_bricks' },
+      Gothic: { aw: 5, al: 6, at: 1, ad: 2, shape: 'pointed', arch: 'deepslate_bricks' },
+      Bridge: { aw: 11, al: 2, at: 2, ad: 3, shape: 'segment', arch: 'mossy_stone_bricks' },
+      Doorway: { aw: 3, al: 4, at: 1, ad: 1, shape: 'flat', arch: 'polished_blackstone_bricks' },
+    },
+  };
+  $('d-presets').onclick = e => {
+    const name = e.target.closest('button')?.textContent, k = kind();
+    if (PRESETS[k][name]) setState(new URLSearchParams({ kind: k, hollow: 1, win: 1, door: 1, dhollow: 1, ...PRESETS[k][name] }));
+  };
+  $('d-share').onclick = () => ROOKS.copy($('d-share'), `${location.origin}${location.pathname}#${getState()}`);
+  // Save image: the view on the page's own background, as a PNG made here in the browser.
+  $('d-save').onclick = () => {
+    const src = dview.snapshot(), c = document.createElement('canvas');
+    c.width = src.width; c.height = src.height;
+    const x = c.getContext('2d');
+    x.fillStyle = getComputedStyle(document.body).backgroundColor; x.fillRect(0, 0, c.width, c.height);
+    x.drawImage(src, 0, 0);
+    const a = document.createElement('a');
+    a.download = `${kind()}-design.png`; a.href = c.toDataURL('image/png'); a.click();
+  };
+  $('spin').onchange = () => dview.spin($('spin').checked);
+
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { dview?.forget(); draw(); });
+  if (!dview) $('d-canvas').insertAdjacentHTML('afterend', '<p class="d-hint">The 3D designer needs WebGL, which this browser has turned off.</p>');
+  // A shared link (or one from the roofs page) carries the design in the address.
+  if (location.hash.length > 1) setState(new URLSearchParams(location.hash.slice(1)));
+  else { chips(); useShape('normal'); reshape(); }
+})();
+</script>
+</body>
+</html>
