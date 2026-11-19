@@ -21,6 +21,11 @@ libraries, and ask before adding any dependency.
   `python3 tools/version.py` (restamps them all). Otherwise returning visitors
   can get new HTML with an old cached `shell.css`/`shell.js`, which breaks
   pages. New pages need the `?v=` on their links too (the script adds it).
+- **Search extras:** before every publish, after `version.py`, run
+  `python3 tools/seo.py`. It writes JSON-LD (breadcrumbs plus
+  WebApplication/CollectionPage/WebSite) into every page in `sitemap.xml` and
+  sets each sitemap `<lastmod>` from git, ignoring `?v=` restamps. A new
+  tool only needs its sitemap line and its entry in `shell.js`.
 - **Feature flags** for tools not ready for release: give the tool
   `flag: 'id'` in `shell.js`. It then shows as "soon" everywhere unless the
   browser opted in by visiting any page with `?flags=id` (comma-separated,

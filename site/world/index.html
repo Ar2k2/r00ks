@@ -13,6 +13,7 @@
 <meta property="og:url" content="https://rooks.rookstudio.net/world/">
 <meta property="og:image" content="https://rooks.rookstudio.net/shared/og.png">
 <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "CollectionPage", "name": "Minecraft World Tools", "url": "https://rooks.rookstudio.net/world/", "description": "Minecraft Java world tools: Nether coordinates, a stronghold finder and a slime chunk finder."}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "R00K’s", "item": "https://rooks.rookstudio.net/"}, {"@type": "ListItem", "position": 2, "name": "World", "item": "https://rooks.rookstudio.net/world/"}]}]}</script>
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../shared/shell.css?v=202611171422">
 </head>
@@ -23,6 +24,15 @@
     <p>Find your way around a world: coordinates, strongholds and slime chunks.</p>
   </header>
   <nav class="tools cards" data-cat="world" aria-label="World tools"><a href="../nether/">Nether coordinates: Overworld and Nether coordinates for linking portals.</a><a href="../stronghold/">Stronghold finder: Find the stronghold from two Eye of Ender throws.</a><a href="../slime/">Slime chunks: Slime chunks around you from a world seed.</a></nav>
+  <section class="about" aria-labelledby="about-h">
+    <h2 id="about-h">About the world tools</h2>
+    <h3>Nether portal coordinate calculator</h3>
+    <p>The Nether is scaled 8 to 1 against the Overworld on X and Z. Convert coordinates both ways, rounded the way the game does it, to link two portals without them connecting to the wrong one.</p>
+    <h3>Stronghold finder</h3>
+    <p>Throw an Eye of Ender from two different spots, enter your coordinates and facing angle from F3, and the two lines cross at the stronghold. You also get the distance and the Nether coordinates for a shorter trip.</p>
+    <h3>Slime chunk finder</h3>
+    <p>Enter your world seed to see a map of the slime chunks around you and the nearest one, using the same calculation the game runs. Text seeds work too.</p>
+  </section>
 </main>
 <script src="../shared/shell.js?v=202611171422"></script>
 </body>
