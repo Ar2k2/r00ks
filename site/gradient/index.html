@@ -15,7 +15,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebApplication", "name": "Minecraft Block Gradient Generator", "url": "https://rooks.rookstudio.net/gradient/", "description": "Find the smoothest row of Minecraft Java blocks between two colors.", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Any", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "R00K’s", "item": "https://rooks.rookstudio.net/"}, {"@type": "ListItem", "position": 2, "name": "Color & art", "item": "https://rooks.rookstudio.net/color/"}, {"@type": "ListItem", "position": 3, "name": "Gradient", "item": "https://rooks.rookstudio.net/gradient/"}]}]}</script>
 <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../shared/shell.css?v=202611191126">
+<link rel="stylesheet" href="../shared/shell.css?v=202611191300">
 <style>
   /* Controls */
   .controls { display: grid; grid-template-columns: 1fr; gap: 16px 12px; align-items: end; }
@@ -27,6 +27,8 @@
   .stop-actions .btn { grid-auto-flow: column; gap: 8px; }
   .swap svg { transition: transform .3s var(--spring); }
   .swap:hover svg { transform: rotate(180deg); }
+  .stop .search { height: 36px; font-size: 13px; }
+  .stop.pinned .search { border-color: var(--accent); }
   .ideal { grid-column: 1 / -1; height: 14px; border-radius: 999px; border: 1px solid var(--panel-border); }
   .steps { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
   .steps output { font: 500 14px var(--mono); min-width: 2ch; text-align: right; }
@@ -47,7 +49,7 @@
 <main>
   <header class="head">
     <h1>Block gradient</h1>
-    <p>Pick two or more colors and get the smoothest row of blocks between them. The whole row is scored at once in OKLab, so each step fits its neighbors, not just its target. New to gradients? Read the <a href="guide/">gradient guide</a>, with ready-made block lists.</p>
+    <p>Pick two or more colors, or start from a block, and get the smoothest row of blocks between them. The whole row is scored at once in OKLab, so each step fits its neighbors, not just its target. New to gradients? Read the <a href="guide/">gradient guide</a>, with ready-made block lists.</p>
   </header>
 
   <section class="panel controls" aria-label="Settings">
@@ -57,6 +59,7 @@
       <label><input type="radio" name="view" value="s"><span>Side <small>wall</small></span></label>
     </div>
     <div class="stops" id="stops"></div>
+    <datalist id="names"></datalist>
     <div class="stop-actions">
       <button class="btn" id="add">+ Add color</button>
       <button class="btn swap" id="swap">
@@ -115,6 +118,8 @@
     <h2 id="about-h">How the gradient generator works</h2>
     <p>Every full, solid block in Minecraft Java 26.3 was measured once: the average color of each face's texture, in linear light, so a log's bark and its cut end count as two different options. There are 460 faces in all. Your colors are blended in OKLab, a color space where equal steps look equal to the eye, and that gives one target color per step.</p>
     <p>Then the whole row is picked at once instead of block by block. Each choice is scored on how close it is to its target, how evenly it steps from its neighbors, whether it repeats a block, and how noisy its texture is. That is why the result reads as one smooth run, not a string of closest matches.</p>
+    <h3>Can I start from a block I already have?</h3>
+    <p>Yes. Type a block's name under any color and that block is placed exactly at that point in the row, even if your filters would leave it out. The rest of the row is picked to lead into it and away from it. Change the color again to let go of the block.</p>
     <h3>Why does the top or side setting matter?</h3>
     <p>Many blocks look different from above than from the side: logs, crafting tables, pumpkins, basalt. Pick top for a floor and side for a wall, and the colors are matched to the face you will actually see.</p>
     <h3>What do the filters do?</h3>
@@ -133,12 +138,12 @@
     <nav class="tools cards" data-related="palette mosaic mapart" aria-label="Related tools"><a href="../palette/">Palette: Build block palettes that sit well together.</a><a href="../mosaic/">Image mosaic: Turn a picture into a wall or floor of blocks.</a><a href="../mapart/">Map art: Turn an image into a map art block layout.</a></nav>
   </section>
 </main>
-<script src="../shared/shell.js?v=202611191126"></script>
-<script src="engine.js?v=202611191126"></script>
-<script src="../shared/blocks.js?v=202611191126"></script>
-<script src="../shared/jar.js?v=202611191126"></script>
-<script src="../shared/build.js?v=202611191126"></script>
-<script src="../shared/swap.js?v=202611191126"></script>
+<script src="../shared/shell.js?v=202611191300"></script>
+<script src="engine.js?v=202611191300"></script>
+<script src="../shared/blocks.js?v=202611191300"></script>
+<script src="../shared/jar.js?v=202611191300"></script>
+<script src="../shared/build.js?v=202611191300"></script>
+<script src="../shared/swap.js?v=202611191300"></script>
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
@@ -151,12 +156,15 @@
   // Color stops: From, any number of Via colors (up to MAX in all), To.
   const MAX = 6;
   let stops = ['#1e3a8a', '#f472b6'];
+  let pinned = [null, null]; // block picked for each stop ("start from a block"), or null for a plain color
+  $('names').innerHTML = [...new Set(blocks.map(b => b.name))].sort().map(n => `<option value="${n}">`).join('');
   const drawStops = (fresh = -1) => {
     $('stops').innerHTML = stops.map((c, i) => {
       const name = i === 0 ? 'From' : i === stops.length - 1 ? 'To' : 'Via';
-      return `<label class="color stop${i === fresh ? ' new' : ''}"><span class="label">${name}</span>
+      return `<label class="color stop${i === fresh ? ' new' : ''}${pinned[i] ? ' pinned' : ''}"><span class="label">${name}</span>
         <div><input type="color" data-i="${i}" value="${c}" aria-label="${name} color ${i + 1}"><input class="hex" data-i="${i}" value="${c}" pattern="#[0-9a-fA-F]{6}" spellcheck="false" aria-label="${name} hex ${i + 1}">${stops.length > 2
-          ? `<button class="btn rm" data-i="${i}" aria-label="Remove color ${i + 1}">✕</button>` : ''}</div></label>`;
+          ? `<button class="btn rm" data-i="${i}" aria-label="Remove color ${i + 1}">✕</button>` : ''}</div>
+        <input class="search" data-i="${i}" list="names" value="${pinned[i]?.name ?? ''}" placeholder="or a block" spellcheck="false" autocomplete="off" aria-label="${name} block ${i + 1}"></label>`;
     }).join('');
     $('add').disabled = stops.length >= MAX;
   };
@@ -170,10 +178,14 @@
 
     const view = document.querySelector('[name=view]:checked').value;
     pool = Blocks.pool(blocks, view);
+    // A picked block shows the face that fits the view, if it has one, and sits at its stop's step.
+    pinned = pinned.map(p => p && (blocks.find(b => b.id === p.id && b.views.includes(view)) ?? p));
+    const pins = new Map();
+    pinned.forEach((p, s) => p && pins.set(Math.round(s * (steps - 1) / (stops.length - 1)), p));
     // Swaps hold until a setting changes.
-    const now = [...stops, steps, view, ...[...document.querySelectorAll('.filters input')].map(c => c.checked)].join();
+    const now = [...stops, ...pinned.map(p => p?.id), steps, view, ...[...document.querySelectorAll('.filters input')].map(c => c.checked)].join();
     if (now !== inputs) { subs.clear(); inputs = now; }
-    const row = Gradient.pick(pool, stops, steps, { avoidRepeats: $('norepeat').checked }).map((b, i) => subs.get(i) ?? b);
+    const row = Gradient.pick(pool, stops, steps, { avoidRepeats: $('norepeat').checked, pins }).map((b, i) => subs.get(i) ?? b);
 
     // Only tiles whose block changed drop in again, so dragging the slider stays calm.
     $('row').innerHTML = row.map((b, i) => `<li class="${last[i] === b ? 'same' : ''}${subs.has(i) ? ' swapped' : ''}" style="--i:${i}"><button class="pick" data-i="${i}" style="--c:${b.hex}" title="Swap or copy ${b.name}" aria-haspopup="dialog">
@@ -219,10 +231,19 @@
   // Each stop's color picker and hex field stay in sync.
   $('stops').oninput = e => {
     const i = +e.target.dataset.i, box = e.target.closest('div');
+    if (e.target.classList.contains('search')) {
+      const name = e.target.value.trim().toLowerCase(), b = blocks.find(b => b.name.toLowerCase() === name);
+      if (!b && name) return;
+      pinned[i] = b ?? null; // clearing the box lets go of the block
+      if (b) { stops[i] = b.hex; drawStops(); }
+      else e.target.closest('.stop').classList.remove('pinned');
+      update(); return;
+    }
     let v = e.target.value.trim();
     if (!v.startsWith('#')) v = '#' + v;
     if (!HEX.test(v)) return;
     stops[i] = v.toLowerCase();
+    if (pinned[i]) { pinned[i] = null; box.parentNode.classList.remove('pinned'); box.parentNode.querySelector('.search').value = ''; } // editing the color lets go of the block
     if (e.target.type === 'color') box.querySelector('.hex').value = v;
     else { box.querySelector('[type=color]').value = stops[i]; e.target.value = v; }
     update();
@@ -231,16 +252,17 @@
     const rm = e.target.closest('.rm');
     if (!rm) return;
     e.preventDefault();
-    stops.splice(+rm.dataset.i, 1); drawStops(); last = []; update();
+    stops.splice(+rm.dataset.i, 1); pinned.splice(+rm.dataset.i, 1); drawStops(); last = []; update();
   };
   // A new color goes in before To, at the halfway color, so the row stays as it was until you change it.
   $('add').onclick = () => {
     if (stops.length >= MAX) return;
     const n = stops.length, a = Gradient.hexToLab(stops[n - 2]), b = Gradient.hexToLab(stops[n - 1]);
     stops.splice(n - 1, 0, Gradient.labToHex(a.map((v, k) => (v + b[k]) / 2)));
+    pinned.splice(n - 1, 0, null);
     drawStops(n - 1); update();
   };
-  $('swap').onclick = () => { stops.reverse(); drawStops(); last = []; update(); };
+  $('swap').onclick = () => { stops.reverse(); pinned.reverse(); drawStops(); last = []; update(); };
   $('steps').oninput = $('bandw').oninput = $('path').oninput = $('noise').oninput = update;
   document.querySelectorAll('.filters input, [name=view], [name=dir]').forEach(el => el.onchange = update);
 

@@ -38,7 +38,8 @@
   const score = (b, t) => d2(b.lab, t) + W.noise * b.noise ** 2;
 
   // colors: two or more hex stops, spaced evenly along the row.
-  function pick(blocks, colors, steps, { avoidRepeats = false } = {}) {
+  // pins: Map of step index -> block that must sit there (a "start from a block" stop).
+  function pick(blocks, colors, steps, { avoidRepeats = false, pins = new Map() } = {}) {
     const K = blocks.length;
     if (!K || steps < 1 || !colors.length) return [];
     const labs = colors.map(hexToLab), segs = Math.max(1, labs.length - 1);
@@ -52,7 +53,7 @@
     // allowed blocks: anything further off loses on distance anyway, and it keeps re-scoring quick.
     const M = 48;
     const solve = ban => {
-      const cand = targets.map((t, i) => blocks.map((o, k) => [k, score(o, t)])
+      const cand = targets.map((t, i) => pins.has(i) ? [[blocks.indexOf(pins.get(i)), 0]] : blocks.map((o, k) => [k, score(o, t)])
         .filter(([k]) => !ban[i].has(blocks[k].id)).sort((p, q) => p[1] - q[1]).slice(0, M));
       if (cand.some(c => !c.length)) return [];
       let cost = cand[0].map(([, u]) => u);
@@ -84,7 +85,9 @@
       return row;
     };
 
-    const ban = targets.map(() => new Set());
+    if ([...pins.values()].some(b => !blocks.includes(b))) blocks = [...blocks, ...pins.values()]; // a pin outside the filters still goes in
+    // Pinned blocks are spoken for: with avoidRepeats no other step may use them.
+    const ban = targets.map((_, i) => new Set(avoidRepeats && !pins.has(i) ? [...pins.values()].map(b => b.id) : []));
     let row = solve(ban);
     // A block used more than once stays only at the step it fits best; re-score until none repeat.
     // If the blocks run out, the last row that worked stands (with some repeats).
@@ -94,9 +97,11 @@
       const dups = [...at].filter(([, is]) => is.length > 1);
       if (!dups.length) break;
       for (const [id, is] of dups) {
+        if (is.some(i => pins.has(i))) continue; // two stops pinned to the same block: both stay
         const keep = is.reduce((p, i) => d2(row[i].lab, targets[i]) < d2(row[p].lab, targets[p]) ? i : p);
         ban.forEach((s, i) => i !== keep && s.add(id));
       }
+      if (dups.every(([, is]) => is.some(i => pins.has(i)))) break;
       const next = solve(ban);
       if (!next.length) break;
       row = next;

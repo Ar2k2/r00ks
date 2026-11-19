@@ -35,6 +35,12 @@ assert.ok(M[4] > M[0] && M[4] > M[8] && M.slice(0, 5).every((v, i) => !i || v > 
 // The middle stop lands exactly on the middle step.
 assert.deepStrictEqual(ids(blocks, ['#000000', '#ffffff', '#000000'], 9)[4], 'snow_block');
 
+// Start from a block: a pinned block sits at its step, even off-color or outside the pool, and is not reused.
+const deep = byId('deepslate'), gold = byId('gold_block');
+const P = pick(blocks, [deep.hex, '#ffffff'], 7, { avoidRepeats: true, pins: new Map([[0, deep], [6, gold]]) });
+assert.strictEqual(P[0], deep); assert.strictEqual(P[6], gold);
+assert.strictEqual(new Set(P.map(b => b.id)).size, 7, P.map(b => b.id).join(' '));
+assert.strictEqual(pick(blocks.filter(b => b !== deep), ['#000000', '#ffffff'], 5, { pins: new Map([[2, deep]]) })[2], deep);
 console.log('gradient engine: all checks passed');
 
 // Top/side views: smithing table top is floor-only, its sides wall-only, its bottom never shown.

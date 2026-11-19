@@ -176,7 +176,8 @@ text color. No heavy black borders or hard offset shadows.
 - Score the **whole row at once** (dynamic programming), not one step at a
   time: distance to each target, smoothness between neighbors, a penalty for
   repeats, and a penalty for noisy textures.
-- Later: multi-stop gradients and a "start from a block" mode.
+- Multi-stop gradients (up to 6 stops). Any stop can be a block instead of a
+  color: that block is pinned at its stop's step and the row is solved around it.
 
 **UI:** color pickers, step slider, filters (smooth only, include wool,
 avoid repeats, survival only, no gravity blocks, no light sources), result row
