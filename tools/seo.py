@@ -2,13 +2,14 @@
 
 Pages get breadcrumbs (Home > category > tool) plus WebSite (home), CollectionPage (hubs) or WebApplication
 (tools), built from each page's own title/description and the tool list in shared/shell.js. lastmod is the
-last commit that changed the page's folder beyond ?v= restamps (today if it has such uncommitted changes).
+last commit that changed the page's folder beyond ?v= restamps (now if it has such uncommitted changes), as a full time so
+same-day publishes still change the sitemap (the deploy pings IndexNow with changed sitemap lines).
 Tool pages also get a "Related tools" section (plain links, from RELATED below) before </main>.
 Idempotent. Run before publishing, after version.py:
 
     python3 tools/seo.py
 """
-import json, os, re, subprocess, time
+import datetime, json, os, re, subprocess
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 SITE = os.path.join(ROOT, 'site')
@@ -32,14 +33,14 @@ def git(*a):
     return subprocess.run(['git', *a], cwd=ROOT, capture_output=True, text=True)
 
 def lastmod(path):
-    spec = f':(glob)site/{path}*' if path else ':(glob)site/*'  # files directly in the folder, not sub-pages
+    spec = f':(glob)site/{path}*' if path else ':(glob)site/*.html'  # not sitemap.xml, which this script writes  # files directly in the folder, not sub-pages
     if git('diff', '--quiet', '-I', STAMP, 'HEAD', '--', spec).returncode:
-        return time.strftime('%Y-%m-%d')
-    for line in git('log', '--format=%H %cs', '--', spec).stdout.splitlines():
+        return datetime.datetime.now().astimezone().isoformat(timespec='seconds')
+    for line in git('log', '--format=%H %cI', '--', spec).stdout.splitlines():
         h, d = line.split()
         if git('diff', '--quiet', '-I', STAMP, f'{h}^', h, '--', spec).returncode:
             return d
-    return time.strftime('%Y-%m-%d')
+    return datetime.datetime.now().astimezone().isoformat(timespec='seconds')
 
 def meta(s, prop):
     return re.search(rf'(?:name|property)="{prop}" content="([^"]*)"', s)[1]
